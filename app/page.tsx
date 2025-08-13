@@ -61,22 +61,20 @@ export default function LoginPage() {
               <Button
                 variant={userType === "professor" ? "default" : "outline"}
                 onClick={() => setUserType("professor")}
-                className={`h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base ${
-                  userType === "professor"
+                className={`h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base ${userType === "professor"
                     ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
                     : "border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 👨‍🏫 Professor
               </Button>
               <Button
                 variant={userType === "aluno" ? "default" : "outline"}
                 onClick={() => setUserType("aluno")}
-                className={`h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base ${
-                  userType === "aluno"
+                className={`h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base ${userType === "aluno"
                     ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
                     : "border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 👨‍🎓 Aluno
               </Button>
@@ -151,7 +149,7 @@ function ProfessorDashboard({ onLogout }: { onLogout: () => void }) {
                 <p className="text-xs sm:text-sm text-gray-600 font-semibold">Painel do Professor</p>
               </div>
             </div>
-            
+
             {/* Botão de inicialização, logout e mobile menu */}
             <div className="flex items-center space-x-2">
               {torneio.duplas.length === 0 && (
@@ -171,15 +169,8 @@ function ProfessorDashboard({ onLogout }: { onLogout: () => void }) {
                   <span>Inicializar</span>
                 </Button>
               )}
-              
-              <Button
-                onClick={onLogout}
-                className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-xl font-bold text-sm"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Sair</span>
-              </Button>
-              
+
+
               <button
                 className="sm:hidden p-2 rounded-lg bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -196,17 +187,24 @@ function ProfessorDashboard({ onLogout }: { onLogout: () => void }) {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center space-x-2 transition-all ${
-                      activeTab === tab.id
+                    className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center space-x-2 transition-all ${activeTab === tab.id
                         ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
                         : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{tab.label}</span>
                   </button>
                 )
               })}
+
+              <Button
+                onClick={onLogout}
+                className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-xl font-bold text-sm"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sair</span>
+              </Button>
             </nav>
           </div>
 
@@ -224,18 +222,17 @@ function ProfessorDashboard({ onLogout }: { onLogout: () => void }) {
                           setActiveTab(tab.id)
                           setIsMobileMenuOpen(false)
                         }}
-                        className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm flex items-center space-x-2 transition-all whitespace-nowrap touch-target ${
-                          activeTab === tab.id
+                        className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm flex items-center space-x-2 transition-all whitespace-nowrap touch-target ${activeTab === tab.id
                             ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
                             : "bg-gray-100 text-gray-600"
-                        }`}
+                          }`}
                       >
                         <Icon className="w-4 h-4" />
                         <span>{tab.label}</span>
                       </button>
                     )
                   })}
-                  
+
                   {/* Botão de logout no mobile */}
                   <button
                     onClick={() => {
@@ -307,11 +304,10 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
             <div className="flex items-center space-x-2">
               <Button
                 onClick={() => setActiveTab("loja")}
-                className={`rounded-full px-3 py-2 sm:px-4 sm:py-3 font-bold text-xs sm:text-base flex items-center space-x-2 ${
-                  activeTab === "loja" 
-                    ? "bg-slate-700 text-white" 
+                className={`rounded-full px-3 py-2 sm:px-4 sm:py-3 font-bold text-xs sm:text-base flex items-center space-x-2 ${activeTab === "loja"
+                    ? "bg-slate-700 text-white"
                     : "bg-white text-orange-500 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <ShoppingBag className="w-4 h-4" />
                 <span className="hidden sm:inline">Lojinha</span>
@@ -346,11 +342,10 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                     setActiveTab("geral")
                     setMenuOpen(false)
                   }}
-                  className={`rounded-full px-4 py-3 font-bold text-sm ${
-                    activeTab === "geral"
+                  className={`rounded-full px-4 py-3 font-bold text-sm ${activeTab === "geral"
                       ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
                       : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-                  }`}
+                    }`}
                 >
                   Rank Geral
                 </Button>
@@ -361,11 +356,10 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                       setActiveTab(rodada.id)
                       setMenuOpen(false)
                     }}
-                    className={`rounded-full px-4 py-3 font-bold text-sm ${
-                      activeTab === rodada.id
+                    className={`rounded-full px-4 py-3 font-bold text-sm ${activeTab === rodada.id
                         ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
                         : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-                    }`}
+                      }`}
                   >
                     {rodada.nome}
                   </Button>
@@ -377,11 +371,10 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                       setActiveTab(bonus.id)
                       setMenuOpen(false)
                     }}
-                    className={`rounded-full px-4 py-3 font-bold text-sm ${
-                      activeTab === bonus.id
+                    className={`rounded-full px-4 py-3 font-bold text-sm ${activeTab === bonus.id
                         ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-white"
                         : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-                    }`}
+                      }`}
                   >
                     ⭐ BÔNUS - {bonus.nome}
                   </Button>
@@ -396,11 +389,10 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
               <div className="flex gap-2 pb-2 min-w-max scroll-smooth-x">
                 <Button
                   onClick={() => setActiveTab("geral")}
-                  className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target ${
-                    activeTab === "geral"
+                  className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target ${activeTab === "geral"
                       ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
                       : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-                  }`}
+                    }`}
                 >
                   Rank Geral
                 </Button>
@@ -408,11 +400,10 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                   <Button
                     key={rodada.id}
                     onClick={() => setActiveTab(rodada.id)}
-                    className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target ${
-                      activeTab === rodada.id
+                    className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target ${activeTab === rodada.id
                         ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
                         : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-                    }`}
+                      }`}
                   >
                     {rodada.nome}
                   </Button>
@@ -421,11 +412,10 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                   <Button
                     key={bonus.id}
                     onClick={() => setActiveTab(bonus.id)}
-                    className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target ${
-                      activeTab === bonus.id
+                    className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target ${activeTab === bonus.id
                         ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-white"
                         : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-                    }`}
+                      }`}
                   >
                     ⭐ BÔNUS - {bonus.nome}
                   </Button>
@@ -436,22 +426,22 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
         </div>
 
         {activeTab === "geral" && <RankingTable title="Ranking Geral" data={rankingGeral} />}
-        {rodadas.map((rodada) => 
+        {rodadas.map((rodada) =>
           activeTab === rodada.id && (
-            <RankingTable 
+            <RankingTable
               key={rodada.id}
-              title={rodada.nome} 
-              data={torneio.getRankingPorRodada(rodada.id)} 
+              title={rodada.nome}
+              data={torneio.getRankingPorRodada(rodada.id)}
               showRoundPoints={true}
             />
           )
         )}
-        {torneio.bonus?.map((bonus: any) => 
+        {torneio.bonus?.map((bonus: any) =>
           activeTab === bonus.id && (
-            <RankingTable 
+            <RankingTable
               key={bonus.id}
-              title={`BÔNUS - ${bonus.nome}`} 
-              data={torneio.getRankingPorBonus(bonus.id, bonus)} 
+              title={`BÔNUS - ${bonus.nome}`}
+              data={torneio.getRankingPorBonus(bonus.id, bonus)}
               showBonusPoints={true}
             />
           )
@@ -468,7 +458,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
   const [descricao, setDescricao] = useState("")
   const [bonusSelecionado, setBonusSelecionado] = useState<string | null>(null)
   const [partidasBonus, setPartidasBonus] = useState<any[]>([])
-  
+
   // Estados para criação de partidas
   const [nomePartida, setNomePartida] = useState("")
   const [descricaoPartida, setDescricaoPartida] = useState("")
@@ -476,7 +466,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
   const [multiplicadorPontos, setMultiplicadorPontos] = useState("")
   const [multiplicadorMoedas, setMultiplicadorMoedas] = useState("")
   const [multiplicadorMedalhas, setMultiplicadorMedalhas] = useState("")
-  
+
   // Estados para pontuação
   const [duplaSelecionada, setDuplaSelecionada] = useState("")
   const [partidaSelecionada, setPartidaSelecionada] = useState("")
@@ -517,20 +507,20 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
         parseFloat(multiplicadorMoedas) || 1,
         parseFloat(multiplicadorMedalhas) || 1
       )
-      
+
       setNomePartida("")
       setDescricaoPartida("")
       setPontuacaoMaxima("")
       setMultiplicadorPontos("")
       setMultiplicadorMoedas("")
       setMultiplicadorMedalhas("")
-      
+
       // Recarregar partidas
       if (bonusSelecionado) {
         const partidas = await torneio.buscarPartidasBonus(bonusSelecionado)
         setPartidasBonus(partidas)
       }
-      
+
       toast.success("Partida criada com sucesso!")
     } catch (error) {
       console.error("Erro ao criar partida:", error)
@@ -553,13 +543,13 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
         parseInt(moedasInseridas) || 0,
         parseInt(medalhasInseridas) || 0
       )
-      
+
       setDuplaSelecionada("")
       setPartidaSelecionada("")
       setPontosInseridos("")
       setMoedasInseridas("")
       setMedalhasInseridas("")
-      
+
       toast.success("Pontuação adicionada com sucesso!")
     } catch (error) {
       console.error("Erro ao adicionar pontuação:", error)
@@ -641,9 +631,8 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
               torneio.bonus.map((bonus: any) => (
                 <div
                   key={bonus.id}
-                  className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-colors ${
-                    bonusSelecionado === bonus.id ? 'bg-blue-50 border-blue-300' : ''
-                  }`}
+                  className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-colors ${bonusSelecionado === bonus.id ? 'bg-blue-50 border-blue-300' : ''
+                    }`}
                   onClick={() => handleSelecionarBonus(bonus.id)}
                 >
                   <div>
@@ -773,8 +762,8 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                   placeholder="Descreva a partida..."
                 />
               </div>
-              <Button 
-                onClick={handleCriarPartida} 
+              <Button
+                onClick={handleCriarPartida}
                 className="w-full"
                 disabled={partidasBonus.length >= 3}
               >
@@ -906,7 +895,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                     />
                   </div>
                 </div>
-                
+
                 {(pontosInseridos || moedasInseridas || medalhasInseridas) && partidaSelecionada && (
                   <div className="p-3 bg-blue-50 rounded-lg">
                     <p className="text-sm text-blue-800 font-medium mb-2">
@@ -915,13 +904,13 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                     {(() => {
                       const partida = partidasBonus.find(p => p.id === partidaSelecionada);
                       if (!partida) return null;
-                      
+
                       const pontos = parseInt(pontosInseridos || "0");
                       const moedas = parseInt(moedasInseridas || "0");
                       const medalhas = parseInt(medalhasInseridas || "0");
-                      
+
                       const resultado = calcularPontuacaoComMultiplicador(pontos, moedas, medalhas, partida);
-                      
+
                       return (
                         <div className="space-y-1">
                           <p className="text-sm text-blue-700">
@@ -938,7 +927,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                     })()}
                   </div>
                 )}
-                
+
                 <Button onClick={handleAdicionarPontuacao} className="w-full">
                   <Save className="w-4 h-4 mr-2" />
                   Adicionar Pontuação
@@ -1140,10 +1129,10 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <h3 className="font-bold text-yellow-800 mb-2">Sincronizar Totais</h3>
               <p className="text-sm text-yellow-700 mb-4">
-                Recalcula e sincroniza os totais de todas as duplas (rodadas + bônus). 
+                Recalcula e sincroniza os totais de todas as duplas (rodadas + bônus).
                 Use se houver inconsistências nos rankings.
               </p>
-              <Button 
+              <Button
                 onClick={async () => {
                   try {
                     await torneio.sincronizarTodosTotais();
@@ -1157,13 +1146,13 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                 SINCRONIZAR TODOS OS TOTAIS
               </Button>
             </div>
-            
+
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <h3 className="font-bold text-green-800 mb-2">Recalcular Totais (Novo)</h3>
               <p className="text-sm text-green-700 mb-4">
                 Recalcula totais usando a nova função otimizada que processa rodadas + bônus de uma vez.
               </p>
-              <Button 
+              <Button
                 onClick={async () => {
                   try {
                     await torneio.recalcularTodosTotais('torneio-escolar-2024');
@@ -1177,13 +1166,13 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                 RECALCULAR TOTAIS (NOVO)
               </Button>
             </div>
-            
+
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h3 className="font-bold text-blue-800 mb-2">Diagnóstico de Dados</h3>
               <p className="text-sm text-blue-700 mb-4">
                 Exibe informações detalhadas das duplas no console para debugging.
               </p>
-              <Button 
+              <Button
                 onClick={() => {
                   console.log("=== DIAGNÓSTICO DE DUPLAS ===");
                   torneio.duplas.forEach((dupla: any, index: number) => {
@@ -1279,11 +1268,10 @@ function RankingsManager({ torneio }: { torneio: any }) {
       <div className="flex flex-wrap gap-2">
         <Button
           onClick={() => setActiveTab("geral")}
-          className={`rounded-full px-6 py-3 font-bold ${
-            activeTab === "geral"
+          className={`rounded-full px-6 py-3 font-bold ${activeTab === "geral"
               ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
               : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-          }`}
+            }`}
         >
           Ranking Geral
         </Button>
@@ -1291,11 +1279,10 @@ function RankingsManager({ torneio }: { torneio: any }) {
           <Button
             key={rodada.id}
             onClick={() => setActiveTab(rodada.id)}
-            className={`rounded-full px-6 py-3 font-bold ${
-              activeTab === rodada.id
+            className={`rounded-full px-6 py-3 font-bold ${activeTab === rodada.id
                 ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
                 : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-            }`}
+              }`}
           >
             {rodada.nome}
           </Button>
@@ -1304,11 +1291,10 @@ function RankingsManager({ torneio }: { torneio: any }) {
           <Button
             key={`bonus-${bonusItem.id}`}
             onClick={() => setActiveTab(`bonus-${bonusItem.id}`)}
-            className={`rounded-full px-6 py-3 font-bold ${
-              activeTab === `bonus-${bonusItem.id}`
+            className={`rounded-full px-6 py-3 font-bold ${activeTab === `bonus-${bonusItem.id}`
                 ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-white"
                 : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-            }`}
+              }`}
           >
             ⭐ BÔNUS - {bonusItem.nome}
           </Button>
@@ -1317,22 +1303,22 @@ function RankingsManager({ torneio }: { torneio: any }) {
 
       {/* Tabelas de Ranking */}
       {activeTab === "geral" && <RankingTable title="Ranking Geral" data={rankingGeral} />}
-      {rodadas.map((rodada: any) => 
+      {rodadas.map((rodada: any) =>
         activeTab === rodada.id && (
-          <RankingTable 
+          <RankingTable
             key={rodada.id}
-            title={rodada.nome} 
-            data={torneio.getRankingPorRodada(rodada.id)} 
+            title={rodada.nome}
+            data={torneio.getRankingPorRodada(rodada.id)}
             showRoundPoints={true}
           />
         )
       )}
-      {bonus.map((bonusItem: any) => 
+      {bonus.map((bonusItem: any) =>
         activeTab === `bonus-${bonusItem.id}` && (
-          <RankingTable 
+          <RankingTable
             key={`bonus-table-${bonusItem.id}`}
-            title={`BÔNUS - ${bonusItem.nome}`} 
-            data={torneio.getRankingPorBonus(bonusItem.id, bonusItem)} 
+            title={`BÔNUS - ${bonusItem.nome}`}
+            data={torneio.getRankingPorBonus(bonusItem.id, bonusItem)}
             showBonusPoints={true}
           />
         )
@@ -1456,21 +1442,21 @@ function LojaManager({ torneio }: { torneio: any }) {
 }
 
 // Componente da tabela de ranking
-function RankingTable({ 
-  title, 
-  data, 
+function RankingTable({
+  title,
+  data,
   showRoundPoints = false,
-  showBonusPoints = false 
-}: { 
-  title: string; 
-  data: (Dupla & { 
-    pontosRodada?: number; 
-    moedasRodada?: number; 
-    medalhasRodada?: number; 
+  showBonusPoints = false
+}: {
+  title: string;
+  data: (Dupla & {
+    pontosRodada?: number;
+    moedasRodada?: number;
+    medalhasRodada?: number;
     pontosBonus?: number;
     moedasBonus?: number;
     medalhasBonus?: number;
-  })[]; 
+  })[];
   showRoundPoints?: boolean;
   showBonusPoints?: boolean;
 }) {
@@ -1488,7 +1474,7 @@ function RankingTable({
             {data.map((dupla, index) => {
               // Determinar quais valores exibir baseado no tipo de tabela
               let pontosParaExibir, moedasParaExibir, medalhasParaExibir;
-              
+
               if (showBonusPoints) {
                 // Para tabelas de bônus, mostrar apenas os valores do bônus
                 pontosParaExibir = Number(dupla.pontosBonus) || 0;
@@ -1721,7 +1707,7 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
                 />
               </div>
             </div>
-            
+
             <div>
               <Label className="font-bold text-gray-700">Descrição</Label>
               <Textarea
@@ -1732,7 +1718,7 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
                 rows={3}
               />
             </div>
-            
+
             <div>
               <Label className="font-bold text-gray-700">Pontuação Máxima</Label>
               <Input
@@ -1743,9 +1729,9 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
                 className="rounded-full border-2 border-gray-300 h-12"
               />
             </div>
-            
-            <Button 
-              onClick={handleCriarRodada} 
+
+            <Button
+              onClick={handleCriarRodada}
               className="w-full h-12 rounded-full font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
             >
               CRIAR RODADA
@@ -1779,13 +1765,12 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="font-black text-xl text-gray-800">{rodada.nome}</h3>
-                      <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        rodada.ativa 
-                          ? 'bg-green-100 text-green-800' 
-                          : rodada.finalizada 
+                      <div className={`px-3 py-1 rounded-full text-xs font-bold ${rodada.ativa
+                          ? 'bg-green-100 text-green-800'
+                          : rodada.finalizada
                             ? 'bg-gray-100 text-gray-800'
                             : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                        }`}>
                         {rodada.ativa ? 'ATIVA' : rodada.finalizada ? 'FINALIZADA' : 'PENDENTE'}
                       </div>
                     </div>
