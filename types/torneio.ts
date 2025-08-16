@@ -1,8 +1,8 @@
 // Tipos para o sistema de torneio
 export interface Dupla {
   id: string;
-  aluno1: string;
-  aluno2: string;
+  tag: string; // Tag de até 5 letras/números para identificação
+  bannerUrl?: string; // URL da imagem banner 700x200 (obrigatório para exibição)
   pontos: number;
   moedas: number;
   medalhas: number;

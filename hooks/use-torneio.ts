@@ -24,6 +24,8 @@ export function useTorneio() {
       pontos: Number(dupla.pontos) || 0,
       moedas: Number(dupla.moedas) || 0,
       medalhas: Number(dupla.medalhas) || 0,
+      tag: dupla.tag || '',
+      bannerUrl: dupla.bannerUrl || '',
       pontosPorRodada: dupla.pontosPorRodada || {},
       moedasPorRodada: dupla.moedasPorRodada || {},
       medalhasPorRodada: dupla.medalhasPorRodada || {},
@@ -45,42 +47,58 @@ export function useTorneio() {
     return unsubscribe;
   }, []);
 
+  // Escutar mudanças nas rodadas em tempo real
+  useEffect(() => {
+    const unsubscribe = rodadaService.escutarMudancas((novasRodadas) => {
+      setRodadas(novasRodadas);
+      // Encontrar e atualizar rodada ativa
+      const rodadaAtiva = novasRodadas.find(r => r.ativa);
+      setRodadaAtiva(rodadaAtiva || null);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Escutar mudanças nos bônus em tempo real
+  useEffect(() => {
+    const unsubscribe = bonusService.escutarMudancas((novosBonus) => {
+      setBonus(novosBonus);
+      // Encontrar e atualizar bônus ativo
+      const bonusAtivo = novosBonus.find(b => b.ativo);
+      setBonusAtivo(bonusAtivo || null);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Carregar itens da loja quando a rodada ativa mudar
+  useEffect(() => {
+    const carregarItensLoja = async () => {
+      if (rodadaAtiva) {
+        try {
+          const itens = await lojaService.buscarPorRodada(rodadaAtiva.id);
+          setItensLoja(itens);
+        } catch (error) {
+          console.error('Erro ao carregar itens da loja:', error);
+          setItensLoja([]);
+        }
+      } else {
+        setItensLoja([]);
+      }
+    };
+
+    carregarItensLoja();
+  }, [rodadaAtiva]);
+
   const carregarDados = async () => {
     try {
       setLoading(true);
       
-      // Carregar dados em paralelo
-      const [
-        duplasDados,
-        rodadasDados,
-        configDados,
-        rodadaAtivaDados,
-        bonusDados,
-        bonusAtivoDados
-      ] = await Promise.all([
-        duplaService.buscarTodas(),
-        rodadaService.buscarTodas(),
-        torneioService.buscarConfig(),
-        rodadaService.buscarAtiva(),
-        bonusService.buscarTodos(),
-        bonusService.buscarAtivo()
-      ]);
-
-      // Normalizar duplas
-      const duplasNormalizadas = duplasDados.map(normalizarDupla);
-
-      setDuplas(duplasNormalizadas);
-      setRodadas(rodadasDados);
+      // Carregar apenas configuração (duplas, rodadas e bônus são gerenciados pelos listeners)
+      const configDados = await torneioService.buscarConfig();
       setConfig(configDados);
-      setRodadaAtiva(rodadaAtivaDados);
-      setBonus(bonusDados);
-      setBonusAtivo(bonusAtivoDados);
 
-      // Carregar itens da loja da rodada ativa
-      if (rodadaAtivaDados) {
-        const itens = await lojaService.buscarPorRodada(rodadaAtivaDados.id);
-        setItensLoja(itens);
-      }
+      // Os itens da loja são carregados automaticamente pelo useEffect do rodadaAtiva
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -89,11 +107,12 @@ export function useTorneio() {
   };
 
   // Funções para gerenciar duplas
-  const criarDupla = async (aluno1: string, aluno2: string) => {
+  const criarDupla = async (tag: string, bannerUrl?: string) => {
+    console.log("🔧 Hook criarDupla chamado:", { tag, bannerUrl });
+    
     try {
       const novaDupla: Omit<Dupla, 'id'> = {
-        aluno1,
-        aluno2,
+        tag,
         pontos: 0,
         moedas: 0,
         medalhas: 0,
@@ -106,10 +125,19 @@ export function useTorneio() {
         status: 'ativa'
       };
 
+      // Só incluir bannerUrl se tiver valor
+      if (bannerUrl && bannerUrl.trim() !== '') {
+        novaDupla.bannerUrl = bannerUrl;
+        console.log("🖼️ Banner incluído na dupla");
+      }
+
+      console.log("💾 Salvando dupla no Firestore...", novaDupla);
       await duplaService.criar(novaDupla);
+      console.log("✅ Dupla salva no Firestore!");
+      
       // Os dados serão atualizados automaticamente pelo listener
     } catch (error) {
-      console.error('Erro ao criar dupla:', error);
+      console.error('❌ Erro ao criar dupla no hook:', error);
       throw error;
     }
   };
@@ -140,6 +168,16 @@ export function useTorneio() {
     }
   };
 
+  const removerDupla = async (duplaId: string) => {
+    try {
+      await duplaService.remover(duplaId);
+      // Os dados serão atualizados automaticamente pelo listener
+    } catch (error) {
+      console.error('Erro ao remover dupla:', error);
+      throw error;
+    }
+  };
+
   // Funções para gerenciar rodadas
   const criarRodada = async (nome: string, numero: number, descricao: string, pontuacaoMaxima: number) => {
     try {
@@ -164,16 +202,19 @@ export function useTorneio() {
   const ativarRodada = async (rodadaId: string) => {
     try {
       await rodadaService.ativar(rodadaId);
-      const novaRodadaAtiva = await rodadaService.buscarAtiva();
-      setRodadaAtiva(novaRodadaAtiva);
-      
-      // Carregar itens da nova rodada ativa
-      if (novaRodadaAtiva) {
-        const itens = await lojaService.buscarPorRodada(novaRodadaAtiva.id);
-        setItensLoja(itens);
-      }
+      // O listener se encarregará de atualizar o estado automaticamente
     } catch (error) {
       console.error('Erro ao ativar rodada:', error);
+      throw error;
+    }
+  };
+
+  const excluirRodada = async (rodadaId: string) => {
+    try {
+      await rodadaService.remover(rodadaId);
+      // O listener se encarregará de atualizar o estado automaticamente
+    } catch (error) {
+      console.error('Erro ao excluir rodada:', error);
       throw error;
     }
   };
@@ -249,10 +290,19 @@ export function useTorneio() {
   const ativarBonus = async (bonusId: string) => {
     try {
       await bonusService.ativar(bonusId);
-      const novoBonusAtivo = await bonusService.buscarAtivo();
-      setBonusAtivo(novoBonusAtivo);
+      // O listener se encarregará de atualizar o estado automaticamente
     } catch (error) {
       console.error('Erro ao ativar bônus:', error);
+      throw error;
+    }
+  };
+
+  const excluirBonus = async (bonusId: string) => {
+    try {
+      await bonusService.remover(bonusId);
+      // O listener se encarregará de atualizar o estado automaticamente
+    } catch (error) {
+      console.error('Erro ao excluir bônus:', error);
       throw error;
     }
   };
@@ -531,14 +581,17 @@ export function useTorneio() {
     criarDupla,
     adicionarPontuacao,
     atualizarStatusDupla,
+    removerDupla,
 
     // Funções de rodadas
     criarRodada,
     ativarRodada,
+    excluirRodada,
 
     // Funções de bônus
     criarBonus,
     ativarBonus,
+    excluirBonus,
     adicionarPontuacaoBonus,
     criarPartidaBonus,
     buscarPartidasBonus,

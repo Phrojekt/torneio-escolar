@@ -1,17 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Trophy, ShoppingBag, Medal, Star, Coins, Menu, X, Plus, Save, Users, Target, Crown, Trash2, LogOut, Calendar, Settings } from "lucide-react"
 import { useTorneio } from "@/hooks/use-torneio"
 import { Dupla } from "@/types/torneio"
 import { toast } from "sonner"
-import { inicializarTorneio } from "@/lib/inicializar-torneio"
 
 export default function LoginPage() {
   const [userType, setUserType] = useState<"professor" | "aluno" | null>(null)
@@ -19,10 +19,18 @@ export default function LoginPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   const handleLogin = () => {
+    console.log("Login attempt:", { userType, password })
     if (userType === "professor" && password === "admin123") {
+      console.log("Professor login successful")
+      toast.success("Login realizado com sucesso!")
       setIsLoggedIn(true)
     } else if (userType === "aluno") {
+      console.log("Student login successful")
+      toast.success("Login realizado com sucesso!")
       setIsLoggedIn(true)
+    } else {
+      console.log("Login failed")
+      toast.error("Credenciais inválidas. Para professor, use a senha: admin123")
     }
   }
 
@@ -94,6 +102,14 @@ export default function LoginPage() {
             </div>
           )}
 
+          {userType === "aluno" && (
+            <div className="p-3 bg-green-50 rounded-lg border-2 border-green-200">
+              <p className="text-sm text-green-700 font-semibold text-center">
+                ✅ Acesso liberado para alunos - clique em "ENTRAR"
+              </p>
+            </div>
+          )}
+
           <Button
             onClick={handleLogin}
             disabled={!userType || (userType === "professor" && !password)}
@@ -150,27 +166,8 @@ function ProfessorDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
 
-            {/* Botão de inicialização, logout e mobile menu */}
+            {/* Botões de navegação e mobile menu */}
             <div className="flex items-center space-x-2">
-              {torneio.duplas.length === 0 && (
-                <Button
-                  onClick={async () => {
-                    try {
-                      await inicializarTorneio()
-                      toast.success("Torneio inicializado com dados de exemplo!")
-                      torneio.recarregar()
-                    } catch (error) {
-                      toast.error("Erro ao inicializar torneio")
-                    }
-                  }}
-                  className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Inicializar</span>
-                </Button>
-              )}
-
-
               <button
                 className="sm:hidden p-2 rounded-lg bg-gray-100"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -200,7 +197,8 @@ function ProfessorDashboard({ onLogout }: { onLogout: () => void }) {
 
               <Button
                 onClick={onLogout}
-                className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-xl font-bold text-sm"
+                className="hidden sm:flex items-center space-x-2 text-white px-4 py-2 rounded-xl font-bold text-sm"
+                style={{ backgroundColor: "#AEE1F9" }}
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sair</span>
@@ -239,7 +237,8 @@ function ProfessorDashboard({ onLogout }: { onLogout: () => void }) {
                       onLogout()
                       setIsMobileMenuOpen(false)
                     }}
-                    className="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm flex items-center space-x-2 transition-all bg-red-100 text-red-600 hover:bg-red-200 whitespace-nowrap touch-target"
+                    className="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm flex items-center space-x-2 transition-all text-white whitespace-nowrap touch-target"
+                    style={{ backgroundColor: "#AEE1F9" }}
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Sair</span>
@@ -286,35 +285,31 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
   const rodadas = torneio.rodadas
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-200 via-blue-200 to-cyan-300 overflow-x-hidden">
-      <header className="bg-gradient-to-r from-orange-400 to-yellow-400 shadow-lg">
+    <div className="min-h-screen bg-[url('/background.png')] bg-cover bg-center bg-no-repeat overflow-x-hidden">
+      <header className="shadow-lg" style={{ backgroundColor: "#AEE1F9" }}>
         <div className="px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-3 sm:py-6">
+          <div className="flex justify-around items-center py-3 sm:py-6">
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-orange-500" />
-              </div>
-              <h1
-                className="text-lg sm:text-3xl font-black text-white drop-shadow-lg leading-tight"
-                style={{ textShadow: "2px 2px 0px #000" }}
-              >
-                TORNEIO JAMBALAIA 2
-              </h1>
+              <img 
+                src="/Torneio_Jamboree.png" 
+                alt="Torneio Jamboree" 
+                className="h-8 sm:h-12 w-auto object-contain drop-shadow-lg"
+              />
             </div>
             <div className="flex items-center space-x-2">
               <Button
                 onClick={() => setActiveTab("loja")}
-                className={`rounded-full px-3 py-2 sm:px-4 sm:py-3 font-bold text-xs sm:text-base flex items-center space-x-2 ${activeTab === "loja"
-                    ? "bg-slate-700 text-white"
-                    : "bg-white text-orange-500 hover:bg-gray-100"
+                className={`rounded-full px-3 py-2 sm:px-4 sm:py-3 font-bold text-xs sm:text-base flex items-center space-x-2 cursor-pointer transition-all duration-300 transform ${activeTab === "loja"
+                    ? "bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:scale-105 hover:shadow-lg scale-105 shadow-lg"
+                    : "bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:scale-105 hover:shadow-lg"
                   }`}
               >
-                <ShoppingBag className="w-4 h-4" />
+                <img src="/shop_icon.png" alt="Loja" className="w-4 h-4" />
                 <span className="hidden sm:inline">Lojinha</span>
               </Button>
               <Button
                 onClick={onLogout}
-                className="bg-slate-700 text-white border-0 rounded-full px-3 py-2 sm:px-6 sm:py-3 font-bold hover:bg-slate-800 text-xs sm:text-base flex items-center space-x-2"
+                className="bg-slate-700 text-white border-0 rounded-full px-3 py-2 sm:px-6 sm:py-3 font-bold hover:bg-slate-800 text-xs sm:text-base flex items-center space-x-2 cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Sair</span>
@@ -330,7 +325,7 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
           <div className="block sm:hidden">
             <Button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="w-full mb-3 bg-gray-300 text-gray-700 hover:bg-gray-400 rounded-full font-bold"
+              className="w-full mb-3 bg-gray-300 text-gray-700 hover:bg-gray-400 rounded-full font-bold cursor-pointer"
             >
               {menuOpen ? <X className="w-4 h-4 mr-2" /> : <Menu className="w-4 h-4 mr-2" />}
               Menu
@@ -342,10 +337,11 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                     setActiveTab("geral")
                     setMenuOpen(false)
                   }}
-                  className={`rounded-full px-4 py-3 font-bold text-sm ${activeTab === "geral"
-                      ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
+                  className={`rounded-full px-4 py-3 font-bold text-sm cursor-pointer ${activeTab === "geral"
+                      ? "text-white"
                       : "bg-gray-300 text-gray-700 hover:bg-gray-400"
                     }`}
+                  style={activeTab === "geral" ? { backgroundColor: "#AEE1F9" } : {}}
                 >
                   Rank Geral
                 </Button>
@@ -356,10 +352,11 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                       setActiveTab(rodada.id)
                       setMenuOpen(false)
                     }}
-                    className={`rounded-full px-4 py-3 font-bold text-sm ${activeTab === rodada.id
-                        ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
+                    className={`rounded-full px-4 py-3 font-bold text-sm cursor-pointer ${activeTab === rodada.id
+                        ? "text-white"
                         : "bg-gray-300 text-gray-700 hover:bg-gray-400"
                       }`}
+                    style={activeTab === rodada.id ? { backgroundColor: "#AEE1F9" } : {}}
                   >
                     {rodada.nome}
                   </Button>
@@ -371,7 +368,7 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                       setActiveTab(bonus.id)
                       setMenuOpen(false)
                     }}
-                    className={`rounded-full px-4 py-3 font-bold text-sm ${activeTab === bonus.id
+                    className={`rounded-full px-4 py-3 font-bold text-sm cursor-pointer ${activeTab === bonus.id
                         ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-white"
                         : "bg-gray-300 text-gray-700 hover:bg-gray-400"
                       }`}
@@ -389,10 +386,11 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
               <div className="flex gap-2 pb-2 min-w-max scroll-smooth-x">
                 <Button
                   onClick={() => setActiveTab("geral")}
-                  className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target ${activeTab === "geral"
-                      ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
+                  className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target cursor-pointer ${activeTab === "geral"
+                      ? "text-white"
                       : "bg-gray-300 text-gray-700 hover:bg-gray-400"
                     }`}
+                  style={activeTab === "geral" ? { backgroundColor: "#AEE1F9" } : {}}
                 >
                   Rank Geral
                 </Button>
@@ -400,10 +398,11 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                   <Button
                     key={rodada.id}
                     onClick={() => setActiveTab(rodada.id)}
-                    className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target ${activeTab === rodada.id
-                        ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
+                    className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target cursor-pointer ${activeTab === rodada.id
+                        ? "text-white"
                         : "bg-gray-300 text-gray-700 hover:bg-gray-400"
                       }`}
+                    style={activeTab === rodada.id ? { backgroundColor: "#AEE1F9" } : {}}
                   >
                     {rodada.nome}
                   </Button>
@@ -412,7 +411,7 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                   <Button
                     key={bonus.id}
                     onClick={() => setActiveTab(bonus.id)}
-                    className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target ${activeTab === bonus.id
+                    className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target cursor-pointer ${activeTab === bonus.id
                         ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-white"
                         : "bg-gray-300 text-gray-700 hover:bg-gray-400"
                       }`}
@@ -458,6 +457,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
   const [descricao, setDescricao] = useState("")
   const [bonusSelecionado, setBonusSelecionado] = useState<string | null>(null)
   const [partidasBonus, setPartidasBonus] = useState<any[]>([])
+  const [bonusParaExcluir, setBonusParaExcluir] = useState<string | null>(null)
 
   // Estados para criação de partidas
   const [nomePartida, setNomePartida] = useState("")
@@ -488,6 +488,23 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
     } catch (error) {
       console.error("Erro ao criar bônus:", error)
       toast.error("Erro ao criar bônus")
+    }
+  }
+
+  const handleExcluirBonus = async (bonusId: string) => {
+    try {
+      const bonus = torneio.bonus.find((b: any) => b.id === bonusId)
+      await torneio.excluirBonus(bonusId)
+      setBonusParaExcluir(null)
+      // Se o bônus excluído estava selecionado, limpar seleção
+      if (bonusSelecionado === bonusId) {
+        setBonusSelecionado(null)
+        setPartidasBonus([])
+      }
+      toast.success(`Bônus "${bonus?.nome}" excluído com sucesso!`)
+    } catch (error) {
+      console.error('Erro ao excluir bônus:', error)
+      toast.error("Erro ao excluir bônus!")
     }
   }
 
@@ -661,6 +678,17 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                         Ativo
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setBonusParaExcluir(bonus.id)
+                      }}
+                      variant="destructive"
+                      className="rounded-full bg-red-500 hover:bg-red-600 text-white font-bold"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               ))
@@ -843,7 +871,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                       <SelectContent>
                         {torneio.duplas.map((dupla: any) => (
                           <SelectItem key={dupla.id} value={dupla.id}>
-                            {dupla.aluno1} & {dupla.aluno2}
+                            {dupla.tag}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -937,19 +965,87 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
           )}
         </>
       )}
+
+      {/* Dialog de confirmação para exclusão */}
+      <AlertDialog open={!!bonusParaExcluir} onOpenChange={() => setBonusParaExcluir(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              {(() => {
+                const bonus = torneio.bonus.find((b: any) => b.id === bonusParaExcluir);
+                if (bonus?.ativo) {
+                  return "ATENÇÃO: Você está prestes a excluir o bônus ATIVO! Esta ação removerá o bônus atual do torneio e todos os dados associados serão perdidos permanentemente. Tem certeza?";
+                }
+                return "Tem certeza que deseja excluir este bônus? Esta ação não pode ser desfeita e todos os dados associados serão perdidos permanentemente.";
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => bonusParaExcluir && handleExcluirBonus(bonusParaExcluir)}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Excluir Bônus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
 
 // Componente para gerenciar duplas - Adicionar pontuação
 function GerenciamentoDuplas({ torneio }: { torneio: any }) {
-  const [aluno1, setAluno1] = useState("")
-  const [aluno2, setAluno2] = useState("")
+  const [tag, setTag] = useState("")
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [duplaId, setDuplaId] = useState("")
   const [pontos, setPontos] = useState("")
   const [moedas, setMoedas] = useState("")
   const [medalhas, setMedalhas] = useState("")
   const [rodadaSelecionada, setRodadaSelecionada] = useState("")
+  const [isCreating, setIsCreating] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  // Função para limpar arquivo e preview
+  const clearBannerFile = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setBannerFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Criar preview quando arquivo for selecionado
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    
+    // Limpar preview anterior
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    
+    setBannerFile(file);
+    if (file) {
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
+  // Cleanup do preview quando componente for desmontado
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleAdicionarPontuacao = async () => {
     try {
@@ -976,18 +1072,97 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
   }
 
   const handleCriarDupla = async () => {
+    if (isCreating) {
+      console.log("⚠️ Criação já em andamento, ignorando...");
+      return;
+    }
+    
+    console.log("🚀 Iniciando criação de dupla...");
+    setIsCreating(true);
+    
+    const timeoutId = setTimeout(() => {
+      console.log("⏰ Timeout da operação!");
+      toast.error("Operação demorou muito tempo. Tente novamente.");
+      setIsCreating(false);
+    }, 60000); // 60 segundos para upload local
+    
     try {
-      if (!aluno1 || !aluno2) {
-        toast.error("Preencha os nomes dos alunos!")
+      if (!tag) {
+        toast.error("Preencha a tag da dupla!")
         return
       }
 
-      await torneio.criarDupla(aluno1, aluno2)
-      toast.success("Dupla criada com sucesso!")
-      setAluno1("")
-      setAluno2("")
+      if (tag.length < 2 || tag.length > 5) {
+        toast.error("A tag deve ter entre 2 e 5 caracteres!")
+        return
+      }
+
+      console.log("✅ Validações iniciais OK");
+      let bannerUrl = undefined;
+      let loadingToastId = null;
+
+      // Se há um arquivo de banner, fazer upload local
+      if (bannerFile) {
+        console.log("📁 Iniciando upload local de arquivo...", bannerFile.name);
+        
+        try {
+          loadingToastId = toast.loading("Fazendo upload da imagem...");
+          
+          // Criar FormData para envio
+          const formData = new FormData();
+          formData.append('file', bannerFile);
+          formData.append('tag', tag.toUpperCase());
+          
+          console.log("� Enviando arquivo para API local...");
+          
+          // Fazer upload via API local
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          const result = await response.json();
+          
+          if (!result.success) {
+            throw new Error(result.message || 'Erro no upload');
+          }
+          
+          bannerUrl = result.imageUrl;
+          console.log("✅ Upload local concluído:", bannerUrl);
+          
+          if (loadingToastId) {
+            toast.dismiss(loadingToastId);
+            loadingToastId = null;
+          }
+          
+        } catch (uploadError: any) {
+          console.error("❌ Erro no upload local:", uploadError);
+          if (loadingToastId) {
+            toast.dismiss(loadingToastId);
+          }
+          
+          const errorMessage = uploadError?.message || "Erro desconhecido no upload";
+          toast.error(`Erro ao fazer upload: ${errorMessage}`);
+          return;
+        }
+      }
+
+      // Criar dupla com ou sem banner
+      console.log("👥 Criando dupla no banco...", { tag: tag.toUpperCase(), bannerUrl });
+      await torneio.criarDupla(tag.toUpperCase(), bannerUrl);
+      console.log("✅ Dupla criada com sucesso!");
+      
+      clearTimeout(timeoutId);
+      toast.success("Dupla criada com sucesso!");
+      setTag("");
+      clearBannerFile();
+      
     } catch (error) {
-      toast.error("Erro ao criar dupla")
+      console.error("❌ Erro geral ao criar dupla:", error);
+      clearTimeout(timeoutId);
+      toast.error("Erro ao criar dupla");
+    } finally {
+      setIsCreating(false);
     }
   }
 
@@ -1003,38 +1178,75 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
         </CardHeader>
         <CardContent className="p-3 sm:p-4 lg:p-6">
           <div className="space-y-3 sm:space-y-4">
-            <div className="overflow-x-auto">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 min-w-full">
-                <div className="flex-1 min-w-0">
-                  <Label className="font-bold text-gray-700 text-sm">Aluno 1</Label>
-                  <Input
-                    placeholder="Nome do primeiro aluno"
-                    value={aluno1}
-                    onChange={(e) => setAluno1(e.target.value)}
-                    className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <Label className="font-bold text-gray-700 text-sm">Aluno 2</Label>
-                  <Input
-                    placeholder="Nome do segundo aluno"
-                    value={aluno2}
-                    onChange={(e) => setAluno2(e.target.value)}
-                    className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
-                  />
-                </div>
+            <div className="space-y-3">
+              <div>
+                <Label className="font-bold text-gray-700 text-sm">Tag da Dupla (2-5 caracteres)</Label>
+                <Input
+                  placeholder="Ex: ALFA1, BETA, TEAM1"
+                  value={tag}
+                  onChange={(e) => setTag(e.target.value.slice(0, 5).toUpperCase())}
+                  className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
+                  maxLength={5}
+                />
+              </div>
+              <div>
+                <Label className="font-bold text-gray-700 text-sm">Banner da Dupla</Label>
+                <Input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="text-xs text-gray-500 mt-1">💡 Recomendação: 700x200 pixels para melhor visualização (opcional)</p>
+                <p className="text-xs text-green-600 mt-1">✅ Arquivos de até 50MB são suportados</p>
+                {bannerFile && (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                      <p className="text-sm text-green-700 font-medium">✅ {bannerFile.name}</p>
+                      <button
+                        type="button"
+                        onClick={clearBannerFile}
+                        className="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded bg-red-50 hover:bg-red-100"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                    {previewUrl && (
+                      <div className="relative">
+                        <img
+                          src={previewUrl}
+                          alt="Preview do banner"
+                          className="w-full max-w-md h-24 object-cover rounded-lg border-2 border-gray-200"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Preview do banner</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
-          <Button onClick={handleCriarDupla} className="w-full h-10 sm:h-12 rounded-full font-bold bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white mt-3 sm:mt-4 text-sm sm:text-base">
-            CRIAR DUPLA
+          <Button 
+            onClick={handleCriarDupla} 
+            disabled={isCreating || !tag || tag.length < 2 || tag.length > 5}
+            className="w-full h-10 sm:h-12 rounded-full font-bold bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white mt-3 sm:mt-4 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isCreating ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                CRIANDO...
+              </div>
+            ) : (
+              "CRIAR DUPLA"
+            )}
           </Button>
         </CardContent>
       </Card>
 
       {/* Adicionar Pontuação */}
       <Card className="border-0 shadow-lg sm:shadow-xl lg:shadow-2xl bg-white rounded-xl sm:rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-purple-400 to-pink-400 text-white px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
+        <CardHeader className="text-white px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6" style={{ backgroundColor: "#AEE1F9" }}>
           <CardTitle className="text-lg sm:text-xl lg:text-2xl font-black flex items-center space-x-2">
             <Target className="w-5 h-5 sm:w-6 sm:h-6" />
             <span>Adicionar Pontuação</span>
@@ -1051,7 +1263,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                 <SelectContent>
                   {torneio.duplas.map((dupla: Dupla) => (
                     <SelectItem key={dupla.id} value={dupla.id}>
-                      {dupla.aluno1} & {dupla.aluno2}
+                      {dupla.tag}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1109,7 +1321,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
               </Select>
             </div>
 
-            <Button onClick={handleAdicionarPontuacao} className="w-full h-12 rounded-full font-bold bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white">
+            <Button onClick={handleAdicionarPontuacao} className="w-full h-12 rounded-full font-bold text-white" style={{ backgroundColor: "#AEE1F9" }}>
               ADICIONAR PONTUAÇÃO
             </Button>
           </div>
@@ -1176,7 +1388,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                 onClick={() => {
                   console.log("=== DIAGNÓSTICO DE DUPLAS ===");
                   torneio.duplas.forEach((dupla: any, index: number) => {
-                    console.log(`\nDupla ${index + 1}: ${dupla.aluno1} & ${dupla.aluno2}`);
+                    console.log(`\nDupla ${index + 1}: ${dupla.tag}`);
                     console.log("Totais armazenados:", {
                       pontos: dupla.pontos,
                       moedas: dupla.moedas,
@@ -1209,10 +1421,24 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
 
 // Componente para gerenciar todas as duplas
 function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
+  const [duplaParaRemover, setDuplaParaRemover] = useState<string | null>(null)
+
+  const handleRemoverDupla = async (duplaId: string) => {
+    try {
+      const dupla = torneio.duplas.find((d: Dupla) => d.id === duplaId)
+      await torneio.removerDupla(duplaId)
+      setDuplaParaRemover(null)
+      toast.success(`Dupla "${dupla?.tag}" removida com sucesso!`)
+    } catch (error) {
+      console.error('Erro ao remover dupla:', error)
+      toast.error("Erro ao remover dupla!")
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-400 to-purple-400 text-white px-6 py-6">
+        <CardHeader className="text-white px-6 py-6" style={{ backgroundColor: "#AEE1F9" }}>
           <CardTitle className="text-2xl font-black flex items-center space-x-2">
             <Users className="w-6 h-6" />
             <span>Todas as Duplas</span>
@@ -1220,33 +1446,71 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
         </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-4">
-            {torneio.duplas.map((dupla: Dupla) => (
-              <div key={dupla.id} className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200 flex justify-between items-center">
-                <div>
-                  <h3 className="font-black text-lg text-gray-800">{dupla.aluno1} & {dupla.aluno2}</h3>
-                  <p className="text-sm text-gray-600 font-semibold">
-                    {dupla.pontos} pontos • {dupla.moedas} moedas • {dupla.medalhas} medalhas
-                  </p>
-                  <p className="text-xs text-gray-500">Status: {dupla.status}</p>
-                </div>
+            {torneio.duplas.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-bold text-gray-600 mb-2">Nenhuma dupla cadastrada</h3>
+                <p className="text-gray-500">Use o formulário acima para criar a primeira dupla</p>
+              </div>
+            ) : (
+              torneio.duplas.map((dupla: Dupla) => (
+                <div key={dupla.id} className="p-4 rounded-xl border-2 flex justify-between items-center" style={{ backgroundColor: "#F0F8FF", borderColor: "#AEE1F9" }}>
+                  <div>
+                    <h3 className="font-black text-lg text-gray-800">{dupla.tag}</h3>
+                    <p className="text-sm text-gray-600 font-semibold">
+                      {dupla.pontos} pontos • {dupla.moedas} moedas • {dupla.medalhas} medalhas
+                    </p>
+                    <p className="text-xs text-gray-500">Status: {dupla.status}</p>
+                  </div>
                 <div className="flex space-x-2">
                   <Button
                     onClick={() => torneio.atualizarStatusDupla(dupla.id, 'aguardando')}
                     size="sm"
-                    className="rounded-full bg-yellow-500 hover:bg-yellow-600 text-white"
+                    className="rounded-full bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer"
                   >
                     Aguardando
                   </Button>
                   <Button
                     onClick={() => torneio.atualizarStatusDupla(dupla.id, 'ativa')}
                     size="sm"
-                    className="rounded-full bg-green-500 hover:bg-green-600 text-white"
+                    className="rounded-full bg-green-500 hover:bg-green-600 text-white cursor-pointer"
                   >
                     Ativar
                   </Button>
+                  {duplaParaRemover === dupla.id ? (
+                    <div className="flex space-x-2 items-center">
+                      <span className="text-sm font-semibold text-red-600 mr-2">Confirmar remoção?</span>
+                      <Button
+                        onClick={() => handleRemoverDupla(dupla.id)}
+                        size="sm"
+                        className="rounded-full text-white cursor-pointer"
+                        style={{ backgroundColor: "#AEE1F9" }}
+                      >
+                        Sim
+                      </Button>
+                      <Button
+                        onClick={() => setDuplaParaRemover(null)}
+                        size="sm"
+                        className="rounded-full bg-gray-500 hover:bg-gray-600 text-white cursor-pointer"
+                      >
+                        Não
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => setDuplaParaRemover(dupla.id)}
+                      size="sm"
+                      className="rounded-full text-white cursor-pointer flex items-center space-x-1"
+                      style={{ backgroundColor: "#AEE1F9" }}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Remover</span>
+                    </Button>
+                  )}
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
@@ -1269,9 +1533,10 @@ function RankingsManager({ torneio }: { torneio: any }) {
         <Button
           onClick={() => setActiveTab("geral")}
           className={`rounded-full px-6 py-3 font-bold ${activeTab === "geral"
-              ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
+              ? "text-white"
               : "bg-gray-300 text-gray-700 hover:bg-gray-400"
             }`}
+          style={activeTab === "geral" ? { backgroundColor: "#AEE1F9" } : {}}
         >
           Ranking Geral
         </Button>
@@ -1280,7 +1545,7 @@ function RankingsManager({ torneio }: { torneio: any }) {
             key={rodada.id}
             onClick={() => setActiveTab(rodada.id)}
             className={`rounded-full px-6 py-3 font-bold ${activeTab === rodada.id
-                ? "bg-gradient-to-r from-red-400 to-pink-400 text-white"
+                ? "bg-gradient-to-r from-red-500 to-red-700 text-white"
                 : "bg-gray-300 text-gray-700 hover:bg-gray-400"
               }`}
           >
@@ -1463,7 +1728,7 @@ function RankingTable({
   return (
     <div className="ranking-card table-container-responsive bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden border-0 max-w-full">
       {title && (
-        <div className="bg-gradient-to-r from-blue-400 to-purple-400 p-4 sm:p-6">
+        <div className="p-4 sm:p-6" style={{ backgroundColor: "#AEE1F9" }}>
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white text-center drop-shadow-lg">{title}</h2>
         </div>
       )}
@@ -1471,19 +1736,26 @@ function RankingTable({
         {/* Container com scroll horizontal para mobile e desktop compacto */}
         <div className="overflow-x-auto custom-scrollbar mobile-scroll-container">
           <div className="min-w-full space-y-3 sm:space-y-4">
-            {data.map((dupla, index) => {
-              // Determinar quais valores exibir baseado no tipo de tabela
-              let pontosParaExibir, moedasParaExibir, medalhasParaExibir;
+            {data.length === 0 ? (
+              <div className="text-center py-12">
+                <Trophy className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-bold text-gray-600 mb-2">Nenhuma dupla encontrada</h3>
+                <p className="text-gray-500">Crie duplas primeiro para visualizar o ranking</p>
+              </div>
+            ) : (
+              data.map((dupla, index) => {
+                // Determinar quais valores exibir baseado no tipo de tabela
+                let pontosParaExibir, moedasParaExibir, medalhasParaExibir;
 
-              if (showBonusPoints) {
-                // Para tabelas de bônus, mostrar apenas os valores do bônus
-                pontosParaExibir = Number(dupla.pontosBonus) || 0;
-                moedasParaExibir = Number(dupla.moedasBonus) || 0;
-                medalhasParaExibir = Number(dupla.medalhasBonus) || 0;
-              } else if (showRoundPoints) {
-                // Para tabelas de rodada, mostrar apenas valores da rodada
-                pontosParaExibir = Number(dupla.pontosRodada) || 0;
-                moedasParaExibir = Number(dupla.moedasRodada) || 0;
+                if (showBonusPoints) {
+                  // Para tabelas de bônus, mostrar apenas os valores do bônus
+                  pontosParaExibir = Number(dupla.pontosBonus) || 0;
+                  moedasParaExibir = Number(dupla.moedasBonus) || 0;
+                  medalhasParaExibir = Number(dupla.medalhasBonus) || 0;
+                } else if (showRoundPoints) {
+                  // Para tabelas de rodada, mostrar apenas valores da rodada
+                  pontosParaExibir = Number(dupla.pontosRodada) || 0;
+                  moedasParaExibir = Number(dupla.moedasRodada) || 0;
                 medalhasParaExibir = Number(dupla.medalhasRodada) || 0;
               } else {
                 // Para ranking geral, mostrar totais
@@ -1500,18 +1772,33 @@ function RankingTable({
               return (
                 <div
                   key={dupla.id}
-                  className="ranking-card flex items-center gap-3 sm:gap-4 lg:gap-6 p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl border-2 border-transparent hover:border-pink-200 min-w-max mobile-scroll-item desktop-compact shadow-sm hover:shadow-md transition-all duration-300"
+                  className="ranking-card flex items-center gap-3 sm:gap-4 lg:gap-6 p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl border-2 border-transparent min-w-max mobile-scroll-item desktop-compact shadow-sm hover:shadow-md transition-all duration-300"
+                  style={{ '--hover-border-color': '#AEE1F9' } as React.CSSProperties}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#AEE1F9'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
                 >
                   {/* Posição - com gradiente da classe CSS */}
                   <div className="ranking-position w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-white text-sm sm:text-lg lg:text-xl flex-shrink-0">
                     {index + 1}°
                   </div>
 
-                  {/* Nome da Dupla - sem cortes, texto completo */}
-                  <div className="ranking-name-container rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 min-w-0 flex-1">
-                    <p className="team-name-full table-text-proportional font-black text-gray-800 leading-tight">
-                      {dupla.aluno1} & {dupla.aluno2}
-                    </p>
+                  {/* Nome da Dupla - com banner quando disponível */}
+                  <div className="ranking-name-container rounded-xl sm:rounded-2xl overflow-hidden min-w-0 flex-1">
+                    {dupla.bannerUrl ? (
+                      <div className="relative w-full h-16 sm:h-20 lg:h-24">
+                        <img 
+                          src={dupla.bannerUrl} 
+                          alt={`Banner da dupla ${dupla.tag}`}
+                          className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
+                        />
+                      </div>
+                    ) : (
+                      <div className="p-3 sm:p-4 lg:p-5 bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl sm:rounded-2xl">
+                        <p className="team-name-full table-text-proportional font-black text-gray-800 leading-tight text-center">
+                          {dupla.tag}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Estatísticas - com classes CSS customizadas */}
@@ -1536,7 +1823,8 @@ function RankingTable({
                   </div>
                 </div>
               );
-            })}
+              })
+            )}
           </div>
         </div>
       </div>
@@ -1591,34 +1879,48 @@ function LojaView({ torneio }: { torneio: any }) {
       <div className="space-y-3 sm:space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 xl:gap-6">
         {/* JambaVIP */}
         <Card className="border-0 shadow-lg sm:shadow-xl lg:shadow-2xl bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-purple-400 to-pink-400 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+          <CardHeader className="text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4" style={{ backgroundColor: "#AEE1F9" }}>
             <CardTitle className="text-sm sm:text-base lg:text-xl font-black">JambaVIP</CardTitle>
           </CardHeader>
           <CardContent className="p-2 sm:p-3 lg:p-6">
             <div className="space-y-2 sm:space-y-3 lg:space-y-4 max-h-48 sm:max-h-56 lg:max-h-80 overflow-y-auto">
-              {jambaVIP.slice(0, 2).map((dupla: Dupla) => (
-                <div key={dupla.id} className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl border-2 border-purple-200">
-                  <p className="font-black text-gray-800">{dupla.aluno1} & {dupla.aluno2}</p>
-                  <p className="text-sm text-gray-600 font-semibold">{dupla.pontos} pontos • {dupla.moedas} moedas</p>
+              {jambaVIP.length === 0 ? (
+                <div className="text-center py-8">
+                  <Crown className="w-12 h-12 mx-auto text-purple-300 mb-2" />
+                  <p className="text-purple-600 font-bold text-sm">Categoria vazia</p>
                 </div>
-              ))}
+              ) : (
+                jambaVIP.slice(0, 2).map((dupla: Dupla) => (
+                  <div key={dupla.id} className="p-4 rounded-2xl border-2" style={{ backgroundColor: "#F0F8FF", borderColor: "#AEE1F9" }}>
+                    <p className="font-black text-gray-800">{dupla.tag}</p>
+                    <p className="text-sm text-gray-600 font-semibold">{dupla.pontos} pontos • {dupla.moedas} moedas</p>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
 
         {/* Jamberlinda */}
         <Card className="border-0 shadow-2xl bg-white rounded-3xl overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-pink-400 to-red-400 text-white px-6 py-4">
+          <CardHeader className="text-white px-6 py-4" style={{ backgroundColor: "#AEE1F9" }}>
             <CardTitle className="text-xl font-black">Jamberlinda</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {jamberlinda.slice(0, 2).map((dupla: Dupla) => (
-                <div key={dupla.id} className="p-4 bg-gradient-to-r from-pink-100 to-red-100 rounded-2xl border-2 border-pink-200">
-                  <p className="font-black text-gray-800">{dupla.aluno1} & {dupla.aluno2}</p>
-                  <p className="text-sm text-gray-600 font-semibold">{dupla.pontos} pontos • {dupla.moedas} moedas</p>
+              {jamberlinda.length === 0 ? (
+                <div className="text-center py-8">
+                  <Crown className="w-12 h-12 mx-auto mb-2" style={{ color: "#AEE1F9" }} />
+                  <p className="font-bold text-sm" style={{ color: "#AEE1F9" }}>Categoria vazia</p>
                 </div>
-              ))}
+              ) : (
+                jamberlinda.slice(0, 2).map((dupla: Dupla) => (
+                  <div key={dupla.id} className="p-4 rounded-2xl border-2" style={{ backgroundColor: "#F0F8FF", borderColor: "#AEE1F9" }}>
+                    <p className="font-black text-gray-800">{dupla.tag}</p>
+                    <p className="text-sm text-gray-600 font-semibold">{dupla.pontos} pontos • {dupla.moedas} moedas</p>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -1632,12 +1934,21 @@ function LojaView({ torneio }: { torneio: any }) {
         <CardContent className="p-3 sm:p-6">
           <div className="overflow-x-auto">
             <div className="flex flex-col sm:grid sm:grid-cols-1 md:grid-cols-3 gap-4 min-w-full">
-              {aguardando.map((dupla: Dupla) => (
-                <div key={dupla.id} className="flex-shrink-0 p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl text-center border-2 border-yellow-200 min-w-48">
-                  <p className="font-black text-gray-800">{dupla.aluno1} & {dupla.aluno2}</p>
-                  <p className="text-sm text-gray-600 font-semibold">Aguardando...</p>
+              {aguardando.length === 0 ? (
+                <div className="col-span-full text-center py-8">
+                  <div className="w-12 h-12 mx-auto bg-yellow-300 rounded-full flex items-center justify-center mb-2">
+                    <span className="text-yellow-800 font-bold">!</span>
+                  </div>
+                  <p className="text-yellow-600 font-bold text-sm">Nenhuma dupla aguardando resultado</p>
                 </div>
-              ))}
+              ) : (
+                aguardando.map((dupla: Dupla) => (
+                  <div key={dupla.id} className="flex-shrink-0 p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl text-center border-2 border-yellow-200 min-w-48">
+                    <p className="font-black text-gray-800">{dupla.tag}</p>
+                    <p className="text-sm text-gray-600 font-semibold">Aguardando...</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </CardContent>
@@ -1652,6 +1963,7 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
   const [descricao, setDescricao] = useState("")
   const [pontuacaoMaxima, setPontuacaoMaxima] = useState("")
   const [numero, setNumero] = useState("")
+  const [rodadaParaExcluir, setRodadaParaExcluir] = useState<string | null>(null)
 
   const handleCriarRodada = async () => {
     try {
@@ -1668,6 +1980,18 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
       setNumero("")
     } catch (error) {
       toast.error("Erro ao criar rodada")
+    }
+  }
+
+  const handleExcluirRodada = async (rodadaId: string) => {
+    try {
+      const rodada = torneio.rodadas.find((r: any) => r.id === rodadaId)
+      await torneio.excluirRodada(rodadaId)
+      setRodadaParaExcluir(null)
+      toast.success(`Rodada "${rodada?.nome}" excluída com sucesso!`)
+    } catch (error) {
+      console.error('Erro ao excluir rodada:', error)
+      toast.error("Erro ao excluir rodada!")
     }
   }
 
@@ -1817,6 +2141,14 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
                         Ativa
                       </Button>
                     )}
+                    <Button
+                      onClick={() => setRodadaParaExcluir(rodada.id)}
+                      size="sm"
+                      variant="destructive"
+                      className="rounded-full bg-red-500 hover:bg-red-600 text-white font-bold"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               ))
@@ -1824,6 +2156,33 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog de confirmação para exclusão */}
+      <AlertDialog open={!!rodadaParaExcluir} onOpenChange={() => setRodadaParaExcluir(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              {(() => {
+                const rodada = torneio.rodadas.find((r: any) => r.id === rodadaParaExcluir);
+                if (rodada?.ativa) {
+                  return "ATENÇÃO: Você está prestes a excluir a rodada ATIVA! Esta ação removerá a rodada atual do torneio e todos os dados associados serão perdidos permanentemente. Tem certeza?";
+                }
+                return "Tem certeza que deseja excluir esta rodada? Esta ação não pode ser desfeita e todos os dados associados serão perdidos permanentemente.";
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => rodadaParaExcluir && handleExcluirRodada(rodadaParaExcluir)}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Excluir Rodada
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

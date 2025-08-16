@@ -196,6 +196,11 @@ export const duplaService = {
     }
   },
 
+  // Remover dupla
+  async remover(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'duplas', id));
+  },
+
   // Escutar mudanças em tempo real
   escutarMudancas(callback: (duplas: Dupla[]) => void) {
     return onSnapshot(
@@ -260,6 +265,25 @@ export const rodadaService = {
     batch.update(rodadaRef, { ativa: true });
     
     await batch.commit();
+  },
+
+  // Remover rodada
+  async remover(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'rodadas', id));
+  },
+
+  // Escutar mudanças nas rodadas em tempo real
+  escutarMudancas(callback: (rodadas: Rodada[]) => void) {
+    return onSnapshot(
+      query(collection(db, 'rodadas'), orderBy('numero', 'asc')),
+      (querySnapshot) => {
+        const rodadas = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Rodada));
+        callback(rodadas);
+      }
+    );
   }
 };
 
@@ -533,6 +557,25 @@ export const bonusService = {
     const medalhas = Object.values(medalhasPorBonus).reduce((total, medalhas) => total + medalhas, 0);
     
     return { pontos, moedas, medalhas };
+  },
+
+  // Remover bônus
+  async remover(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'bonus', id));
+  },
+
+  // Escutar mudanças nos bônus em tempo real
+  escutarMudancas(callback: (bonus: Bonus[]) => void) {
+    return onSnapshot(
+      query(collection(db, 'bonus'), orderBy('dataInicio', 'desc')),
+      (querySnapshot) => {
+        const bonus = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Bonus));
+        callback(bonus);
+      }
+    );
   }
 };
 

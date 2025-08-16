@@ -25,3 +25,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# uploaded banners (keep directory but ignore images)
+/public/banners/*.jpg
+/public/banners/*.jpeg
+/public/banners/*.png
+/public/banners/*.gif
+/public/banners/*.webp
+/public/banners/*.svg
+/public/banners/*.bmp

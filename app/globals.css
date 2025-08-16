@@ -237,8 +237,8 @@
 }
 
 .ranking-position {
-  background: linear-gradient(135deg, #ef4444, #ec4899, #be185d);
-  box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4);
+  background: #AEE1F9;
+  box-shadow: 0 10px 25px -5px rgba(174, 225, 249, 0.4);
 }
 
 .ranking-name-container {
@@ -275,8 +275,8 @@
 }
 
 .coins-badge {
-  background: linear-gradient(135deg, #f87171, #ec4899, #be185d);
-  box-shadow: 0 8px 20px -5px rgba(248, 113, 113, 0.4);
+  background: #AEE1F9;
+  box-shadow: 0 8px 20px -5px rgba(174, 225, 249, 0.4);
 }
 
 /* Estilos específicos para texto e layout das tabelas */
