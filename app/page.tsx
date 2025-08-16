@@ -281,7 +281,229 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
     )
   }
 
-  const rankingGeral = torneio.getRankingGeral()
+  // Calcular ranking geral diretamente das duplas
+  const calcularRankingGeral = () => {
+    console.log("🏆 [AlunoDashboard] calcularRankingGeral - iniciando com duplas:", torneio.duplas.length);
+    
+    const resultado = [...torneio.duplas]
+      .map(dupla => {
+        // Calcular totais das rodadas
+        const pontosRodadas = Object.values(dupla.pontosPorRodada || {})
+          .reduce((total: number, pontos: any) => total + (Number(pontos) || 0), 0);
+        const moedasRodadas = Object.values(dupla.moedasPorRodada || {})
+          .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
+        const medalhasRodadas = Object.values(dupla.medalhasPorRodada || {})
+          .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
+
+        // Calcular totais dos bônus
+        const pontosBonusTotal = Object.values(dupla.pontosPorBonus || {})
+          .reduce((total: number, bonusPartidas: any) => 
+            total + Object.values(bonusPartidas || {})
+              .reduce((subTotal: number, pontos: any) => subTotal + (Number(pontos) || 0), 0), 0
+          );
+        const moedasBonusTotal = Object.values(dupla.moedasPorBonus || {})
+          .reduce((total: number, bonusPartidas: any) => 
+            total + Object.values(bonusPartidas || {})
+              .reduce((subTotal: number, moedas: any) => subTotal + (Number(moedas) || 0), 0), 0
+          );
+        const medalhasBonusTotal = Object.values(dupla.medalhasPorBonus || {})
+          .reduce((total: number, bonusPartidas: any) => 
+            total + Object.values(bonusPartidas || {})
+              .reduce((subTotal: number, medalhas: any) => subTotal + (Number(medalhas) || 0), 0), 0
+          );
+
+        const resultado = {
+          ...dupla,
+          pontos: pontosRodadas + pontosBonusTotal,
+          moedas: moedasRodadas + moedasBonusTotal,
+          medalhas: medalhasRodadas + medalhasBonusTotal,
+          pontosBonus: pontosBonusTotal,
+          moedasBonus: moedasBonusTotal,
+          medalhasBonus: medalhasBonusTotal
+        };
+
+        console.log(`📊 [AlunoDashboard] ${dupla.tag}: rodadas=${pontosRodadas}, bonus=${pontosBonusTotal}, total=${resultado.pontos}`);
+        return resultado;
+      })
+      // Ordenar por pontos totais, depois por bônus como desempate
+      .sort((a, b) => {
+        // Primeiro critério: pontos totais
+        if ((b.pontos || 0) !== (a.pontos || 0)) {
+          return (b.pontos || 0) - (a.pontos || 0);
+        }
+        // Desempate por pontos de bônus
+        if ((b.pontosBonus || 0) !== (a.pontosBonus || 0)) {
+          return (b.pontosBonus || 0) - (a.pontosBonus || 0);
+        }
+        // Desempate por medalhas totais
+        if ((b.medalhas || 0) !== (a.medalhas || 0)) {
+          return (b.medalhas || 0) - (a.medalhas || 0);
+        }
+        // Desempate por moedas totais
+        return (b.moedas || 0) - (a.moedas || 0);
+      });
+
+    // Calcular posições com empates
+    let posicaoAtual = 1;
+    const resultadoComRanking = resultado.map((dupla, index) => {
+      if (index > 0) {
+        const anterior = resultado[index - 1];
+        // Se pontos, medalhas e moedas são diferentes da dupla anterior, avança a posição
+        if (dupla.pontos !== anterior.pontos || 
+            dupla.medalhas !== anterior.medalhas || 
+            dupla.moedas !== anterior.moedas) {
+          posicaoAtual = index + 1;
+        }
+        // Se são iguais, mantém a mesma posição (empate)
+      }
+      
+      return {
+        ...dupla,
+        posicao: posicaoAtual
+      };
+    });
+
+    console.log("🏆 [AlunoDashboard] Ranking geral final:", resultadoComRanking.map(d => ({ tag: d.tag, posicao: d.posicao, pontos: d.pontos })));
+    return resultadoComRanking;
+  };
+
+  // Calcular ranking por rodada diretamente das duplas
+  const calcularRankingPorRodada = (rodadaId: string) => {
+    console.log(`🎯 [AlunoDashboard] calcularRankingPorRodada - rodada: ${rodadaId}, duplas: ${torneio.duplas.length}`);
+    
+    const resultado = [...torneio.duplas]
+      .map(dupla => {
+        const pontosRodada = Number(dupla.pontosPorRodada?.[rodadaId]) || 0;
+        const moedasRodada = Number(dupla.moedasPorRodada?.[rodadaId]) || 0;
+        const medalhasRodada = Number(dupla.medalhasPorRodada?.[rodadaId]) || 0;
+        
+        // Calcular bônus total para desempate
+        const pontosBonusTotal = Object.values(dupla.pontosPorBonus || {})
+          .reduce((total: number, bonusPartidas: any) => 
+            total + Object.values(bonusPartidas || {})
+              .reduce((subTotal: number, pontos: any) => subTotal + (Number(pontos) || 0), 0), 0
+          );
+        
+        console.log(`📈 [AlunoDashboard] ${dupla.tag} - rodada ${rodadaId}: pontos=${pontosRodada}, dados originais:`, dupla.pontosPorRodada);
+        
+        return {
+          ...dupla,
+          pontosRodada: isNaN(pontosRodada) ? 0 : pontosRodada,
+          moedasRodada: isNaN(moedasRodada) ? 0 : moedasRodada,
+          medalhasRodada: isNaN(medalhasRodada) ? 0 : medalhasRodada,
+          pontosBonusTotal
+        };
+      })
+      // Ordenar por pontos da rodada, depois por bônus como desempate
+      .sort((a, b) => {
+        // Primeiro critério: pontos da rodada
+        if ((b.pontosRodada || 0) !== (a.pontosRodada || 0)) {
+          return (b.pontosRodada || 0) - (a.pontosRodada || 0);
+        }
+        // Desempate por pontos de bônus total
+        if ((b.pontosBonusTotal || 0) !== (a.pontosBonusTotal || 0)) {
+          return (b.pontosBonusTotal || 0) - (a.pontosBonusTotal || 0);
+        }
+        // Desempate por medalhas da rodada
+        if ((b.medalhasRodada || 0) !== (a.medalhasRodada || 0)) {
+          return (b.medalhasRodada || 0) - (a.medalhasRodada || 0);
+        }
+        // Desempate por moedas da rodada
+        return (b.moedasRodada || 0) - (a.moedasRodada || 0);
+      });
+
+    // Calcular posições com empates para rodada
+    let posicaoAtual = 1;
+    const resultadoComRanking = resultado.map((dupla, index) => {
+      if (index > 0) {
+        const anterior = resultado[index - 1];
+        // Se pontos, medalhas e moedas da rodada são diferentes, avança a posição
+        if (dupla.pontosRodada !== anterior.pontosRodada || 
+            dupla.medalhasRodada !== anterior.medalhasRodada || 
+            dupla.moedasRodada !== anterior.moedasRodada) {
+          posicaoAtual = index + 1;
+        }
+        // Se são iguais, mantém a mesma posição (empate)
+      }
+      
+      return {
+        ...dupla,
+        posicao: posicaoAtual
+      };
+    });
+
+    console.log("🎯 [AlunoDashboard] Ranking por rodada final:", resultadoComRanking.map(d => ({ tag: d.tag, posicao: d.posicao, pontosRodada: d.pontosRodada })));
+    return resultadoComRanking;
+  };
+
+  // Calcular ranking por bônus diretamente das duplas  
+  const calcularRankingPorBonus = (bonusId: string) => {
+    const resultado = [...torneio.duplas]
+      .map(dupla => {
+        let pontosBonus = 0;
+        let moedasBonus = 0;
+        let medalhasBonus = 0;
+        
+        if (dupla.pontosPorBonus?.[bonusId]) {
+          pontosBonus = Object.values(dupla.pontosPorBonus[bonusId])
+            .reduce((total: number, pontos: any) => total + (Number(pontos) || 0), 0);
+        }
+        
+        if (dupla.moedasPorBonus?.[bonusId]) {
+          moedasBonus = Object.values(dupla.moedasPorBonus[bonusId])
+            .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
+        }
+        
+        if (dupla.medalhasPorBonus?.[bonusId]) {
+          medalhasBonus = Object.values(dupla.medalhasPorBonus[bonusId])
+            .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
+        }
+
+        return {
+          ...dupla,
+          pontosBonus: isNaN(pontosBonus) ? 0 : pontosBonus,
+          moedasBonus: isNaN(moedasBonus) ? 0 : moedasBonus,
+          medalhasBonus: isNaN(medalhasBonus) ? 0 : medalhasBonus
+        };
+      })
+      // Ordenar por pontos de bônus, depois por medalhas e moedas
+      .sort((a, b) => {
+        // Primeiro critério: pontos de bônus
+        if ((b.pontosBonus || 0) !== (a.pontosBonus || 0)) {
+          return (b.pontosBonus || 0) - (a.pontosBonus || 0);
+        }
+        // Desempate por medalhas de bônus
+        if ((b.medalhasBonus || 0) !== (a.medalhasBonus || 0)) {
+          return (b.medalhasBonus || 0) - (a.medalhasBonus || 0);
+        }
+        // Desempate por moedas de bônus
+        return (b.moedasBonus || 0) - (a.moedasBonus || 0);
+      });
+
+    // Calcular posições com empates para bônus
+    let posicaoAtual = 1;
+    const resultadoComRanking = resultado.map((dupla, index) => {
+      if (index > 0) {
+        const anterior = resultado[index - 1];
+        // Se pontos, medalhas e moedas de bônus são diferentes, avança a posição
+        if (dupla.pontosBonus !== anterior.pontosBonus || 
+            dupla.medalhasBonus !== anterior.medalhasBonus || 
+            dupla.moedasBonus !== anterior.moedasBonus) {
+          posicaoAtual = index + 1;
+        }
+        // Se são iguais, mantém a mesma posição (empate)
+      }
+      
+      return {
+        ...dupla,
+        posicao: posicaoAtual
+      };
+    });
+
+    return resultadoComRanking;
+  };
+
+  const rankingGeral = calcularRankingGeral();
   const rodadas = torneio.rodadas
 
   return (
@@ -338,10 +560,9 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                     setMenuOpen(false)
                   }}
                   className={`rounded-full px-4 py-3 font-bold text-sm cursor-pointer ${activeTab === "geral"
-                      ? "text-white"
-                      : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                      ? "bg-gradient-to-r bg-[#AEE1F9] text-white"
+                      : "bg-gray-300 text-black hover:bg-gray-400"
                     }`}
-                  style={activeTab === "geral" ? { backgroundColor: "#AEE1F9" } : {}}
                 >
                   Rank Geral
                 </Button>
@@ -353,10 +574,9 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                       setMenuOpen(false)
                     }}
                     className={`rounded-full px-4 py-3 font-bold text-sm cursor-pointer ${activeTab === rodada.id
-                        ? "text-white"
-                        : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                        ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white"
+                        : "bg-gray-300 text-black hover:bg-gray-400"
                       }`}
-                    style={activeTab === rodada.id ? { backgroundColor: "#AEE1F9" } : {}}
                   >
                     {rodada.nome}
                   </Button>
@@ -370,7 +590,7 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                     }}
                     className={`rounded-full px-4 py-3 font-bold text-sm cursor-pointer ${activeTab === bonus.id
                         ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-white"
-                        : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                        : "bg-gray-300 text-black hover:bg-gray-400"
                       }`}
                   >
                     ⭐ BÔNUS - {bonus.nome}
@@ -387,10 +607,9 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                 <Button
                   onClick={() => setActiveTab("geral")}
                   className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target cursor-pointer ${activeTab === "geral"
-                      ? "text-white"
-                      : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                      ? "bg-gradient-to-r bg-[#AEE1F9] text-white"
+                      : "bg-gray-300 text-black hover:bg-gray-400"
                     }`}
-                  style={activeTab === "geral" ? { backgroundColor: "#AEE1F9" } : {}}
                 >
                   Rank Geral
                 </Button>
@@ -399,10 +618,9 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                     key={rodada.id}
                     onClick={() => setActiveTab(rodada.id)}
                     className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target cursor-pointer ${activeTab === rodada.id
-                        ? "text-white"
-                        : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                        ? "bg-gradient-to-r bg-[#AEE1F9] text-white"
+                        : "bg-gray-300 text-black hover:bg-gray-400"
                       }`}
-                    style={activeTab === rodada.id ? { backgroundColor: "#AEE1F9" } : {}}
                   >
                     {rodada.nome}
                   </Button>
@@ -413,7 +631,7 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                     onClick={() => setActiveTab(bonus.id)}
                     className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target cursor-pointer ${activeTab === bonus.id
                         ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-white"
-                        : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                        : "bg-gray-300 text-black hover:bg-gray-400"
                       }`}
                   >
                     ⭐ BÔNUS - {bonus.nome}
@@ -425,22 +643,22 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
         </div>
 
         {activeTab === "geral" && <RankingTable title="Ranking Geral" data={rankingGeral} />}
-        {rodadas.map((rodada) =>
-          activeTab === rodada.id && (
+        {rodadas.map((rodada) => 
+          activeTab === rodada.id ? (
             <RankingTable
               key={rodada.id}
               title={rodada.nome}
-              data={torneio.getRankingPorRodada(rodada.id)}
+              data={calcularRankingPorRodada(rodada.id)}
               showRoundPoints={true}
             />
-          )
+          ) : null
         )}
         {torneio.bonus?.map((bonus: any) =>
           activeTab === bonus.id && (
             <RankingTable
               key={bonus.id}
               title={`BÔNUS - ${bonus.nome}`}
-              data={torneio.getRankingPorBonus(bonus.id, bonus)}
+              data={calcularRankingPorBonus(bonus.id)}
               showBonusPoints={true}
             />
           )
@@ -1054,6 +1272,14 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
         return
       }
 
+      console.log("🎯 Adicionando pontuação:", {
+        duplaId,
+        pontos: parseInt(pontos),
+        moedas: parseInt(moedas),
+        medalhas: parseInt(medalhas),
+        rodada: rodadaSelecionada
+      });
+
       await torneio.adicionarPontuacao(
         duplaId,
         parseInt(pontos),
@@ -1062,11 +1288,13 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
         rodadaSelecionada
       )
 
+      console.log("✅ Pontuação adicionada com sucesso!");
       toast.success("Pontuação adicionada com sucesso!")
       setPontos("")
       setMoedas("")
       setMedalhas("")
     } catch (error) {
+      console.error("❌ Erro ao adicionar pontuação:", error);
       toast.error("Erro ao adicionar pontuação")
     }
   }
@@ -1412,6 +1640,29 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                 DIAGNOSTICAR DADOS
               </Button>
             </div>
+
+            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+              <h3 className="font-bold text-purple-800 mb-2">Debug Rankings</h3>
+              <p className="text-sm text-purple-700 mb-4">
+                Exibe informações de debug sobre o cálculo dos rankings no console.
+              </p>
+              <Button
+                onClick={() => {
+                  console.log("=== DEBUG RANKINGS ===");
+                  console.log("1. Duplas originais:", torneio.duplas);
+                  console.log("2. Ranking Geral:", torneio.getRankingGeral());
+                  if (torneio.rodadas.length > 0) {
+                    torneio.rodadas.forEach((rodada: any) => {
+                      console.log(`3. Ranking Rodada ${rodada.nome} (${rodada.id}):`, torneio.getRankingPorRodada(rodada.id));
+                    });
+                  }
+                  toast.success("Informações de debug no console!");
+                }}
+                className="w-full h-12 rounded-full font-bold bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white"
+              >
+                DEBUG RANKINGS
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -1522,9 +1773,220 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
 function RankingsManager({ torneio }: { torneio: any }) {
   const [activeTab, setActiveTab] = useState("geral")
 
-  const rankingGeral = torneio.getRankingGeral()
-  const rodadas = torneio.rodadas
-  const bonus = torneio.bonus
+  // Calcular ranking geral diretamente das duplas
+  const calcularRankingGeral = () => {
+    const resultado = [...torneio.duplas]
+      .map(dupla => {
+        // Calcular totais das rodadas
+        const pontosRodadas = Object.values(dupla.pontosPorRodada || {})
+          .reduce((total: number, pontos: any) => total + (Number(pontos) || 0), 0);
+        const moedasRodadas = Object.values(dupla.moedasPorRodada || {})
+          .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
+        const medalhasRodadas = Object.values(dupla.medalhasPorRodada || {})
+          .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
+
+        // Calcular totais dos bônus
+        const pontosBonusTotal = Object.values(dupla.pontosPorBonus || {})
+          .reduce((total: number, bonusPartidas: any) => 
+            total + Object.values(bonusPartidas || {})
+              .reduce((subTotal: number, pontos: any) => subTotal + (Number(pontos) || 0), 0), 0
+          );
+        const moedasBonusTotal = Object.values(dupla.moedasPorBonus || {})
+          .reduce((total: number, bonusPartidas: any) => 
+            total + Object.values(bonusPartidas || {})
+              .reduce((subTotal: number, moedas: any) => subTotal + (Number(moedas) || 0), 0), 0
+          );
+        const medalhasBonusTotal = Object.values(dupla.medalhasPorBonus || {})
+          .reduce((total: number, bonusPartidas: any) => 
+            total + Object.values(bonusPartidas || {})
+              .reduce((subTotal: number, medalhas: any) => subTotal + (Number(medalhas) || 0), 0), 0
+          );
+
+        return {
+          ...dupla,
+          pontos: pontosRodadas + pontosBonusTotal,
+          moedas: moedasRodadas + moedasBonusTotal,
+          medalhas: medalhasRodadas + medalhasBonusTotal,
+          pontosBonus: pontosBonusTotal,
+          moedasBonus: moedasBonusTotal,
+          medalhasBonus: medalhasBonusTotal
+        };
+      })
+      // Ordenar por pontos totais, depois por bônus como desempate
+      .sort((a, b) => {
+        // Primeiro critério: pontos totais
+        if ((b.pontos || 0) !== (a.pontos || 0)) {
+          return (b.pontos || 0) - (a.pontos || 0);
+        }
+        // Desempate por pontos de bônus
+        if ((b.pontosBonus || 0) !== (a.pontosBonus || 0)) {
+          return (b.pontosBonus || 0) - (a.pontosBonus || 0);
+        }
+        // Desempate por medalhas totais
+        if ((b.medalhas || 0) !== (a.medalhas || 0)) {
+          return (b.medalhas || 0) - (a.medalhas || 0);
+        }
+        // Desempate por moedas totais
+        return (b.moedas || 0) - (a.moedas || 0);
+      });
+
+    // Calcular posições com empates
+    let posicaoAtual = 1;
+    const resultadoComRanking = resultado.map((dupla, index) => {
+      if (index > 0) {
+        const anterior = resultado[index - 1];
+        // Se pontos, medalhas e moedas são diferentes da dupla anterior, avança a posição
+        if (dupla.pontos !== anterior.pontos || 
+            dupla.medalhas !== anterior.medalhas || 
+            dupla.moedas !== anterior.moedas) {
+          posicaoAtual = index + 1;
+        }
+        // Se são iguais, mantém a mesma posição (empate)
+      }
+      
+      return {
+        ...dupla,
+        posicao: posicaoAtual
+      };
+    });
+
+    return resultadoComRanking;
+  };
+
+  // Calcular ranking por rodada diretamente das duplas
+  const calcularRankingPorRodada = (rodadaId: string) => {
+    const resultado = [...torneio.duplas]
+      .map(dupla => {
+        const pontosRodada = Number(dupla.pontosPorRodada?.[rodadaId]) || 0;
+        const moedasRodada = Number(dupla.moedasPorRodada?.[rodadaId]) || 0;
+        const medalhasRodada = Number(dupla.medalhasPorRodada?.[rodadaId]) || 0;
+        
+        // Calcular bônus total para desempate
+        const pontosBonusTotal = Object.values(dupla.pontosPorBonus || {})
+          .reduce((total: number, bonusPartidas: any) => 
+            total + Object.values(bonusPartidas || {})
+              .reduce((subTotal: number, pontos: any) => subTotal + (Number(pontos) || 0), 0), 0
+          );
+        
+        return {
+          ...dupla,
+          pontosRodada: isNaN(pontosRodada) ? 0 : pontosRodada,
+          moedasRodada: isNaN(moedasRodada) ? 0 : moedasRodada,
+          medalhasRodada: isNaN(medalhasRodada) ? 0 : medalhasRodada,
+          pontosBonusTotal
+        };
+      })
+      // Ordenar por pontos da rodada, depois por bônus como desempate
+      .sort((a, b) => {
+        // Primeiro critério: pontos da rodada
+        if ((b.pontosRodada || 0) !== (a.pontosRodada || 0)) {
+          return (b.pontosRodada || 0) - (a.pontosRodada || 0);
+        }
+        // Desempate por pontos de bônus total
+        if ((b.pontosBonusTotal || 0) !== (a.pontosBonusTotal || 0)) {
+          return (b.pontosBonusTotal || 0) - (a.pontosBonusTotal || 0);
+        }
+        // Desempate por medalhas da rodada
+        if ((b.medalhasRodada || 0) !== (a.medalhasRodada || 0)) {
+          return (b.medalhasRodada || 0) - (a.medalhasRodada || 0);
+        }
+        // Desempate por moedas da rodada
+        return (b.moedasRodada || 0) - (a.moedasRodada || 0);
+      });
+
+    // Calcular posições com empates para rodada
+    let posicaoAtual = 1;
+    const resultadoComRanking = resultado.map((dupla, index) => {
+      if (index > 0) {
+        const anterior = resultado[index - 1];
+        // Se pontos, medalhas e moedas da rodada são diferentes, avança a posição
+        if (dupla.pontosRodada !== anterior.pontosRodada || 
+            dupla.medalhasRodada !== anterior.medalhasRodada || 
+            dupla.moedasRodada !== anterior.moedasRodada) {
+          posicaoAtual = index + 1;
+        }
+        // Se são iguais, mantém a mesma posição (empate)
+      }
+      
+      return {
+        ...dupla,
+        posicao: posicaoAtual
+      };
+    });
+
+    return resultadoComRanking;
+  };
+
+  // Calcular ranking por bônus diretamente das duplas  
+  const calcularRankingPorBonus = (bonusId: string) => {
+    const resultado = [...torneio.duplas]
+      .map(dupla => {
+        let pontosBonus = 0;
+        let moedasBonus = 0;
+        let medalhasBonus = 0;
+        
+        if (dupla.pontosPorBonus?.[bonusId]) {
+          pontosBonus = Object.values(dupla.pontosPorBonus[bonusId])
+            .reduce((total: number, pontos: any) => total + (Number(pontos) || 0), 0);
+        }
+        
+        if (dupla.moedasPorBonus?.[bonusId]) {
+          moedasBonus = Object.values(dupla.moedasPorBonus[bonusId])
+            .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
+        }
+        
+        if (dupla.medalhasPorBonus?.[bonusId]) {
+          medalhasBonus = Object.values(dupla.medalhasPorBonus[bonusId])
+            .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
+        }
+
+        return {
+          ...dupla,
+          pontosBonus: isNaN(pontosBonus) ? 0 : pontosBonus,
+          moedasBonus: isNaN(moedasBonus) ? 0 : moedasBonus,
+          medalhasBonus: isNaN(medalhasBonus) ? 0 : medalhasBonus
+        };
+      })
+      // Ordenar por pontos de bônus, depois por medalhas e moedas
+      .sort((a, b) => {
+        // Primeiro critério: pontos de bônus
+        if ((b.pontosBonus || 0) !== (a.pontosBonus || 0)) {
+          return (b.pontosBonus || 0) - (a.pontosBonus || 0);
+        }
+        // Desempate por medalhas de bônus
+        if ((b.medalhasBonus || 0) !== (a.medalhasBonus || 0)) {
+          return (b.medalhasBonus || 0) - (a.medalhasBonus || 0);
+        }
+        // Desempate por moedas de bônus
+        return (b.moedasBonus || 0) - (a.moedasBonus || 0);
+      });
+
+    // Calcular posições com empates para bônus
+    let posicaoAtual = 1;
+    const resultadoComRanking = resultado.map((dupla, index) => {
+      if (index > 0) {
+        const anterior = resultado[index - 1];
+        // Se pontos, medalhas e moedas de bônus são diferentes, avança a posição
+        if (dupla.pontosBonus !== anterior.pontosBonus || 
+            dupla.medalhasBonus !== anterior.medalhasBonus || 
+            dupla.moedasBonus !== anterior.moedasBonus) {
+          posicaoAtual = index + 1;
+        }
+        // Se são iguais, mantém a mesma posição (empate)
+      }
+      
+      return {
+        ...dupla,
+        posicao: posicaoAtual
+      };
+    });
+
+    return resultadoComRanking;
+  };
+
+  const rankingGeral = calcularRankingGeral();
+  const rodadas = torneio.rodadas;
+  const bonus = torneio.bonus;
 
   return (
     <div className="space-y-6">
@@ -1533,10 +1995,9 @@ function RankingsManager({ torneio }: { torneio: any }) {
         <Button
           onClick={() => setActiveTab("geral")}
           className={`rounded-full px-6 py-3 font-bold ${activeTab === "geral"
-              ? "text-white"
-              : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+              ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white"
+              : "bg-gray-300 text-black hover:bg-gray-400"
             }`}
-          style={activeTab === "geral" ? { backgroundColor: "#AEE1F9" } : {}}
         >
           Ranking Geral
         </Button>
@@ -1545,8 +2006,8 @@ function RankingsManager({ torneio }: { torneio: any }) {
             key={rodada.id}
             onClick={() => setActiveTab(rodada.id)}
             className={`rounded-full px-6 py-3 font-bold ${activeTab === rodada.id
-                ? "bg-gradient-to-r from-red-500 to-red-700 text-white"
-                : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white"
+                : "bg-gray-300 text-black hover:bg-gray-400"
               }`}
           >
             {rodada.nome}
@@ -1557,8 +2018,8 @@ function RankingsManager({ torneio }: { torneio: any }) {
             key={`bonus-${bonusItem.id}`}
             onClick={() => setActiveTab(`bonus-${bonusItem.id}`)}
             className={`rounded-full px-6 py-3 font-bold ${activeTab === `bonus-${bonusItem.id}`
-                ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-white"
-                : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white"
+                : "bg-gray-300 text-black hover:bg-gray-400"
               }`}
           >
             ⭐ BÔNUS - {bonusItem.nome}
@@ -1569,21 +2030,21 @@ function RankingsManager({ torneio }: { torneio: any }) {
       {/* Tabelas de Ranking */}
       {activeTab === "geral" && <RankingTable title="Ranking Geral" data={rankingGeral} />}
       {rodadas.map((rodada: any) =>
-        activeTab === rodada.id && (
+        activeTab === rodada.id ? (
           <RankingTable
             key={rodada.id}
             title={rodada.nome}
-            data={torneio.getRankingPorRodada(rodada.id)}
+            data={calcularRankingPorRodada(rodada.id)}
             showRoundPoints={true}
           />
-        )
+        ) : null
       )}
       {bonus.map((bonusItem: any) =>
         activeTab === `bonus-${bonusItem.id}` && (
           <RankingTable
             key={`bonus-table-${bonusItem.id}`}
             title={`BÔNUS - ${bonusItem.nome}`}
-            data={torneio.getRankingPorBonus(bonusItem.id, bonusItem)}
+            data={calcularRankingPorBonus(bonusItem.id)}
             showBonusPoints={true}
           />
         )
@@ -1725,10 +2186,34 @@ function RankingTable({
   showRoundPoints?: boolean;
   showBonusPoints?: boolean;
 }) {
+  // Debug: Ver os dados que estão chegando
+  console.log(`🔍 RankingTable Debug - ${title}:`, {
+    dataLength: data.length,
+    showRoundPoints,
+    showBonusPoints,
+    sampleData: data.slice(0, 3).map(d => ({
+      tag: d.tag,
+      pontos: d.pontos,
+      pontosRodada: d.pontosRodada,
+      pontosBonus: d.pontosBonus,
+      pontosPorRodada: d.pontosPorRodada,
+      pontosPorBonus: d.pontosPorBonus
+    }))
+  });
+
+  // Verificar se há dados relevantes
+  const hasRelevantData = data.some(dupla => {
+    if (showRoundPoints) {
+      return (dupla.pontosRodada || 0) > 0 || (dupla.moedasRodada || 0) > 0 || (dupla.medalhasRodada || 0) > 0;
+    } else if (showBonusPoints) {
+      return (dupla.pontosBonus || 0) > 0 || (dupla.moedasBonus || 0) > 0 || (dupla.medalhasBonus || 0) > 0;
+    }
+    return true; // Para ranking geral, sempre mostrar
+  });
   return (
     <div className="ranking-card table-container-responsive bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden border-0 max-w-full">
       {title && (
-        <div className="p-4 sm:p-6" style={{ backgroundColor: "#AEE1F9" }}>
+        <div className="p-4 sm:p-6 bg-gradient-to-r bg-[#AEE1F9]">
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white text-center drop-shadow-lg">{title}</h2>
         </div>
       )}
@@ -1742,6 +2227,18 @@ function RankingTable({
                 <h3 className="text-lg font-bold text-gray-600 mb-2">Nenhuma dupla encontrada</h3>
                 <p className="text-gray-500">Crie duplas primeiro para visualizar o ranking</p>
               </div>
+            ) : !hasRelevantData && (showRoundPoints || showBonusPoints) ? (
+              <div className="text-center py-12">
+                <Trophy className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-bold text-gray-600 mb-2">
+                  {showRoundPoints ? "Nenhuma pontuação registrada para esta rodada" : "Nenhuma pontuação registrada para este bônus"}
+                </h3>
+                <p className="text-gray-500">
+                  {showRoundPoints 
+                    ? "Adicione pontuações nas duplas através da aba 'Duplas' para ver o ranking desta rodada" 
+                    : "Adicione pontuações de bônus através da aba 'Bônus' para ver este ranking"}
+                </p>
+              </div>
             ) : (
               data.map((dupla, index) => {
                 // Determinar quais valores exibir baseado no tipo de tabela
@@ -1752,24 +2249,25 @@ function RankingTable({
                   pontosParaExibir = Number(dupla.pontosBonus) || 0;
                   moedasParaExibir = Number(dupla.moedasBonus) || 0;
                   medalhasParaExibir = Number(dupla.medalhasBonus) || 0;
+                  console.log('DEBUG BONUS:', dupla.tag, { pontosBonus: dupla.pontosBonus, pontosParaExibir });
                 } else if (showRoundPoints) {
                   // Para tabelas de rodada, mostrar apenas valores da rodada
                   pontosParaExibir = Number(dupla.pontosRodada) || 0;
                   moedasParaExibir = Number(dupla.moedasRodada) || 0;
-                medalhasParaExibir = Number(dupla.medalhasRodada) || 0;
-              } else {
-                // Para ranking geral, mostrar totais
-                pontosParaExibir = Number(dupla.pontos) || 0;
-                moedasParaExibir = Number(dupla.moedas) || 0;
-                medalhasParaExibir = Number(dupla.medalhas) || 0;
+                  medalhasParaExibir = Number(dupla.medalhasRodada) || 0;
+                  console.log('DEBUG RODADA:', dupla.tag, { pontosRodada: dupla.pontosRodada, pontosParaExibir });
+                } else {
+                  // Para ranking geral, mostrar totais
+                  pontosParaExibir = Number(dupla.pontos) || 0;
+                  moedasParaExibir = Number(dupla.moedas) || 0;
+                  medalhasParaExibir = Number(dupla.medalhas) || 0;
+                console.log('DEBUG GERAL:', dupla.tag, { pontos: dupla.pontos, pontosParaExibir });
               }
 
               // Garantir que todos os valores são números válidos
               pontosParaExibir = isNaN(pontosParaExibir) ? 0 : pontosParaExibir;
               moedasParaExibir = isNaN(moedasParaExibir) ? 0 : moedasParaExibir;
-              medalhasParaExibir = isNaN(medalhasParaExibir) ? 0 : medalhasParaExibir;
-
-              return (
+              medalhasParaExibir = isNaN(medalhasParaExibir) ? 0 : medalhasParaExibir;              return (
                 <div
                   key={dupla.id}
                   className="ranking-card flex items-center gap-3 sm:gap-4 lg:gap-6 p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl border-2 border-transparent min-w-max mobile-scroll-item desktop-compact shadow-sm hover:shadow-md transition-all duration-300"
@@ -1779,7 +2277,7 @@ function RankingTable({
                 >
                   {/* Posição - com gradiente da classe CSS */}
                   <div className="ranking-position w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-white text-sm sm:text-lg lg:text-xl flex-shrink-0">
-                    {index + 1}°
+                    {(dupla as any).posicao || (index + 1)}°
                   </div>
 
                   {/* Nome da Dupla - com banner quando disponível */}
@@ -1806,13 +2304,13 @@ function RankingTable({
                     {/* Medalhas */}
                     <div className="medals-badge stat-badge w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
                       <Medal className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mb-0.5" />
-                      <span className="font-black text-xs sm:text-sm lg:text-base">{medalhasParaExibir}</span>
+                      <span className="font-black text-xs sm:text-sm lg:text-base">{pontosParaExibir}</span>
                     </div>
 
-                    {/* Estrelas */}
+                    {/* Pontos */}
                     <div className="stars-badge stat-badge w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
                       <Star className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mb-0.5" />
-                      <span className="font-black text-xs sm:text-sm lg:text-base">{Math.floor(pontosParaExibir / 100)}</span>
+                      <span className="font-black text-xs sm:text-sm lg:text-base">{medalhasParaExibir}</span>
                     </div>
 
                     {/* Moedas */}

@@ -469,18 +469,41 @@ export function useTorneio() {
           .reduce((subTotal: number, medalhas: any) => subTotal + (Number(medalhas) || 0), 0), 0
       );
 
-    return {
+    const totais = {
       pontos: pontosRodadas + pontosBonusTotal,
       moedas: moedasRodadas + moedasBonusTotal,
       medalhas: medalhasRodadas + medalhasBonusTotal
     };
+
+    // Log para debug
+    if (dupla.tag) {
+      console.log(`🏆 Totais ${dupla.tag}:`, {
+        rodadas: { pontosRodadas, moedasRodadas, medalhasRodadas },
+        bonus: { pontosBonusTotal, moedasBonusTotal, medalhasBonusTotal },
+        totais,
+        estrutura: {
+          pontosPorRodada: dupla.pontosPorRodada,
+          pontosPorBonus: dupla.pontosPorBonus
+        }
+      });
+    }
+
+    return totais;
   };
 
   // Funções auxiliares para rankings
   const getRankingGeral = () => {
-    return [...duplas]
+    console.log("🏆 getRankingGeral - duplas originais:", duplas.map(d => ({
+      tag: d.tag,
+      pontos: d.pontos,
+      pontosPorRodada: d.pontosPorRodada,
+      pontosPorBonus: d.pontosPorBonus
+    })));
+
+    const ranking = [...duplas]
       .map(dupla => {
         const totaisReais = calcularTotaisReais(dupla);
+        console.log(`🔢 ${dupla.tag} - Totais calculados:`, totaisReais);
         return {
           ...dupla,
           pontos: totaisReais.pontos,
@@ -489,14 +512,35 @@ export function useTorneio() {
         };
       })
       .sort((a, b) => (b.pontos || 0) - (a.pontos || 0));
+
+    console.log("🏆 Ranking final ordenado:", ranking.map(d => ({ tag: d.tag, pontos: d.pontos })));
+    return ranking;
   };
 
   const getRankingPorRodada = (rodadaId: string) => {
-    return [...duplas]
+    console.log(`🎯 getRankingPorRodada - rodada: ${rodadaId}`);
+    console.log("📊 duplas para análise:", duplas.map(d => ({
+      tag: d.tag,
+      pontosPorRodada: d.pontosPorRodada,
+      valorEspecifico: d.pontosPorRodada?.[rodadaId]
+    })));
+
+    const ranking = [...duplas]
       .map(dupla => {
         const pontosRodada = Number(dupla.pontosPorRodada?.[rodadaId]) || 0;
         const moedasRodada = Number(dupla.moedasPorRodada?.[rodadaId]) || 0;
         const medalhasRodada = Number(dupla.medalhasPorRodada?.[rodadaId]) || 0;
+        
+        console.log(`📈 ${dupla.tag} - rodada ${rodadaId}:`, { 
+          pontosRodada, 
+          moedasRodada, 
+          medalhasRodada,
+          original: {
+            pontos: dupla.pontosPorRodada?.[rodadaId],
+            moedas: dupla.moedasPorRodada?.[rodadaId],
+            medalhas: dupla.medalhasPorRodada?.[rodadaId]
+          }
+        });
         
         return {
           ...dupla,
@@ -506,6 +550,12 @@ export function useTorneio() {
         };
       })
       .sort((a, b) => (b.pontosRodada || 0) - (a.pontosRodada || 0));
+
+    console.log("🎯 Ranking por rodada final:", ranking.map(d => ({ 
+      tag: d.tag, 
+      pontosRodada: d.pontosRodada 
+    })));
+    return ranking;
   };
 
   const getRankingPorBonus = (bonusId: string, bonusData: Bonus) => {
