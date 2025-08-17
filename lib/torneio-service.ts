@@ -23,6 +23,12 @@ export const duplaService = {
     return docRef.id;
   },
 
+  // Atualizar dupla
+  async atualizar(id: string, dados: Partial<Dupla>): Promise<void> {
+    const duplaRef = doc(db, 'duplas', id);
+    await updateDoc(duplaRef, dados);
+  },
+
   // Buscar todas as duplas
   async buscarTodas(): Promise<Dupla[]> {
     const querySnapshot = await getDocs(

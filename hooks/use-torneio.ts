@@ -687,6 +687,35 @@ export function useTorneio() {
     comprarItem,
     removerItemLoja,
 
+    // Função para migrar URLs de banners antigos
+    migrarBannersAntigos: async () => {
+      try {
+        console.log("🔄 Iniciando migração de banners antigos...");
+        const duplasComBannersAntigos = duplas.filter(dupla => 
+          dupla.bannerUrl && dupla.bannerUrl.startsWith('/banners/')
+        );
+        
+        if (duplasComBannersAntigos.length === 0) {
+          console.log("✅ Nenhum banner antigo encontrado para migrar");
+          return;
+        }
+
+        console.log(`📋 Encontradas ${duplasComBannersAntigos.length} duplas com banners antigos`);
+        
+        for (const dupla of duplasComBannersAntigos) {
+          const bannerAntigoPath = dupla.bannerUrl;
+          // Remover o banner URL antigo (vai usar o fallback)
+          await duplaService.atualizar(dupla.id, { bannerUrl: '' });
+          console.log(`🔄 Removido banner antigo da dupla ${dupla.tag}: ${bannerAntigoPath}`);
+        }
+        
+        console.log("✅ Migração concluída! As duplas agora usarão o banner padrão até novo upload.");
+      } catch (error) {
+        console.error("❌ Erro na migração de banners:", error);
+        throw error;
+      }
+    },
+
     // Funções auxiliares
     getRankingGeral,
     getRankingPorRodada,

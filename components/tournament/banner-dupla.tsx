@@ -11,6 +11,13 @@ interface BannerDuplaProps {
 export const BannerDupla = ({ dupla, className = "", showTag = true }: BannerDuplaProps) => {
   const [imagemFalhou, setImagemFalhou] = useState(false);
   
+  // Debug: verificar dados da dupla
+  console.log('🖼️ BannerDupla render:', { 
+    tag: dupla?.tag, 
+    bannerUrl: dupla?.bannerUrl, 
+    imagemFalhou 
+  });
+  
   // Verificar se há banner válido
   const temBanner = dupla?.bannerUrl && dupla.bannerUrl.trim() !== '' && !imagemFalhou;
   
@@ -20,8 +27,14 @@ export const BannerDupla = ({ dupla, className = "", showTag = true }: BannerDup
         src={dupla.bannerUrl} 
         alt={`Banner da dupla ${dupla.tag}`}
         className={`object-cover ${className}`}
-        onError={() => setImagemFalhou(true)}
-        onLoad={() => setImagemFalhou(false)}
+        onError={() => {
+          console.error('❌ Erro ao carregar imagem:', dupla.bannerUrl);
+          setImagemFalhou(true);
+        }}
+        onLoad={() => {
+          console.log('✅ Imagem carregada com sucesso:', dupla.bannerUrl);
+          setImagemFalhou(false);
+        }}
       />
     )
   }

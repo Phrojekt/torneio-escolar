@@ -13,16 +13,21 @@ export async function POST(request: NextRequest) {
   try {
     // Verificar se o token do GitHub está configurado
     if (!GITHUB_TOKEN) {
+      console.error('❌ Token do GitHub não configurado');
       return NextResponse.json({ 
         success: false, 
         message: 'Token do GitHub não configurado. Configure a variável GITHUB_TOKEN.' 
       });
     }
 
+    console.log('✅ Token do GitHub configurado');
+
     const data = await request.formData();
     const file: File | null = data.get('file') as unknown as File;
     const tag: string = data.get('tag') as string;
     const type: string = data.get('type') as string || 'banner'; // 'banner' ou 'item'
+
+    console.log('📁 Dados recebidos:', { fileName: file?.name, tag, type });
 
     if (!file) {
       return NextResponse.json({ success: false, message: 'Nenhum arquivo encontrado' });
@@ -59,6 +64,13 @@ export async function POST(request: NextRequest) {
     const folder = type === 'item' ? 'public/itens' : 'public/banners-duplas';
     const repoFilePath = `${folder}/${fileName}`;
 
+    console.log('📂 Caminho do arquivo:', repoFilePath);
+    console.log('🔧 Configurações GitHub:', { 
+      repo: GITHUB_REPO, 
+      branch: GITHUB_BRANCH,
+      tokenPresent: !!GITHUB_TOKEN 
+    });
+
     // Buscar SHA do arquivo se já existir (para update)
     let sha: string | undefined = undefined;
     try {
@@ -77,6 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Commitar arquivo via API do GitHub
+    console.log('⬆️ Enviando para GitHub...');
     const commitRes = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${repoFilePath}`, {
       method: 'PUT',
       headers: {
@@ -92,9 +105,11 @@ export async function POST(request: NextRequest) {
       }),
     });
 
+    console.log('📊 Status da resposta:', commitRes.status);
+
     if (!commitRes.ok) {
       const errorData = await commitRes.json();
-      console.error('Erro detalhado do GitHub:', errorData);
+      console.error('❌ Erro detalhado do GitHub:', errorData);
       return NextResponse.json({ 
         success: false, 
         message: `Erro ao salvar no GitHub: ${errorData.message || 'Erro desconhecido'}`,
@@ -102,8 +117,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const commitData = await commitRes.json();
+    console.log('✅ Commit realizado:', commitData.commit?.sha);
+
     // Gerar URL raw
     const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${repoFilePath}`;
+    console.log('🔗 URL gerada:', rawUrl);
 
     return NextResponse.json({ 
       success: true, 
