@@ -204,6 +204,32 @@ export const duplaService = {
 
   // Remover dupla
   async remover(id: string): Promise<void> {
+    // Primeiro buscar a dupla para obter a URL da imagem
+    const duplaDoc = await getDoc(doc(db, 'duplas', id));
+    if (duplaDoc.exists()) {
+      const dupla = duplaDoc.data() as Dupla;
+      
+      // Se tem banner, deletar do GitHub
+      if (dupla.bannerUrl && dupla.bannerUrl.includes('raw.githubusercontent.com')) {
+        try {
+          const response = await fetch('/api/delete-image', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl: dupla.bannerUrl })
+          });
+          
+          if (response.ok) {
+            console.log('✅ Banner da dupla deletado do GitHub');
+          } else {
+            console.warn('⚠️ Erro ao deletar banner da dupla do GitHub');
+          }
+        } catch (error) {
+          console.error('❌ Erro ao deletar banner:', error);
+        }
+      }
+    }
+    
+    // Deletar a dupla do Firestore
     await deleteDoc(doc(db, 'duplas', id));
   },
 
@@ -212,10 +238,26 @@ export const duplaService = {
     return onSnapshot(
       query(collection(db, 'duplas'), orderBy('pontos', 'desc')),
       (snapshot) => {
-        const duplas = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Dupla));
+        console.log('🔄 Firestore listener triggered, docs:', snapshot.docs.length);
+        const duplas = snapshot.docs.map(doc => {
+          const data = doc.data();
+          console.log('📄 Documento Firestore:', { 
+            id: doc.id, 
+            tag: data.tag, 
+            bannerUrl: data.bannerUrl,
+            hasbanner: !!data.bannerUrl,
+            allFields: Object.keys(data)
+          });
+          return {
+            id: doc.id,
+            ...data
+          } as Dupla;
+        });
+        console.log('📦 Duplas processadas para callback:', duplas.map(d => ({ 
+          id: d.id, 
+          tag: d.tag, 
+          bannerUrl: d.bannerUrl 
+        })));
         callback(duplas);
       }
     );
@@ -388,6 +430,32 @@ export const lojaService = {
 
   // Remover item
   async remover(id: string): Promise<void> {
+    // Primeiro buscar o item para obter a URL da imagem
+    const itemDoc = await getDoc(doc(db, 'itensLoja', id));
+    if (itemDoc.exists()) {
+      const item = itemDoc.data() as ItemLoja;
+      
+      // Se tem imagem, deletar do GitHub
+      if (item.imagem && item.imagem.includes('raw.githubusercontent.com')) {
+        try {
+          const response = await fetch('/api/delete-image', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl: item.imagem })
+          });
+          
+          if (response.ok) {
+            console.log('✅ Imagem do item deletada do GitHub');
+          } else {
+            console.warn('⚠️ Erro ao deletar imagem do item do GitHub');
+          }
+        } catch (error) {
+          console.error('❌ Erro ao deletar imagem do item:', error);
+        }
+      }
+    }
+    
+    // Deletar o item do Firestore
     await deleteDoc(doc(db, 'itensLoja', id));
   }
 };

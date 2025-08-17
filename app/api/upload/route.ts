@@ -124,9 +124,28 @@ export async function POST(request: NextRequest) {
     const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${repoFilePath}`;
     console.log('🔗 URL gerada:', rawUrl);
 
+    // Aguardar um pouco para o GitHub processar o arquivo
+    console.log('⏳ Aguardando GitHub processar o arquivo...');
+    await new Promise(resolve => setTimeout(resolve, 2000)); // 2 segundos
+
+    // Testar se o arquivo está acessível
+    try {
+      const testRes = await fetch(rawUrl, { method: 'HEAD' });
+      if (!testRes.ok) {
+        console.warn('⚠️ Arquivo ainda não acessível via raw URL, mas commit foi realizado');
+      } else {
+        console.log('✅ Arquivo confirmado como acessível via raw URL');
+      }
+    } catch (error) {
+      console.warn('⚠️ Erro ao testar acessibilidade do arquivo:', error);
+    }
+
+    // Adicionar cache-busting para evitar problemas de cache
+    const urlComCacheBusting = `${rawUrl}?t=${Date.now()}`;
+
     return NextResponse.json({ 
       success: true, 
-      imageUrl: rawUrl,
+      imageUrl: urlComCacheBusting,
       message: 'Upload realizado com sucesso!'
     });
   } catch (error) {

@@ -50,21 +50,26 @@ export function LojaManager({ torneio }: LojaManagerProps) {
       formData.append('tag', 'ITEM')
       formData.append('type', 'item')
 
+      console.log('📤 Fazendo upload de item:', imagemArquivo.name);
+
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       })
 
       const result = await response.json()
+      console.log('📥 Resultado do upload do item:', result);
 
       if (result.success) {
+        console.log('✅ Upload de item bem-sucedido:', result.imageUrl);
         return result.imageUrl
       } else {
+        console.error('❌ Erro no upload do item:', result.message);
         toast.error(result.message || 'Erro no upload da imagem')
         return undefined
       }
     } catch (error) {
-      console.error('Erro no upload:', error)
+      console.error('❌ Erro no upload do item:', error)
       toast.error('Erro no upload da imagem')
       return undefined
     } finally {

@@ -19,13 +19,20 @@ export function useTorneio() {
 
   // Função utilitária para normalizar dados das duplas
   const normalizarDupla = (dupla: any) => {
-    return {
+    console.log('🔧 Normalizando dupla:', { 
+      id: dupla.id, 
+      tag: dupla.tag, 
+      bannerUrl: dupla.bannerUrl,
+      duplaOriginal: dupla 
+    });
+    
+    const normalizada = {
       ...dupla,
       pontos: Number(dupla.pontos) || 0,
       moedas: Number(dupla.moedas) || 0,
       medalhas: Number(dupla.medalhas) || 0,
       tag: dupla.tag || '',
-      bannerUrl: dupla.bannerUrl || '',
+      bannerUrl: dupla.bannerUrl || '', // Preservar bannerUrl mesmo se vazio
       pontosPorRodada: dupla.pontosPorRodada || {},
       moedasPorRodada: dupla.moedasPorRodada || {},
       medalhasPorRodada: dupla.medalhasPorRodada || {},
@@ -34,6 +41,14 @@ export function useTorneio() {
       medalhasPorBonus: dupla.medalhasPorBonus || {},
       status: dupla.status || 'ativa'
     };
+    
+    console.log('✅ Dupla normalizada:', { 
+      id: normalizada.id, 
+      tag: normalizada.tag, 
+      bannerUrl: normalizada.bannerUrl 
+    });
+    
+    return normalizada;
   };
 
   // Escutar mudanças nas duplas em tempo real

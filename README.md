@@ -24,11 +24,22 @@ Para que o upload de imagens funcione no Netlify, é necessário configurar um t
    - `GITHUB_REPO`: `Phrojekt/torneio-escolar`
    - `GITHUB_BRANCH`: `main`
 
-### 2. Como Funciona o Upload
+### 2. Como Funciona o Upload e Deleção
 
-- As imagens são salvas diretamente no repositório na pasta `public/banners-duplas/`
+#### Upload de Imagens
+- **Duplas**: Imagens são salvas na pasta `public/banners-duplas/`
+- **Itens da Loja**: Imagens são salvas na pasta `public/itens/`
 - O sistema retorna a URL raw do GitHub para exibição
 - As imagens ficam versionadas e sempre acessíveis
+
+#### Deleção Automática
+- **Ao remover uma dupla**: O banner é automaticamente deletado do GitHub
+- **Ao remover um item da loja**: A imagem do item é automaticamente deletada do GitHub
+- Utiliza o endpoint `/api/delete-image` para remover os arquivos do repositório
+
+#### Endpoints Disponíveis
+- `POST /api/upload`: Upload de imagens (duplas e itens)
+- `DELETE /api/delete-image`: Deleção de imagens do GitHub
 
 ### 3. Desenvolvimento Local
 
