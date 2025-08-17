@@ -14,6 +14,8 @@ import { Dupla } from "@/types/torneio"
 import { toast } from "sonner"
 import { LoginPage } from "@/components/auth/login-page"
 import { BannerDupla } from "@/components/tournament/banner-dupla"
+import { LojaManager } from "@/components/loja/loja-manager"
+import { LojaView } from "@/components/loja/loja-view"
 
 export default function App() {
   const [userType, setUserType] = useState<"professor" | "aluno" | null>(null)
@@ -488,7 +490,7 @@ function AlunoDashboard({ onLogout }: { onLogout: () => void }) {
                       setMenuOpen(false)
                     }}
                     className={`rounded-full px-4 py-3 font-bold text-sm cursor-pointer ${activeTab === rodada.id
-                      ? "bg-gradient-to-r bg-[#AEE1F9] text-white"
+                      ? "bg-gradient-to-r from-blue-600 to-blue-800 text-white"
                       : "bg-gray-300 text-black hover:bg-gray-400"
                       }`}
                   >
@@ -1466,6 +1468,117 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
             <Button onClick={handleAdicionarPontuacao} className="w-full h-12 rounded-full font-bold text-white" style={{ backgroundColor: "#AEE1F9" }}>
               ADICIONAR PONTUAÇÃO
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Ferramentas Administrativas */}
+      <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-orange-400 to-red-400 text-white px-6 py-6">
+          <CardTitle className="text-2xl font-black flex items-center space-x-2">
+            <Settings className="w-6 h-6" />
+            <span>Ferramentas Administrativas</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h3 className="font-bold text-yellow-800 mb-2">Sincronizar Totais</h3>
+              <p className="text-sm text-yellow-700 mb-4">
+                Recalcula e sincroniza os totais de todas as duplas (rodadas + bônus).
+                Use se houver inconsistências nos rankings.
+              </p>
+              <Button
+                onClick={async () => {
+                  try {
+                    await torneio.sincronizarTodosTotais();
+                    toast.success("Totais sincronizados com sucesso!");
+                  } catch (error) {
+                    toast.error("Erro ao sincronizar totais");
+                  }
+                }}
+                className="w-full h-12 rounded-full font-bold bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white"
+              >
+                SINCRONIZAR TODOS OS TOTAIS
+              </Button>
+            </div>
+
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h3 className="font-bold text-green-800 mb-2">Recalcular Totais (Novo)</h3>
+              <p className="text-sm text-green-700 mb-4">
+                Recalcula totais usando a nova função otimizada que processa rodadas + bônus de uma vez.
+              </p>
+              <Button
+                onClick={async () => {
+                  try {
+                    await torneio.recalcularTodosTotais('torneio-escolar-2024');
+                    toast.success("Totais recalculados com sucesso!");
+                  } catch (error) {
+                    toast.error("Erro ao recalcular totais");
+                  }
+                }}
+                className="w-full h-12 rounded-full font-bold bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white"
+              >
+                RECALCULAR TOTAIS (NOVO)
+              </Button>
+            </div>
+
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 className="font-bold text-blue-800 mb-2">Diagnóstico de Dados</h3>
+              <p className="text-sm text-blue-700 mb-4">
+                Exibe informações detalhadas das duplas no console para debugging.
+              </p>
+              <Button
+                onClick={() => {
+                  console.log("=== DIAGNÓSTICO DE DUPLAS ===");
+                  torneio.duplas.forEach((dupla: any, index: number) => {
+                    console.log(`\nDupla ${index + 1}: ${dupla.tag}`);
+                    console.log("Totais armazenados:", {
+                      pontos: dupla.pontos,
+                      moedas: dupla.moedas,
+                      medalhas: dupla.medalhas
+                    });
+                    console.log("Por rodada:", {
+                      pontos: dupla.pontosPorRodada,
+                      moedas: dupla.moedasPorRodada,
+                      medalhas: dupla.medalhasPorRodada
+                    });
+                    console.log("Por bônus:", {
+                      pontos: dupla.pontosPorBonus,
+                      moedas: dupla.moedasPorBonus,
+                      medalhas: dupla.medalhasPorBonus
+                    });
+                  });
+                  toast.success("Dados exibidos no console!");
+                }}
+                className="w-full h-12 rounded-full font-bold bg-gradient-to-r from-blue-400 to-cyan-400 hover:from-blue-500 hover:to-cyan-500 text-white"
+              >
+                DIAGNOSTICAR DADOS
+              </Button>
+            </div>
+
+            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+              <h3 className="font-bold text-purple-800 mb-2">Debug Rankings</h3>
+              <p className="text-sm text-purple-700 mb-4">
+                Exibe informações de debug sobre o cálculo dos rankings no console.
+              </p>
+              <Button
+                onClick={() => {
+                  console.log("=== DEBUG RANKINGS ===");
+                  console.log("1. Duplas originais:", torneio.duplas);
+                  console.log("2. Ranking Geral:", torneio.getRankingGeral());
+                  if (torneio.rodadas.length > 0) {
+                    torneio.rodadas.forEach((rodada: any) => {
+                      console.log(`3. Ranking Rodada ${rodada.nome} (${rodada.id}):`, torneio.getRankingPorRodada(rodada.id));
+                    });
+                  }
+                  toast.success("Informações de debug no console!");
+                }}
+                className="w-full h-12 rounded-full font-bold bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white"
+              >
+                DEBUG RANKINGS
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -71,24 +71,20 @@ export function useTorneio() {
     return unsubscribe;
   }, []);
 
-  // Carregar itens da loja quando a rodada ativa mudar
+  // Carregar itens da loja quando inicializar e quando houver mudanças
   useEffect(() => {
     const carregarItensLoja = async () => {
-      if (rodadaAtiva) {
-        try {
-          const itens = await lojaService.buscarPorRodada(rodadaAtiva.id);
-          setItensLoja(itens);
-        } catch (error) {
-          console.error('Erro ao carregar itens da loja:', error);
-          setItensLoja([]);
-        }
-      } else {
+      try {
+        const itens = await lojaService.buscarTodos();
+        setItensLoja(itens);
+      } catch (error) {
+        console.error('Erro ao carregar itens da loja:', error);
         setItensLoja([]);
       }
     };
 
     carregarItensLoja();
-  }, [rodadaAtiva]);
+  }, [rodadaAtiva]); // Recarregar quando mudança na rodada ativa
 
   const carregarDados = async () => {
     try {
@@ -220,23 +216,24 @@ export function useTorneio() {
   };
 
   // Funções para gerenciar loja
-  const adicionarItemLoja = async (nome: string, descricao: string, preco: number, rodada: string) => {
+  const adicionarItemLoja = async (nome: string, descricao: string, preco: number, rodada: string, quantidade: number, imagem?: string) => {
     try {
       const novoItem: Omit<ItemLoja, 'id'> = {
         nome,
         descricao,
         preco,
         rodada,
-        disponivel: true
+        disponivel: true,
+        quantidadeTotal: quantidade,
+        quantidadeDisponivel: quantidade,
+        imagem
       };
 
       await lojaService.criarItem(novoItem);
       
-      // Recarregar itens da loja se for da rodada ativa
-      if (rodadaAtiva && rodada === rodadaAtiva.id) {
-        const itens = await lojaService.buscarPorRodada(rodada);
-        setItensLoja(itens);
-      }
+      // Recarregar todos os itens da loja
+      const itens = await lojaService.buscarTodos();
+      setItensLoja(itens);
     } catch (error) {
       console.error('Erro ao adicionar item:', error);
       throw error;
@@ -253,15 +250,45 @@ export function useTorneio() {
     }
   };
 
+  const editarItemLoja = async (itemId: string, nome: string, descricao: string, preco: number, rodada: string, quantidade?: number, imagem?: string) => {
+    try {
+      const itemEditado: Partial<Omit<ItemLoja, 'id'>> = {
+        nome,
+        descricao,
+        preco,
+        rodada,
+        disponivel: true
+      };
+
+      // Se uma nova quantidade foi fornecida, atualizá-la
+      if (quantidade !== undefined) {
+        itemEditado.quantidadeTotal = quantidade;
+        itemEditado.quantidadeDisponivel = quantidade;
+      }
+
+      // Se uma nova imagem foi fornecida, atualizá-la
+      if (imagem !== undefined) {
+        itemEditado.imagem = imagem;
+      }
+
+      await lojaService.editar(itemId, itemEditado);
+      
+      // Recarregar todos os itens da loja
+      const itens = await lojaService.buscarTodos();
+      setItensLoja(itens);
+    } catch (error) {
+      console.error('Erro ao editar item:', error);
+      throw error;
+    }
+  };
+
   const removerItemLoja = async (itemId: string) => {
     try {
       await lojaService.remover(itemId);
       
-      // Recarregar itens da loja
-      if (rodadaAtiva) {
-        const itens = await lojaService.buscarPorRodada(rodadaAtiva.id);
-        setItensLoja(itens);
-      }
+      // Recarregar todos os itens da loja
+      const itens = await lojaService.buscarTodos();
+      setItensLoja(itens);
     } catch (error) {
       console.error('Erro ao remover item:', error);
       throw error;
@@ -656,6 +683,7 @@ export function useTorneio() {
 
     // Funções de loja
     adicionarItemLoja,
+    editarItemLoja,
     comprarItem,
     removerItemLoja,
 

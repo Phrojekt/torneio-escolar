@@ -36,6 +36,8 @@ export interface ItemLoja {
   rodada: string;
   disponivel: boolean;
   imagem?: string;
+  quantidadeTotal: number; // Quantidade total cadastrada
+  quantidadeDisponivel: number; // Quantidade ainda disponível para compra
 }
 
 export interface Compra {

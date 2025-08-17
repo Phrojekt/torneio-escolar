@@ -7,6 +7,7 @@ export async function POST(request: NextRequest) {
     const data = await request.formData();
     const file: File | null = data.get('file') as unknown as File;
     const tag: string = data.get('tag') as string;
+    const type: string = data.get('type') as string || 'banner'; // 'banner' ou 'item'
 
     if (!file) {
       return NextResponse.json({ success: false, message: 'Nenhum arquivo encontrado' });
@@ -38,14 +39,17 @@ export async function POST(request: NextRequest) {
     const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const fileName = `${timestamp}_${tag}_${cleanName}`;
 
+    // Definir pasta baseada no tipo
+    const folder = type === 'item' ? 'itens' : 'banners';
+    
     // Caminho para salvar
-    const uploadPath = path.join(process.cwd(), 'public', 'banners', fileName);
+    const uploadPath = path.join(process.cwd(), 'public', folder, fileName);
 
     // Salvar arquivo
     await writeFile(uploadPath, buffer);
 
     // Retornar URL relativa
-    const imageUrl = `/banners/${fileName}`;
+    const imageUrl = `/${folder}/${fileName}`;
 
     return NextResponse.json({ 
       success: true, 

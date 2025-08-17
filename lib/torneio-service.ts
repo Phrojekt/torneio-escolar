@@ -295,6 +295,22 @@ export const lojaService = {
     return docRef.id;
   },
 
+  // Buscar todos os itens
+  async buscarTodos(): Promise<ItemLoja[]> {
+    const querySnapshot = await getDocs(
+      query(
+        collection(db, 'itensLoja'), 
+        where('disponivel', '==', true)
+      )
+    );
+    return querySnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as ItemLoja))
+      .filter(item => (item.quantidadeDisponivel || 0) > 0);
+  },
+
   // Buscar itens por rodada
   async buscarPorRodada(rodada: string): Promise<ItemLoja[]> {
     const querySnapshot = await getDocs(
@@ -304,10 +320,12 @@ export const lojaService = {
         where('disponivel', '==', true)
       )
     );
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as ItemLoja));
+    return querySnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as ItemLoja))
+      .filter(item => (item.quantidadeDisponivel || 0) > 0);
   },
 
   // Realizar compra
@@ -328,10 +346,21 @@ export const lojaService = {
     if (dupla.moedas < item.preco) {
       throw new Error('Moedas insuficientes');
     }
+
+    // Verificar se há quantidade disponível
+    if (item.quantidadeDisponivel <= 0) {
+      throw new Error('Item esgotado');
+    }
     
     // Atualizar moedas da dupla
     batch.update(doc(db, 'duplas', duplaId), {
       moedas: dupla.moedas - item.preco
+    });
+
+    // Decrementar quantidade disponível do item
+    batch.update(doc(db, 'itensLoja', itemId), {
+      quantidadeDisponivel: item.quantidadeDisponivel - 1,
+      disponivel: item.quantidadeDisponivel - 1 > 0 // Marcar como indisponível se esgotar
     });
     
     // Criar registro de compra
@@ -344,6 +373,11 @@ export const lojaService = {
     });
     
     await batch.commit();
+  },
+
+  // Editar item
+  async editar(id: string, item: Partial<Omit<ItemLoja, 'id'>>): Promise<void> {
+    await updateDoc(doc(db, 'itensLoja', id), item);
   },
 
   // Remover item

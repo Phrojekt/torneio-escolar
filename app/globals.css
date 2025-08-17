@@ -311,4 +311,42 @@
     min-width: 300px;
   }
 }
+
+/* Estilos específicos para a loja - prevenir corte no hover */
+.custom-scrollbar {
+  padding: 8px 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Garantir que elementos com hover scale não sejam cortados */
+.hover-scale-container {
+  padding: 0.25rem;
+  overflow: visible !important;
+}
+
+.hover-scale-item {
+  position: relative;
+  z-index: 1;
+}
+
+.hover-scale-item:hover {
+  z-index: 10;
+}
 }

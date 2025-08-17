@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trophy, ShoppingBag, Medal, Star, Coins, Menu, X, Plus, Save, Users, Target, Crown, Trash2 } from "lucide-react"
+import { Trophy, ShoppingBag, Medal, Star, Coins, Menu, X, Plus, Save, Users, Target, Crown, Trash2, LogOut, Calendar, Settings, Edit } from "lucide-react"
 import { useTorneio } from "@/hooks/use-torneio"
 import { Dupla } from "@/types/torneio"
 import { toast } from "sonner"
@@ -364,7 +364,7 @@ function AlunoDashboard() {
             />
           )
         )}
-        {activeTab === "loja" && <LojaView torneio={torneio} />}
+        {activeTab === "loja" && <LojaView torneio={torneio} showComprarButton={false} />}
       </main>
     </div>
   )
@@ -476,7 +476,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                 <SelectContent>
                   {torneio.duplas.map((dupla: Dupla) => (
                     <SelectItem key={dupla.id} value={dupla.id}>
-                      {dupla.aluno1} & {dupla.aluno2}
+                      {dupla.tag}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -558,7 +558,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
             {torneio.duplas.map((dupla: Dupla) => (
               <div key={dupla.id} className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200 flex justify-between items-center">
                 <div>
-                  <h3 className="font-black text-lg text-gray-800">{dupla.aluno1} & {dupla.aluno2}</h3>
+                  <h3 className="font-black text-lg text-gray-800">{dupla.tag}</h3>
                   <p className="text-sm text-gray-600 font-semibold">
                     {dupla.pontos} pontos • {dupla.moedas} moedas • {dupla.medalhas} medalhas
                   </p>
@@ -646,6 +646,8 @@ function LojaManager({ torneio }: { torneio: any }) {
   const [descricao, setDescricao] = useState("")
   const [preco, setPreco] = useState("")
   const [rodadaSelecionada, setRodadaSelecionada] = useState("")
+  const [itemEditando, setItemEditando] = useState<any>(null)
+  const [modoEdicao, setModoEdicao] = useState(false)
 
   const handleAdicionarItem = async () => {
     try {
@@ -664,19 +666,68 @@ function LojaManager({ torneio }: { torneio: any }) {
     }
   }
 
+  const handleEditarItem = (item: any) => {
+    setItemEditando(item)
+    setNome(item.nome)
+    setDescricao(item.descricao)
+    setPreco(item.preco.toString())
+    setRodadaSelecionada(item.rodada)
+    setModoEdicao(true)
+  }
+
+  const handleSalvarEdicao = async () => {
+    try {
+      if (!nome || !descricao || !preco || !rodadaSelecionada) {
+        toast.error("Preencha todos os campos!")
+        return
+      }
+
+      await torneio.editarItemLoja(itemEditando.id, nome, descricao, parseInt(preco), rodadaSelecionada)
+      toast.success("Item editado com sucesso!")
+      handleCancelarEdicao()
+    } catch (error) {
+      toast.error("Erro ao editar item")
+    }
+  }
+
+  const handleCancelarEdicao = () => {
+    setModoEdicao(false)
+    setItemEditando(null)
+    setNome("")
+    setDescricao("")
+    setPreco("")
+    setRodadaSelecionada("")
+  }
+
+  const handleRemoverItem = async (itemId: string) => {
+    try {
+      await torneio.removerItemLoja(itemId)
+      toast.success("Item removido com sucesso!")
+    } catch (error) {
+      toast.error("Erro ao remover item")
+    }
+  }
+
   return (
     <div className="space-y-6">
-      {/* Adicionar Item */}
+      {/* Adicionar/Editar Item */}
       <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-slate-600 to-slate-800 text-white px-6 py-6">
-          <CardTitle className="text-2xl font-black">Gerenciar Loja Misteriosa</CardTitle>
+          <CardTitle className="text-2xl font-black">
+            {modoEdicao ? 'Editar Item da Loja' : 'Adicionar Item à Loja Misteriosa'}
+          </CardTitle>
+          {modoEdicao && (
+            <CardDescription className="text-slate-200 font-semibold">
+              Editando: {itemEditando?.nome}
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-4">
             <div>
               <Label className="font-bold text-gray-700">Nome do Item</Label>
               <Input
-                placeholder="Ex: Poder Especial"
+                placeholder="Nome do item"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 className="rounded-full border-2 border-gray-300 h-12"
@@ -685,7 +736,7 @@ function LojaManager({ torneio }: { torneio: any }) {
             <div>
               <Label className="font-bold text-gray-700">Descrição</Label>
               <Input
-                placeholder="Ex: Dobra os pontos da próxima atividade"
+                placeholder="Descrição do item"
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 className="rounded-full border-2 border-gray-300 h-12"
@@ -716,9 +767,22 @@ function LojaManager({ torneio }: { torneio: any }) {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleAdicionarItem} className="w-full h-12 rounded-full font-bold bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white">
-              ADICIONAR ITEM
-            </Button>
+            <div className="flex gap-3">
+              {modoEdicao ? (
+                <>
+                  <Button onClick={handleSalvarEdicao} className="flex-1 h-12 rounded-full font-bold bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white">
+                    SALVAR ALTERAÇÕES
+                  </Button>
+                  <Button onClick={handleCancelarEdicao} variant="outline" className="flex-1 h-12 rounded-full font-bold border-2 border-gray-300 text-gray-600 hover:bg-gray-50">
+                    CANCELAR
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={handleAdicionarItem} className="w-full h-12 rounded-full font-bold bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white">
+                  ADICIONAR ITEM
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -727,26 +791,56 @@ function LojaManager({ torneio }: { torneio: any }) {
       <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-orange-400 to-yellow-400 text-white px-6 py-6">
           <CardTitle className="text-2xl font-black">Itens Disponíveis</CardTitle>
+          <CardDescription className="text-orange-100 font-semibold">
+            {torneio.itensLoja.length} {torneio.itensLoja.length === 1 ? 'item' : 'itens'} na loja
+          </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-4">
-            {torneio.itensLoja.map((item: any) => (
-              <div key={item.id} className="p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl border-2 border-orange-200 flex justify-between items-center">
-                <div>
-                  <h3 className="font-black text-lg text-gray-800">{item.nome}</h3>
-                  <p className="text-sm text-gray-600 font-semibold">{item.descricao}</p>
-                  <p className="text-lg font-black text-orange-600">{item.preco} moedas</p>
-                </div>
-                <Button
-                  onClick={() => torneio.removerItemLoja(item.id)}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full border-2 border-red-300 text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+            {torneio.itensLoja.length === 0 ? (
+              <div className="text-center py-8">
+                <ShoppingBag className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p className="text-gray-500 font-semibold">Nenhum item cadastrado</p>
+                <p className="text-sm text-gray-400">Adicione o primeiro item à loja!</p>
               </div>
-            ))}
+            ) : (
+              torneio.itensLoja.map((item: any) => (
+                <div key={item.id} className="p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl border-2 border-orange-200 hover:shadow-lg transition-all">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-black text-lg text-gray-800 mb-1">{item.nome}</h3>
+                      <p className="text-sm text-gray-600 font-semibold mb-2">{item.descricao}</p>
+                      <div className="flex items-center gap-4">
+                        <p className="text-lg font-black text-orange-600">{item.preco} moedas</p>
+                        <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded-full font-semibold">
+                          {torneio.rodadas.find((r: any) => r.id === item.rodada)?.nome || 'Rodada não encontrada'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        onClick={() => handleEditarItem(item)}
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full border-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+                        disabled={modoEdicao}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        onClick={() => handleRemoverItem(item.id)}
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full border-2 border-red-300 text-red-600 hover:bg-red-50"
+                        disabled={modoEdicao}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
@@ -778,7 +872,7 @@ function RankingTable({ title, data }: { title: string; data: Dupla[] }) {
               {/* Nome da Dupla */}
               <div className="flex-1 bg-gray-200 rounded-2xl p-4 min-w-0">
                 <p className="font-black text-gray-800 text-lg truncate">
-                  {dupla.aluno1} & {dupla.aluno2}
+                  {dupla.tag}
                 </p>
               </div>
 
@@ -811,7 +905,7 @@ function RankingTable({ title, data }: { title: string; data: Dupla[] }) {
 }
 
 // Componente da loja para alunos
-function LojaView({ torneio }: { torneio: any }) {
+function LojaView({ torneio, showComprarButton = true }: { torneio: any; showComprarButton?: boolean }) {
   const jambaVIP = torneio.getDuplasPorCategoria('JambaVIP')
   const jamberlinda = torneio.getDuplasPorCategoria('Jamberlinda')
   const aguardando = torneio.getDuplasAguardando()
@@ -826,23 +920,25 @@ function LojaView({ torneio }: { torneio: any }) {
             <span>Lojinha Misteriosa</span>
           </CardTitle>
           <CardDescription className="text-slate-200 font-semibold">
-            Use suas moedas para comprar itens especiais
+            {showComprarButton ? 'Use suas moedas para comprar itens especiais' : 'Veja os itens especiais disponíveis'}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-2 hover-scale-container">
             {torneio.itensLoja.map((item: any, index: number) => (
               <div
                 key={index}
-                className="p-6 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl border-2 border-orange-200 hover:shadow-lg transition-all transform hover:scale-105"
+                className="p-6 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl border-2 border-orange-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105 hover-scale-item"
               >
                 <h3 className="font-black text-xl text-gray-800 mb-2">{item.nome}</h3>
                 <p className="text-gray-600 text-sm mb-4 font-semibold">{item.descricao}</p>
                 <div className="flex justify-between items-center">
                   <span className="text-2xl font-black text-orange-600">{item.preco} moedas</span>
-                  <Button className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white font-bold px-6 py-2">
-                    Comprar
-                  </Button>
+                  {showComprarButton && (
+                    <Button className="rounded-full bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white font-bold px-6 py-2">
+                      Comprar
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
@@ -861,7 +957,7 @@ function LojaView({ torneio }: { torneio: any }) {
             <div className="space-y-4">
               {jambaVIP.slice(0, 2).map((dupla: Dupla) => (
                 <div key={dupla.id} className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl border-2 border-purple-200">
-                  <p className="font-black text-gray-800">{dupla.aluno1} & {dupla.aluno2}</p>
+                  <p className="font-black text-gray-800">{dupla.tag}</p>
                   <p className="text-sm text-gray-600 font-semibold">{dupla.pontos} pontos • {dupla.moedas} moedas</p>
                 </div>
               ))}
@@ -878,7 +974,7 @@ function LojaView({ torneio }: { torneio: any }) {
             <div className="space-y-4">
               {jamberlinda.slice(0, 2).map((dupla: Dupla) => (
                 <div key={dupla.id} className="p-4 bg-gradient-to-r from-pink-100 to-red-100 rounded-2xl border-2 border-pink-200">
-                  <p className="font-black text-gray-800">{dupla.aluno1} & {dupla.aluno2}</p>
+                  <p className="font-black text-gray-800">{dupla.tag}</p>
                   <p className="text-sm text-gray-600 font-semibold">{dupla.pontos} pontos • {dupla.moedas} moedas</p>
                 </div>
               ))}
@@ -896,7 +992,7 @@ function LojaView({ torneio }: { torneio: any }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {aguardando.map((dupla: Dupla) => (
               <div key={dupla.id} className="p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl text-center border-2 border-yellow-200">
-                <p className="font-black text-gray-800">{dupla.aluno1} & {dupla.aluno2}</p>
+                <p className="font-black text-gray-800">{dupla.tag}</p>
                 <p className="text-sm text-gray-600 font-semibold">Aguardando...</p>
               </div>
             ))}
