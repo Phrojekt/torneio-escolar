@@ -1,6 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
+// import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
+import { NextRequest, NextResponse } from 'next/server';
+
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_REPO = process.env.GITHUB_REPO || 'Phrojekt/torneio-escolar';
+const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
+const GITHUB_API_URL = 'https://api.github.com';
+const GITHUB_USER = process.env.GITHUB_USER || 'github-actions[bot]';
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,9 +36,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Converter para bytes
+    // Converter para base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const contentBase64 = buffer.toString('base64');
 
     // Criar nome único
     const timestamp = Date.now();
@@ -39,29 +47,58 @@ export async function POST(request: NextRequest) {
     const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const fileName = `${timestamp}_${tag}_${cleanName}`;
 
-    // Definir pasta baseada no tipo
-    const folder = type === 'item' ? 'itens' : 'banners';
-    
-    // Caminho para salvar
-    const uploadPath = path.join(process.cwd(), 'public', folder, fileName);
+    // Pasta de destino
+    const folder = type === 'item' ? 'public/itens' : 'public/banners-duplas';
+    const repoFilePath = `${folder}/${fileName}`;
 
-    // Salvar arquivo
-    await writeFile(uploadPath, buffer);
+    // Buscar SHA do arquivo se já existir (para update)
+    let sha: string | undefined = undefined;
+    const getFileRes = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${repoFilePath}?ref=${GITHUB_BRANCH}`, {
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github+json',
+      },
+    });
+    if (getFileRes.ok) {
+      const fileData = await getFileRes.json();
+      sha = fileData.sha;
+    }
 
-    // Retornar URL relativa
-    const imageUrl = `/${folder}/${fileName}`;
+    // Commitar arquivo via API do GitHub
+    const commitRes = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${repoFilePath}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: `upload banner via API: ${fileName}`,
+        content: contentBase64,
+        branch: GITHUB_BRANCH,
+        ...(sha ? { sha } : {}),
+      }),
+    });
+
+    if (!commitRes.ok) {
+      const error = await commitRes.json();
+      return NextResponse.json({ success: false, message: 'Erro ao salvar no GitHub', error });
+    }
+
+    // Gerar URL raw
+    const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO.replace(/\/.*/, '')}/${GITHUB_REPO.split('/')[1]}/${GITHUB_BRANCH}/${repoFilePath}`;
 
     return NextResponse.json({ 
       success: true, 
-      imageUrl,
-      message: 'Upload realizado com sucesso!' 
+      imageUrl: rawUrl,
+      message: 'Upload realizado com sucesso!'
     });
-
   } catch (error) {
     console.error('Erro no upload:', error);
     return NextResponse.json({ 
       success: false, 
-      message: 'Erro interno do servidor' 
+      message: 'Erro interno do servidor',
+      error: error instanceof Error ? error.message : error
     });
   }
 }
