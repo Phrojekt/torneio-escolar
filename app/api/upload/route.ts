@@ -11,6 +11,14 @@ const GITHUB_USER = process.env.GITHUB_USER || 'github-actions[bot]';
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar se o token do GitHub está configurado
+    if (!GITHUB_TOKEN) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Token do GitHub não configurado. Configure a variável GITHUB_TOKEN.' 
+      });
+    }
+
     const data = await request.formData();
     const file: File | null = data.get('file') as unknown as File;
     const tag: string = data.get('tag') as string;
@@ -53,15 +61,19 @@ export async function POST(request: NextRequest) {
 
     // Buscar SHA do arquivo se já existir (para update)
     let sha: string | undefined = undefined;
-    const getFileRes = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${repoFilePath}?ref=${GITHUB_BRANCH}`, {
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github+json',
-      },
-    });
-    if (getFileRes.ok) {
-      const fileData = await getFileRes.json();
-      sha = fileData.sha;
+    try {
+      const getFileRes = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${repoFilePath}?ref=${GITHUB_BRANCH}`, {
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github+json',
+        },
+      });
+      if (getFileRes.ok) {
+        const fileData = await getFileRes.json();
+        sha = fileData.sha;
+      }
+    } catch (error) {
+      console.log('Arquivo não existe ainda (será criado novo)');
     }
 
     // Commitar arquivo via API do GitHub
@@ -81,12 +93,17 @@ export async function POST(request: NextRequest) {
     });
 
     if (!commitRes.ok) {
-      const error = await commitRes.json();
-      return NextResponse.json({ success: false, message: 'Erro ao salvar no GitHub', error });
+      const errorData = await commitRes.json();
+      console.error('Erro detalhado do GitHub:', errorData);
+      return NextResponse.json({ 
+        success: false, 
+        message: `Erro ao salvar no GitHub: ${errorData.message || 'Erro desconhecido'}`,
+        details: errorData
+      });
     }
 
     // Gerar URL raw
-    const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO.replace(/\/.*/, '')}/${GITHUB_REPO.split('/')[1]}/${GITHUB_BRANCH}/${repoFilePath}`;
+    const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${repoFilePath}`;
 
     return NextResponse.json({ 
       success: true, 
