@@ -28,7 +28,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       onLogin("jogador")
     } else {
       console.log("Login failed")
-      toast.error("Credenciais inválidas. Para administrador, use a senha: admin123")
+      toast.error("Credenciais inválidas.")
     }
   }
 
