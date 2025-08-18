@@ -7,6 +7,16 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Torneio Jambalaia 2.0',
   description: 'O torneio de jogos mais emocionante do ano!',
+  icons: {
+    icon: [
+      {
+        url: '/favicon.ico',
+        sizes: 'any',
+      }
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
@@ -17,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <style>{`
 html {
   font-family: ${GeistSans.style.fontFamily};

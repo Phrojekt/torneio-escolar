@@ -275,7 +275,7 @@
 }
 
 .coins-badge {
-  background: #AEE1F9;
+  background: linear-gradient(135deg, #ccb911, #ccc90c, #776f03);
   box-shadow: 0 8px 20px -5px rgba(174, 225, 249, 0.4);
 }
 

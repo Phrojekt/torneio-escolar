@@ -58,7 +58,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   : "border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
               >
-                �️ Administrador
+                Administrador
               </Button>
               <Button
                 variant={userType === "jogador" ? "default" : "outline"}
@@ -68,7 +68,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   : "border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
               >
-                � Jogador
+                Jogador
               </Button>
             </div>
           </div>

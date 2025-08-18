@@ -128,9 +128,25 @@ export const duplaService = {
   },
 
   // Atualizar status da dupla
-  async atualizarStatus(id: string, status: 'ativa' | 'aguardando' | 'eliminada'): Promise<void> {
+  async atualizarStatus(id: string, status: 'ativa' | 'aguardando' | 'eliminada' | 'JambaVIP' | 'Jamberlinda' | 'Dupla Aguardando Resultado'): Promise<void> {
     const duplaRef = doc(db, 'duplas', id);
     await updateDoc(duplaRef, { status });
+  },
+
+  // Atualizar categoria especial da dupla
+  async atualizarStatusEspecial(id: string, statusEspecial: 'JambaVIP' | 'Jamberlinda' | 'Dupla Aguardando Resultado' | 'normal'): Promise<void> {
+    const duplaRef = doc(db, 'duplas', id);
+    const updates: any = {
+      status: statusEspecial === 'normal' ? 'ativa' : statusEspecial
+    };
+    
+    if (statusEspecial !== 'normal') {
+      updates.categoria = statusEspecial === 'Dupla Aguardando Resultado' ? 'normal' : statusEspecial;
+    } else {
+      updates.categoria = 'normal';
+    }
+    
+    await updateDoc(duplaRef, updates);
   },
 
   // Recalcular totais de uma dupla (rodadas + bônus)

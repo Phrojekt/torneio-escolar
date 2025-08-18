@@ -12,7 +12,7 @@ export interface Dupla {
   medalhasPorBonus?: { [bonusId: string]: { [partidaId: string]: number } };
   estrelasPorBonus?: { [bonusId: string]: { [partidaId: string]: number } };
   moedasPorBonus?: { [bonusId: string]: { [partidaId: string]: number } };
-  status: 'ativa' | 'aguardando' | 'eliminada';
+  status: 'ativa' | 'aguardando' | 'eliminada' | 'JambaVIP' | 'Jamberlinda' | 'Dupla Aguardando Resultado';
   categoria?: 'JambaVIP' | 'Jamberlinda' | 'normal';
 }
 
@@ -21,7 +21,6 @@ export interface Rodada {
   nome: string;
   numero: number;
   descricao: string;
-  pontuacaoMaxima: number;
   ativa: boolean;
   finalizada: boolean;
   dataInicio?: Date;
@@ -92,7 +91,6 @@ export interface Partida {
   id: string;
   nome: string;
   descricao: string;
-  pontuacaoMaxima: number;
   multiplicadorMedalhas: number; // Multiplicador para medalhas
   multiplicadorEstrelas: number; // Multiplicador para estrelas
   multiplicadorMoedas: number; // Multiplicador para moedas

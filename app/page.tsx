@@ -596,7 +596,6 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
   // Estados para criação de partidas
   const [nomePartida, setNomePartida] = useState("")
   const [descricaoPartida, setDescricaoPartida] = useState("")
-  const [pontuacaoMaxima, setPontuacaoMaxima] = useState("0")
   const [multiplicadorPontos, setMultiplicadorPontos] = useState("0")
   const [multiplicadorMoedas, setMultiplicadorMoedas] = useState("0")
   const [multiplicadorMedalhas, setMultiplicadorMedalhas] = useState("0")
@@ -644,7 +643,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
 
   const handleCriarPartida = async () => {
     try {
-      if (!bonusSelecionado || !nomePartida || !descricaoPartida || !pontuacaoMaxima || !multiplicadorPontos) {
+      if (!bonusSelecionado || !nomePartida || !descricaoPartida || !multiplicadorPontos) {
         toast.error("Preencha todos os campos da partida!")
         return
       }
@@ -653,7 +652,6 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
         bonusSelecionado,
         nomePartida,
         descricaoPartida,
-        parseInt(pontuacaoMaxima),
         parseFloat(multiplicadorPontos),
         parseFloat(multiplicadorMoedas) || 1,
         parseFloat(multiplicadorMedalhas) || 1
@@ -661,7 +659,6 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
 
       setNomePartida("")
       setDescricaoPartida("")
-      setPontuacaoMaxima("0")
       setMultiplicadorPontos("0")
       setMultiplicadorMoedas("0")
       setMultiplicadorMedalhas("0")
@@ -901,17 +898,6 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                         className="w-full"
                       />
                     </div>
-                    <div className="min-w-0">
-                      <Label htmlFor="pontuacaoMaxima">Pontuação Máxima</Label>
-                      <Input
-                        id="pontuacaoMaxima"
-                        type="number"
-                        value={pontuacaoMaxima}
-                        onChange={(e) => setPontuacaoMaxima(e.target.value)}
-                        placeholder="0"
-                        className="w-full"
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
@@ -955,9 +941,6 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                         <p className="text-sm text-gray-600">{partida.descricao}</p>
                         <p className="text-sm text-blue-600">
                           Multiplicadores: Pontos {partida.multiplicadorPontos}x | Moedas {partida.multiplicadorMoedas || 1}x | Medalhas {partida.multiplicadorMedalhas || 1}x
-                        </p>
-                        <p className="text-sm text-green-600">
-                          Max: {partida.pontuacaoMaxima} pontos
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -1324,13 +1307,12 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
           <div className="space-y-3 sm:space-y-4">
             <div className="space-y-3">
               <div>
-                <Label className="font-bold text-gray-700 text-sm">Tag da Dupla (2-5 caracteres)</Label>
+                <Label className="font-bold text-gray-700 text-sm">Tag da Dupla</Label>
                 <Input
                   placeholder="Nome da dupla (TAG)"
                   value={tag}
-                  onChange={(e) => setTag(e.target.value.slice(0, 5).toUpperCase())}
+                  onChange={(e) => setTag(e.target.value.toUpperCase())}
                   className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
-                  maxLength={5}
                 />
               </div>
               <div>
@@ -1516,94 +1498,170 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
     }
   }
 
+  const handleAtualizarStatusEspecial = async (duplaId: string, statusEspecial: 'JambaVIP' | 'Jamberlinda' | 'Dupla Aguardando Resultado' | 'normal') => {
+    try {
+      const dupla = torneio.duplas.find((d: Dupla) => d.id === duplaId)
+      await torneio.atualizarStatusEspecialDupla(duplaId, statusEspecial)
+      const statusTexto = statusEspecial === 'normal' ? 'Normal' : statusEspecial
+      toast.success(`Dupla "${dupla?.tag}" definida como "${statusTexto}"!`)
+    } catch (error) {
+      console.error('Erro ao atualizar status especial:', error)
+      toast.error("Erro ao atualizar status especial!")
+    }
+  }
+
+  // Separar duplas por status especial
+  const jambaVIP = torneio.duplas.filter((d: Dupla) => d.status === 'JambaVIP')
+  const jamberlinda = torneio.duplas.filter((d: Dupla) => d.status === 'Jamberlinda')
+  const aguardandoResultado = torneio.duplas.filter((d: Dupla) => d.status === 'Dupla Aguardando Resultado')
+  const normais = torneio.duplas.filter((d: Dupla) => !['JambaVIP', 'Jamberlinda', 'Dupla Aguardando Resultado'].includes(d.status))
+
+  const StatusCard = ({ titulo, duplas, cor, icone }: { titulo: string, duplas: Dupla[], cor: string, icone: React.ReactNode }) => (
+    <Card className="border-0 shadow-lg bg-white rounded-2xl overflow-hidden">
+      <CardHeader className="text-white px-4 py-4" style={{ backgroundColor: cor }}>
+        <CardTitle className="text-lg font-black flex items-center space-x-2">
+          {icone}
+          <span>{titulo}</span>
+          <span className="text-sm font-normal">({duplas.length})</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          {duplas.length === 0 ? (
+            <div className="text-center py-4">
+              <p className="text-gray-500 text-sm">Nenhuma dupla nesta categoria</p>
+            </div>
+          ) : (
+            duplas.map((dupla: Dupla) => (
+              <div key={dupla.id} className="p-3 rounded-xl border-2 bg-gray-50 border-gray-200">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                    <BannerDupla 
+                      dupla={dupla} 
+                      className="w-full h-full text-xs"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-black text-base text-gray-800">{dupla.tag}</h3>
+                    <p className="text-xs text-gray-600 font-semibold">
+                      ⭐ {dupla.estrelas} • 🪙 {dupla.moedas} • 🏅 {dupla.medalhas}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Botões de status especial responsivos */}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => handleAtualizarStatusEspecial(dupla.id, 'JambaVIP')}
+                    size="sm"
+                    className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'JambaVIP' ? 'bg-purple-600' : 'bg-purple-400 hover:bg-purple-500'}`}
+                  >
+                    👑 JambaVIP
+                  </Button>
+                  <Button
+                    onClick={() => handleAtualizarStatusEspecial(dupla.id, 'Jamberlinda')}
+                    size="sm"
+                    className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'Jamberlinda' ? 'bg-pink-600' : 'bg-pink-400 hover:bg-pink-500'}`}
+                  >
+                    💄 Jamberlinda
+                  </Button>
+                  <Button
+                    onClick={() => handleAtualizarStatusEspecial(dupla.id, 'Dupla Aguardando Resultado')}
+                    size="sm"
+                    className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'Dupla Aguardando Resultado' ? 'bg-orange-600' : 'bg-orange-400 hover:bg-orange-500'}`}
+                  >
+                    ⏳ Aguardando
+                  </Button>
+                  <Button
+                    onClick={() => handleAtualizarStatusEspecial(dupla.id, 'normal')}
+                    size="sm"
+                    className={`rounded-full text-white text-xs px-3 py-1 ${!['JambaVIP', 'Jamberlinda', 'Dupla Aguardando Resultado'].includes(dupla.status) ? 'bg-gray-600' : 'bg-gray-400 hover:bg-gray-500'}`}
+                  >
+                    👥 Normal
+                  </Button>
+                </div>
+                
+                {/* Botão de remover */}
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  {duplaParaRemover === dupla.id ? (
+                    <div className="flex space-x-2 items-center">
+                      <span className="text-sm font-semibold text-red-600 mr-2">Confirmar remoção?</span>
+                      <Button
+                        onClick={() => handleRemoverDupla(dupla.id)}
+                        size="sm"
+                        className="rounded-full bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1"
+                      >
+                        Sim
+                      </Button>
+                      <Button
+                        onClick={() => setDuplaParaRemover(null)}
+                        size="sm"
+                        className="rounded-full bg-gray-500 hover:bg-gray-600 text-white text-xs px-3 py-1"
+                      >
+                        Não
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => setDuplaParaRemover(dupla.id)}
+                      size="sm"
+                      className="rounded-full bg-red-400 hover:bg-red-500 text-white flex items-center space-x-1 text-xs px-3 py-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Remover</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+
   return (
     <div className="space-y-6">
+      {/* Header geral */}
       <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
         <CardHeader className="text-white px-6 py-6" style={{ backgroundColor: "#AEE1F9" }}>
           <CardTitle className="text-2xl font-black flex items-center space-x-2">
             <Users className="w-6 h-6" />
-            <span>Todas as Duplas</span>
+            <span>Gerenciamento de Duplas</span>
           </CardTitle>
+          <CardDescription className="text-blue-100 font-semibold">
+            Defina o status especial das duplas: JambaVIP, Jamberlinda ou Aguardando Resultado
+          </CardDescription>
         </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            {torneio.duplas.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-lg font-bold text-gray-600 mb-2">Nenhuma dupla cadastrada</h3>
-                <p className="text-gray-500 text-sm">Cadastre a primeira dupla para começar o torneio!</p>
-                <p className="text-gray-500">Use o formulário acima para criar a primeira dupla</p>
-              </div>
-            ) : (
-              torneio.duplas.map((dupla: Dupla) => (
-                <div key={dupla.id} className="p-4 rounded-xl border-2 flex justify-between items-center" style={{ backgroundColor: "#F0F8FF", borderColor: "#AEE1F9" }}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                      <BannerDupla 
-                        dupla={dupla} 
-                        className="w-full h-full text-sm"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="font-black text-lg text-gray-800">{dupla.tag}</h3>
-                      <p className="text-sm text-gray-600 font-semibold">
-                        {dupla.estrelas} estrelas • {dupla.moedas} moedas • {dupla.medalhas} medalhas
-                      </p>
-                      <p className="text-xs text-gray-500">Status: {dupla.status}</p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      onClick={() => torneio.atualizarStatusDupla(dupla.id, 'aguardando')}
-                      size="sm"
-                      className="rounded-full bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer"
-                    >
-                      Aguardando
-                    </Button>
-                    <Button
-                      onClick={() => torneio.atualizarStatusDupla(dupla.id, 'ativa')}
-                      size="sm"
-                      className="rounded-full bg-green-500 hover:bg-green-600 text-white cursor-pointer"
-                    >
-                      Ativar
-                    </Button>
-                    {duplaParaRemover === dupla.id ? (
-                      <div className="flex space-x-2 items-center">
-                        <span className="text-sm font-semibold text-red-600 mr-2">Confirmar remoção?</span>
-                        <Button
-                          onClick={() => handleRemoverDupla(dupla.id)}
-                          size="sm"
-                          className="rounded-full text-white cursor-pointer"
-                          style={{ backgroundColor: "#AEE1F9" }}
-                        >
-                          Sim
-                        </Button>
-                        <Button
-                          onClick={() => setDuplaParaRemover(null)}
-                          size="sm"
-                          className="rounded-full bg-gray-500 hover:bg-gray-600 text-white cursor-pointer"
-                        >
-                          Não
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        onClick={() => setDuplaParaRemover(dupla.id)}
-                        size="sm"
-                        className="rounded-full text-white cursor-pointer flex items-center space-x-1"
-                        style={{ backgroundColor: "#AEE1F9" }}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        <span>Remover</span>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
       </Card>
+
+      {/* Grid responsivo de status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
+        <StatusCard 
+          titulo="👑 JambaVIP" 
+          duplas={jambaVIP} 
+          cor="#8B5CF6" 
+          icone={<Crown className="w-5 h-5" />}
+        />
+        <StatusCard 
+          titulo="💄 Jamberlinda" 
+          duplas={jamberlinda} 
+          cor="#EC4899" 
+          icone={<span className="text-lg">💄</span>}
+        />
+        <StatusCard 
+          titulo="⏳ Aguardando Resultado" 
+          duplas={aguardandoResultado} 
+          cor="#F97316" 
+          icone={<span className="text-lg">⏳</span>}
+        />
+        <StatusCard 
+          titulo="👥 Duplas Normais" 
+          duplas={normais} 
+          cor="#6B7280" 
+          icone={<Users className="w-5 h-5" />}
+        />
+      </div>
     </div>
   )
 }
@@ -2383,7 +2441,7 @@ function RankingTable({
                       </div>
 
                       {/* Moedas */}
-                      <div className="coins-badge stat-badge w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
+                      <div className="coins-badge bg-amber-300 stat-badge w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
                         <Image src="/coin_icon.png" alt="Coin" width={16} height={16} className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mb-0.5" />
                         <span className="font-black text-xs sm:text-sm lg:text-base">{moedasParaExibir}</span>
                       </div>
@@ -2610,22 +2668,20 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
 function GerenciamentoRodadas({ torneio }: { torneio: any }) {
   const [nome, setNome] = useState("")
   const [descricao, setDescricao] = useState("")
-  const [pontuacaoMaxima, setPontuacaoMaxima] = useState("")
   const [numero, setNumero] = useState("")
   const [rodadaParaExcluir, setRodadaParaExcluir] = useState<string | null>(null)
 
   const handleCriarRodada = async () => {
     try {
-      if (!nome || !descricao || !pontuacaoMaxima || !numero) {
+      if (!nome || !descricao || !numero) {
         toast.error("Preencha todos os campos!")
         return
       }
 
-      await torneio.criarRodada(nome, parseInt(numero), descricao, parseInt(pontuacaoMaxima))
+      await torneio.criarRodada(nome, parseInt(numero), descricao)
       toast.success("Rodada criada com sucesso!")
       setNome("")
       setDescricao("")
-      setPontuacaoMaxima("")
       setNumero("")
     } catch (error) {
       toast.error("Erro ao criar rodada")
@@ -2692,17 +2748,6 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
               />
             </div>
 
-            <div>
-              <Label className="font-bold text-gray-700">Pontuação Máxima</Label>
-              <Input
-                type="number"
-                placeholder="500"
-                value={pontuacaoMaxima}
-                onChange={(e) => setPontuacaoMaxima(e.target.value)}
-                className="rounded-full border-2 border-gray-300 h-12"
-              />
-            </div>
-
             <Button
               onClick={handleCriarRodada}
               className="w-full h-12 rounded-full font-bold bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
@@ -2749,13 +2794,7 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
                       </div>
                     </div>
                     <p className="text-gray-600 font-semibold mb-3">{rodada.descricao}</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <Target className="w-4 h-4 text-indigo-500" />
-                        <span className="font-semibold text-gray-700">
-                          Pontuação Máxima: {rodada.pontuacaoMaxima}
-                        </span>
-                      </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
                         <Calendar className="w-4 h-4 text-indigo-500" />
                         <span className="font-semibold text-gray-700">

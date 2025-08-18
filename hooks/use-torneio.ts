@@ -169,7 +169,7 @@ export function useTorneio() {
     }
   };
 
-  const atualizarStatusDupla = async (duplaId: string, status: 'ativa' | 'aguardando' | 'eliminada') => {
+  const atualizarStatusDupla = async (duplaId: string, status: 'ativa' | 'aguardando' | 'eliminada' | 'JambaVIP' | 'Jamberlinda' | 'Dupla Aguardando Resultado') => {
     try {
       await duplaService.atualizarStatus(duplaId, status);
       // Os dados serão atualizados automaticamente pelo listener
@@ -177,6 +177,21 @@ export function useTorneio() {
       console.error('Erro ao atualizar status:', error);
       throw error;
     }
+  };
+
+  const atualizarStatusEspecialDupla = async (duplaId: string, statusEspecial: 'JambaVIP' | 'Jamberlinda' | 'Dupla Aguardando Resultado' | 'normal') => {
+    try {
+      await duplaService.atualizarStatusEspecial(duplaId, statusEspecial);
+      // Os dados serão atualizados automaticamente pelo listener
+    } catch (error) {
+      console.error('Erro ao atualizar status especial:', error);
+      throw error;
+    }
+  };
+
+  // Função para buscar duplas por status especial
+  const getDuplasPorStatusEspecial = (statusEspecial: 'JambaVIP' | 'Jamberlinda' | 'Dupla Aguardando Resultado') => {
+    return duplas.filter(dupla => dupla.status === statusEspecial);
   };
 
   const removerDupla = async (duplaId: string) => {
@@ -190,13 +205,12 @@ export function useTorneio() {
   };
 
   // Funções para gerenciar rodadas
-  const criarRodada = async (nome: string, numero: number, descricao: string, pontuacaoMaxima: number) => {
+  const criarRodada = async (nome: string, numero: number, descricao: string) => {
     try {
       const novaRodada: Omit<Rodada, 'id'> = {
         nome,
         numero,
         descricao,
-        pontuacaoMaxima,
         ativa: false,
         finalizada: false,
         dataInicio: new Date()
@@ -371,7 +385,6 @@ export function useTorneio() {
     bonusId: string,
     nome: string,
     descricao: string,
-    pontuacaoMaxima: number,
     multiplicadorEstrelas: number,
     multiplicadorMoedas: number = 1,
     multiplicadorMedalhas: number = 1
@@ -380,7 +393,6 @@ export function useTorneio() {
       const novaPartida: Omit<Partida, 'id'> = {
         nome,
         descricao,
-        pontuacaoMaxima,
         multiplicadorEstrelas,
         multiplicadorMoedas,
         multiplicadorMedalhas,
@@ -673,6 +685,8 @@ export function useTorneio() {
     criarDupla,
     adicionarPontuacao,
     atualizarStatusDupla,
+    atualizarStatusEspecialDupla,
+    getDuplasPorStatusEspecial,
     removerDupla,
 
     // Funções de rodadas
