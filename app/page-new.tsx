@@ -1,34 +1,36 @@
 "use client"
 
-import { useState } from "react"
+import React from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trophy, ShoppingBag, Medal, Star, Coins, Menu, X, Plus, Save, Users, Target, Crown, Trash2, LogOut, Calendar, Settings, Edit } from "lucide-react"
+import { Trophy, ShoppingBag, Menu, X, Plus, Save, Users, Target, Crown, Trash2, LogOut, Calendar, Settings, Edit } from "lucide-react"
+import Image from "next/image"
 import { useTorneio } from "@/hooks/use-torneio"
 import { Dupla } from "@/types/torneio"
 import { toast } from "sonner"
 
 export default function LoginPage() {
-  const [userType, setUserType] = useState<"professor" | "aluno" | null>(null)
+  const [userType, setUserType] = useState<"administrador" | "jogador" | null>(null)
   const [password, setPassword] = useState("")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   const handleLogin = () => {
-    if (userType === "professor" && password === "admin123") {
+    if (userType === "administrador" && password === "admin123") {
       setIsLoggedIn(true)
-    } else if (userType === "aluno") {
+    } else if (userType === "jogador") {
       setIsLoggedIn(true)
     }
   }
 
   if (isLoggedIn) {
-    if (userType === "professor") {
-      return <ProfessorDashboard />
+    if (userType === "administrador") {
+      return <AdministradorDashboard />
     } else {
-      return <AlunoDashboard />
+      return <JogadorDashboard />
     }
   }
 
@@ -40,7 +42,7 @@ export default function LoginPage() {
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
               <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500" />
             </div>
-            <CardTitle className="text-2xl sm:text-3xl font-black mb-2">Torneio Escolar</CardTitle>
+            <CardTitle className="text-2xl sm:text-3xl font-black mb-2">Torneio Jamboree</CardTitle>
             <CardDescription className="text-blue-100 font-semibold text-sm sm:text-base">
               Sistema de Acompanhamento
             </CardDescription>
@@ -51,36 +53,36 @@ export default function LoginPage() {
             <Label className="text-base sm:text-lg font-bold text-gray-700">Tipo de Usuário</Label>
             <div className="grid grid-cols-1 gap-3">
               <Button
-                variant={userType === "professor" ? "default" : "outline"}
-                onClick={() => setUserType("professor")}
+                variant={userType === "administrador" ? "default" : "outline"}
+                onClick={() => setUserType("administrador")}
                 className={`h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base ${
-                  userType === "professor"
+                  userType === "administrador"
                     ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
                     : "border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                👨‍🏫 Professor
+                �️ Administrador
               </Button>
               <Button
-                variant={userType === "aluno" ? "default" : "outline"}
-                onClick={() => setUserType("aluno")}
+                variant={userType === "jogador" ? "default" : "outline"}
+                onClick={() => setUserType("jogador")}
                 className={`h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base ${
-                  userType === "aluno"
+                  userType === "jogador"
                     ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
                     : "border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                👨‍🎓 Aluno
+                � Jogador
               </Button>
             </div>
           </div>
 
-          {userType === "professor" && (
+          {userType === "administrador" && (
             <div className="space-y-3">
               <Label className="text-base sm:text-lg font-bold text-gray-700">Senha</Label>
               <Input
                 type="password"
-                placeholder="Digite a senha do professor"
+                placeholder="Digite a senha do administrador"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-12 sm:h-14 rounded-xl border-2 border-gray-300 text-sm sm:text-base"
@@ -90,7 +92,7 @@ export default function LoginPage() {
 
           <Button
             onClick={handleLogin}
-            disabled={!userType || (userType === "professor" && !password)}
+            disabled={!userType || (userType === "administrador" && !password)}
             className="w-full h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             ENTRAR
@@ -101,7 +103,7 @@ export default function LoginPage() {
   )
 }
 
-function ProfessorDashboard() {
+function AdministradorDashboard() {
   const [activeTab, setActiveTab] = useState("gerenciar")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const torneio = useTorneio()
@@ -137,8 +139,8 @@ function ProfessorDashboard() {
                 <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-2xl font-black text-gray-800">Torneio Escolar</h1>
-                <p className="text-xs sm:text-sm text-gray-600 font-semibold">Painel do Professor</p>
+                <h1 className="text-lg sm:text-2xl font-black text-gray-800">Torneio Jamboree</h1>
+                <p className="text-xs sm:text-sm text-gray-600 font-semibold">Painel do Administrador</p>
               </div>
             </div>
             
@@ -213,7 +215,7 @@ function ProfessorDashboard() {
   )
 }
 
-function AlunoDashboard() {
+function JogadorDashboard() {
   const [activeTab, setActiveTab] = useState("geral")
   const [menuOpen, setMenuOpen] = useState(false)
   const torneio = useTorneio()
@@ -407,7 +409,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
   const handleCriarDupla = async () => {
     try {
       if (!aluno1 || !aluno2) {
-        toast.error("Preencha os nomes dos alunos!")
+        toast.error("Preencha os nomes dos jogadores!")
         return
       }
 
@@ -433,18 +435,18 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <Label className="font-bold text-gray-700">Aluno 1</Label>
+              <Label className="font-bold text-gray-700">Jogador 1</Label>
               <Input
-                placeholder="Nome do primeiro aluno"
+                placeholder="Nome do primeiro jogador"
                 value={aluno1}
                 onChange={(e) => setAluno1(e.target.value)}
                 className="rounded-full border-2 border-gray-300 h-12"
               />
             </div>
             <div>
-              <Label className="font-bold text-gray-700">Aluno 2</Label>
+              <Label className="font-bold text-gray-700">Jogador 2</Label>
               <Input
-                placeholder="Nome do segundo aluno"
+                placeholder="Nome do segundo jogador"
                 value={aluno2}
                 onChange={(e) => setAluno2(e.target.value)}
                 className="rounded-full border-2 border-gray-300 h-12"
@@ -560,7 +562,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
                 <div>
                   <h3 className="font-black text-lg text-gray-800">{dupla.tag}</h3>
                   <p className="text-sm text-gray-600 font-semibold">
-                    {dupla.pontos} pontos • {dupla.moedas} moedas • {dupla.medalhas} medalhas
+                    {dupla.estrelas} estrelas • {dupla.moedas} moedas • {dupla.medalhas} medalhas
                   </p>
                   <p className="text-xs text-gray-500">Status: {dupla.status}</p>
                 </div>
@@ -880,19 +882,19 @@ function RankingTable({ title, data }: { title: string; data: Dupla[] }) {
               <div className="flex gap-2">
                 {/* Medalhas */}
                 <div className="w-16 h-16 bg-slate-700 rounded-2xl flex flex-col items-center justify-center text-white">
-                  <Medal className="w-5 h-5 mb-1" />
+                  <Image src="/medal_icon.png" alt="Medal" width={20} height={20} className="w-5 h-5 mb-1" />
                   <span className="font-black text-sm">{dupla.medalhas}</span>
                 </div>
 
                 {/* Estrelas (calculadas dos pontos) */}
                 <div className="w-16 h-16 bg-green-400 rounded-2xl flex flex-col items-center justify-center text-white">
-                  <Star className="w-5 h-5 mb-1" />
-                  <span className="font-black text-sm">{Math.floor(dupla.pontos / 100)}</span>
+                  <Image src="/star_icon.png" alt="Star" width={20} height={20} className="w-5 h-5 mb-1" />
+                  <span className="font-black text-sm">{dupla.estrelas}</span>
                 </div>
 
                 {/* Moedas */}
                 <div className="w-16 h-16 bg-gradient-to-r from-red-400 to-pink-400 rounded-2xl flex flex-col items-center justify-center text-white">
-                  <Coins className="w-5 h-5 mb-1" />
+                  <Image src="/coin_icon.png" alt="Coin" width={20} height={20} className="w-5 h-5 mb-1" />
                   <span className="font-black text-sm">{dupla.moedas}</span>
                 </div>
               </div>
@@ -904,7 +906,7 @@ function RankingTable({ title, data }: { title: string; data: Dupla[] }) {
   )
 }
 
-// Componente da loja para alunos
+// Componente da loja para jogadores
 function LojaView({ torneio, showComprarButton = true }: { torneio: any; showComprarButton?: boolean }) {
   const jambaVIP = torneio.getDuplasPorCategoria('JambaVIP')
   const jamberlinda = torneio.getDuplasPorCategoria('Jamberlinda')
@@ -958,7 +960,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
               {jambaVIP.slice(0, 2).map((dupla: Dupla) => (
                 <div key={dupla.id} className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl border-2 border-purple-200">
                   <p className="font-black text-gray-800">{dupla.tag}</p>
-                  <p className="text-sm text-gray-600 font-semibold">{dupla.pontos} pontos • {dupla.moedas} moedas</p>
+                  <p className="text-sm text-gray-600 font-semibold">{dupla.estrelas} estrelas • {dupla.moedas} moedas</p>
                 </div>
               ))}
             </div>
@@ -975,7 +977,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
               {jamberlinda.slice(0, 2).map((dupla: Dupla) => (
                 <div key={dupla.id} className="p-4 bg-gradient-to-r from-pink-100 to-red-100 rounded-2xl border-2 border-pink-200">
                   <p className="font-black text-gray-800">{dupla.tag}</p>
-                  <p className="text-sm text-gray-600 font-semibold">{dupla.pontos} pontos • {dupla.moedas} moedas</p>
+                  <p className="text-sm text-gray-600 font-semibold">{dupla.estrelas} estrelas • {dupla.moedas} moedas</p>
                 </div>
               ))}
             </div>

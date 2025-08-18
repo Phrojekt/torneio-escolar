@@ -28,17 +28,17 @@ export function useTorneio() {
     
     const normalizada = {
       ...dupla,
-      pontos: Number(dupla.pontos) || 0,
-      moedas: Number(dupla.moedas) || 0,
       medalhas: Number(dupla.medalhas) || 0,
+      estrelas: Number(dupla.estrelas) || 0,
+      moedas: Number(dupla.moedas) || 0,
       tag: dupla.tag || '',
       bannerUrl: dupla.bannerUrl || '', // Preservar bannerUrl mesmo se vazio
-      pontosPorRodada: dupla.pontosPorRodada || {},
-      moedasPorRodada: dupla.moedasPorRodada || {},
       medalhasPorRodada: dupla.medalhasPorRodada || {},
-      pontosPorBonus: dupla.pontosPorBonus || {},
-      moedasPorBonus: dupla.moedasPorBonus || {},
+      estrelasPorRodada: dupla.estrelasPorRodada || {},
+      moedasPorRodada: dupla.moedasPorRodada || {},
       medalhasPorBonus: dupla.medalhasPorBonus || {},
+      estrelasPorBonus: dupla.estrelasPorBonus || {},
+      moedasPorBonus: dupla.moedasPorBonus || {},
       status: dupla.status || 'ativa'
     };
     
@@ -124,13 +124,13 @@ export function useTorneio() {
     try {
       const novaDupla: Omit<Dupla, 'id'> = {
         tag,
-        pontos: 0,
+        estrelas: 0,
         moedas: 0,
         medalhas: 0,
-        pontosPorRodada: {},
+        estrelasPorRodada: {},
         moedasPorRodada: {},
         medalhasPorRodada: {},
-        pontosPorBonus: {},
+        estrelasPorBonus: {},
         moedasPorBonus: {},
         medalhasPorBonus: {},
         status: 'ativa'
@@ -372,7 +372,7 @@ export function useTorneio() {
     nome: string,
     descricao: string,
     pontuacaoMaxima: number,
-    multiplicadorPontos: number,
+    multiplicadorEstrelas: number,
     multiplicadorMoedas: number = 1,
     multiplicadorMedalhas: number = 1
   ) => {
@@ -381,7 +381,7 @@ export function useTorneio() {
         nome,
         descricao,
         pontuacaoMaxima,
-        multiplicadorPontos,
+        multiplicadorEstrelas,
         multiplicadorMoedas,
         multiplicadorMedalhas,
         bonusId,
@@ -449,12 +449,12 @@ export function useTorneio() {
     }
   };
 
-  const calcularPontuacaoBonus = async (duplaId: string, bonusId: string): Promise<{pontos: number, moedas: number, medalhas: number}> => {
+  const calcularPontuacaoBonus = async (duplaId: string, bonusId: string): Promise<{estrelas: number, moedas: number, medalhas: number}> => {
     try {
       return await bonusService.calcularPontuacaoBonus(duplaId, bonusId);
     } catch (error) {
       console.error('Erro ao calcular pontuação do bônus:', error);
-      return {pontos: 0, moedas: 0, medalhas: 0};
+      return {estrelas: 0, moedas: 0, medalhas: 0};
     }
   };
 
@@ -537,9 +537,9 @@ export function useTorneio() {
   const getRankingGeral = () => {
     console.log("🏆 getRankingGeral - duplas originais:", duplas.map(d => ({
       tag: d.tag,
-      pontos: d.pontos,
-      pontosPorRodada: d.pontosPorRodada,
-      pontosPorBonus: d.pontosPorBonus
+      estrelas: d.estrelas,
+      estrelasPorRodada: d.estrelasPorRodada,
+      estrelasPorBonus: d.estrelasPorBonus
     })));
 
     const ranking = [...duplas]
@@ -563,22 +563,22 @@ export function useTorneio() {
     console.log(`🎯 getRankingPorRodada - rodada: ${rodadaId}`);
     console.log("📊 duplas para análise:", duplas.map(d => ({
       tag: d.tag,
-      pontosPorRodada: d.pontosPorRodada,
-      valorEspecifico: d.pontosPorRodada?.[rodadaId]
+      estrelasPorRodada: d.estrelasPorRodada,
+      valorEspecifico: d.estrelasPorRodada?.[rodadaId]
     })));
 
     const ranking = [...duplas]
       .map(dupla => {
-        const pontosRodada = Number(dupla.pontosPorRodada?.[rodadaId]) || 0;
+        const estrelasRodada = Number(dupla.estrelasPorRodada?.[rodadaId]) || 0;
         const moedasRodada = Number(dupla.moedasPorRodada?.[rodadaId]) || 0;
         const medalhasRodada = Number(dupla.medalhasPorRodada?.[rodadaId]) || 0;
         
         console.log(`📈 ${dupla.tag} - rodada ${rodadaId}:`, { 
-          pontosRodada, 
+          estrelasRodada, 
           moedasRodada, 
           medalhasRodada,
           original: {
-            pontos: dupla.pontosPorRodada?.[rodadaId],
+            estrelas: dupla.estrelasPorRodada?.[rodadaId],
             moedas: dupla.moedasPorRodada?.[rodadaId],
             medalhas: dupla.medalhasPorRodada?.[rodadaId]
           }
@@ -586,16 +586,16 @@ export function useTorneio() {
         
         return {
           ...dupla,
-          pontosRodada: isNaN(pontosRodada) ? 0 : pontosRodada,
+          estrelasRodada: isNaN(estrelasRodada) ? 0 : estrelasRodada,
           moedasRodada: isNaN(moedasRodada) ? 0 : moedasRodada,
           medalhasRodada: isNaN(medalhasRodada) ? 0 : medalhasRodada
         };
       })
-      .sort((a, b) => (b.pontosRodada || 0) - (a.pontosRodada || 0));
+      .sort((a, b) => (b.estrelasRodada || 0) - (a.estrelasRodada || 0));
 
     console.log("🎯 Ranking por rodada final:", ranking.map(d => ({ 
       tag: d.tag, 
-      pontosRodada: d.pontosRodada 
+      estrelasRodada: d.estrelasRodada 
     })));
     return ranking;
   };
@@ -603,39 +603,39 @@ export function useTorneio() {
   const getRankingPorBonus = (bonusId: string, bonusData: Bonus) => {
     return [...duplas]
       .map(dupla => {
-        // Calcular pontos, moedas e medalhas totais do bônus (já com multiplicadores aplicados)
-        let pontosBonus = 0;
+        // Calcular estrelas, moedas e medalhas totais do bônus (já com multiplicadores aplicados)
+        let estrelasBonus = 0;
         let moedasBonus = 0;
         let medalhasBonus = 0;
         
-        if (dupla.pontosPorBonus?.[bonusId]) {
-          pontosBonus = Object.values(dupla.pontosPorBonus[bonusId])
-            .reduce((total, pontos) => total + (Number(pontos) || 0), 0);
+        if (dupla.estrelasPorBonus?.[bonusId]) {
+          estrelasBonus = Object.values(dupla.estrelasPorBonus[bonusId])
+            .reduce((total: number, estrelas: unknown) => total + (Number(estrelas) || 0), 0);
         }
         
         if (dupla.moedasPorBonus?.[bonusId]) {
           moedasBonus = Object.values(dupla.moedasPorBonus[bonusId])
-            .reduce((total, moedas) => total + (Number(moedas) || 0), 0);
+            .reduce((total: number, moedas: unknown) => total + (Number(moedas) || 0), 0);
         }
         
         if (dupla.medalhasPorBonus?.[bonusId]) {
           medalhasBonus = Object.values(dupla.medalhasPorBonus[bonusId])
-            .reduce((total, medalhas) => total + (Number(medalhas) || 0), 0);
+            .reduce((total: number, medalhas: unknown) => total + (Number(medalhas) || 0), 0);
         }
 
         // Garantir que todos os valores são números válidos
-        pontosBonus = isNaN(pontosBonus) ? 0 : pontosBonus;
+        estrelasBonus = isNaN(estrelasBonus) ? 0 : estrelasBonus;
         moedasBonus = isNaN(moedasBonus) ? 0 : moedasBonus;
         medalhasBonus = isNaN(medalhasBonus) ? 0 : medalhasBonus;
 
         return {
           ...dupla,
-          pontosBonus,
+          estrelasBonus,
           moedasBonus,
           medalhasBonus
         };
       })
-      .sort((a, b) => (b.pontosBonus || 0) - (a.pontosBonus || 0));
+      .sort((a, b) => (b.estrelasBonus || 0) - (a.estrelasBonus || 0));
   };
 
   const getDuplasPorCategoria = (categoria: 'JambaVIP' | 'Jamberlinda') => {

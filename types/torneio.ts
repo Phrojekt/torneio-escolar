@@ -3,15 +3,15 @@ export interface Dupla {
   id: string;
   tag: string; // Tag de até 5 letras/números para identificação
   bannerUrl?: string; // URL da imagem banner 700x200 (obrigatório para exibição)
-  pontos: number;
-  moedas: number;
   medalhas: number;
-  pontosPorRodada: { [rodada: string]: number };
-  moedasPorRodada: { [rodada: string]: number };
+  estrelas: number;
+  moedas: number;
   medalhasPorRodada: { [rodada: string]: number };
-  pontosPorBonus?: { [bonusId: string]: { [partidaId: string]: number } };
-  moedasPorBonus?: { [bonusId: string]: { [partidaId: string]: number } };
+  estrelasPorRodada: { [rodada: string]: number };
+  moedasPorRodada: { [rodada: string]: number };
   medalhasPorBonus?: { [bonusId: string]: { [partidaId: string]: number } };
+  estrelasPorBonus?: { [bonusId: string]: { [partidaId: string]: number } };
+  moedasPorBonus?: { [bonusId: string]: { [partidaId: string]: number } };
   status: 'ativa' | 'aguardando' | 'eliminada';
   categoria?: 'JambaVIP' | 'Jamberlinda' | 'normal';
 }
@@ -61,9 +61,9 @@ export interface TorneioConfig {
 export interface Usuario {
   id: string;
   email: string;
-  tipo: 'professor' | 'aluno';
+  tipo: 'administrador' | 'jogador';
   nome: string;
-  duplaId?: string; // Para alunos
+  duplaId?: string; // Para jogadores
 }
 
 export interface Atividade {
@@ -71,9 +71,9 @@ export interface Atividade {
   nome: string;
   descricao: string;
   rodada: string;
-  pontos: number;
-  moedas: number;
   medalhas: number;
+  estrelas: number;
+  moedas: number;
   dataRealizacao: Date;
   participantes: string[]; // IDs das duplas
 }
@@ -93,9 +93,9 @@ export interface Partida {
   nome: string;
   descricao: string;
   pontuacaoMaxima: number;
-  multiplicadorPontos: number; // Multiplicador para pontos
-  multiplicadorMoedas: number; // Multiplicador para moedas
   multiplicadorMedalhas: number; // Multiplicador para medalhas
+  multiplicadorEstrelas: number; // Multiplicador para estrelas
+  multiplicadorMoedas: number; // Multiplicador para moedas
   bonusId: string;
   ativa: boolean;
   finalizada: boolean;

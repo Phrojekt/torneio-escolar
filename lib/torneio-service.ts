@@ -32,7 +32,7 @@ export const duplaService = {
   // Buscar todas as duplas
   async buscarTodas(): Promise<Dupla[]> {
     const querySnapshot = await getDocs(
-      query(collection(db, 'duplas'), orderBy('pontos', 'desc'))
+      query(collection(db, 'duplas'), orderBy('medalhas', 'desc'))
     );
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
@@ -46,7 +46,7 @@ export const duplaService = {
       query(
         collection(db, 'duplas'), 
         where('categoria', '==', categoria),
-        orderBy('pontos', 'desc')
+        orderBy('medalhas', 'desc')
       )
     );
     return querySnapshot.docs.map(doc => ({
@@ -69,9 +69,9 @@ export const duplaService = {
   // Atualizar pontuação de uma dupla
   async atualizarPontuacao(
     id: string, 
-    pontos: number, 
-    moedas: number, 
     medalhas: number, 
+    estrelas: number, 
+    moedas: number, 
     rodada: string
   ): Promise<void> {
     const duplaRef = doc(db, 'duplas', id);
@@ -80,10 +80,16 @@ export const duplaService = {
     if (duplaDoc.exists()) {
       const duplaAtual = duplaDoc.data() as Dupla;
       
-      // Atualizar pontos da rodada específica
-      const novosPontosPorRodada = {
-        ...duplaAtual.pontosPorRodada,
-        [rodada]: (duplaAtual.pontosPorRodada?.[rodada] || 0) + pontos
+      // Atualizar medalhas da rodada específica
+      const novasMedalhasPorRodada = {
+        ...duplaAtual.medalhasPorRodada,
+        [rodada]: (duplaAtual.medalhasPorRodada?.[rodada] || 0) + medalhas
+      };
+
+      // Atualizar estrelas da rodada específica
+      const novasEstrelasPorRodada = {
+        ...duplaAtual.estrelasPorRodada,
+        [rodada]: (duplaAtual.estrelasPorRodada?.[rodada] || 0) + estrelas
       };
 
       // Atualizar moedas da rodada específica
@@ -92,37 +98,31 @@ export const duplaService = {
         [rodada]: (duplaAtual.moedasPorRodada?.[rodada] || 0) + moedas
       };
 
-      // Atualizar medalhas da rodada específica
-      const novasMedalhasPorRodada = {
-        ...duplaAtual.medalhasPorRodada,
-        [rodada]: (duplaAtual.medalhasPorRodada?.[rodada] || 0) + medalhas
-      };
-
       // Calcular totais somando todas as rodadas
-      const pontosTotaisRodadas = Object.values(novosPontosPorRodada).reduce((total, pontosRodada) => total + pontosRodada, 0);
-      const moedasTotaisRodadas = Object.values(novasMoedasPorRodada).reduce((total, moedasRodada) => total + moedasRodada, 0);
       const medalhasTotaisRodadas = Object.values(novasMedalhasPorRodada).reduce((total, medalhasRodada) => total + medalhasRodada, 0);
+      const estrelasTotaisRodadas = Object.values(novasEstrelasPorRodada).reduce((total, estrelasRodada) => total + estrelasRodada, 0);
+      const moedasTotaisRodadas = Object.values(novasMoedasPorRodada).reduce((total, moedasRodada) => total + moedasRodada, 0);
 
       // Calcular totais dos bônus
-      const pontosTotaisBonus = Object.values(duplaAtual.pontosPorBonus || {}).reduce((total, bonusPartidas) => 
-        total + Object.values(bonusPartidas).reduce((subTotal, pontos) => subTotal + pontos, 0), 0
+      const medalhasTotaisBonus = Object.values(duplaAtual.medalhasPorBonus || {}).reduce((total, bonusPartidas) => 
+        total + Object.values(bonusPartidas).reduce((subTotal, medalhas) => subTotal + medalhas, 0), 0
+      );
+      
+      const estrelasTotaisBonus = Object.values(duplaAtual.estrelasPorBonus || {}).reduce((total, bonusPartidas) => 
+        total + Object.values(bonusPartidas).reduce((subTotal, estrelas) => subTotal + estrelas, 0), 0
       );
       
       const moedasTotaisBonus = Object.values(duplaAtual.moedasPorBonus || {}).reduce((total, bonusPartidas) => 
         total + Object.values(bonusPartidas).reduce((subTotal, moedas) => subTotal + moedas, 0), 0
       );
-      
-      const medalhasTotaisBonus = Object.values(duplaAtual.medalhasPorBonus || {}).reduce((total, bonusPartidas) => 
-        total + Object.values(bonusPartidas).reduce((subTotal, medalhas) => subTotal + medalhas, 0), 0
-      );
 
       await updateDoc(duplaRef, {
-        pontos: pontosTotaisRodadas + pontosTotaisBonus,
-        moedas: moedasTotaisRodadas + moedasTotaisBonus,
         medalhas: medalhasTotaisRodadas + medalhasTotaisBonus,
-        pontosPorRodada: novosPontosPorRodada,
-        moedasPorRodada: novasMoedasPorRodada,
-        medalhasPorRodada: novasMedalhasPorRodada
+        estrelas: estrelasTotaisRodadas + estrelasTotaisBonus,
+        moedas: moedasTotaisRodadas + moedasTotaisBonus,
+        medalhasPorRodada: novasMedalhasPorRodada,
+        estrelasPorRodada: novasEstrelasPorRodada,
+        moedasPorRodada: novasMoedasPorRodada
       });
     }
   },
@@ -142,28 +142,28 @@ export const duplaService = {
       const dupla = duplaDoc.data() as Dupla;
       
       // Calcular totais das rodadas
-      const pontosRodadas = Object.values(dupla.pontosPorRodada || {}).reduce((total, pontos) => total + pontos, 0);
-      const moedasRodadas = Object.values(dupla.moedasPorRodada || {}).reduce((total, moedas) => total + moedas, 0);
       const medalhasRodadas = Object.values(dupla.medalhasPorRodada || {}).reduce((total, medalhas) => total + medalhas, 0);
+      const estrelasRodadas = Object.values(dupla.estrelasPorRodada || {}).reduce((total, estrelas) => total + estrelas, 0);
+      const moedasRodadas = Object.values(dupla.moedasPorRodada || {}).reduce((total, moedas) => total + moedas, 0);
       
       // Calcular totais dos bônus
-      const pontosBonusTotal = Object.values(dupla.pontosPorBonus || {}).reduce((total, bonusPartidas) => 
-        total + Object.values(bonusPartidas).reduce((subTotal, pontos) => subTotal + pontos, 0), 0
+      const medalhasBonusTotal = Object.values(dupla.medalhasPorBonus || {}).reduce((total, bonusPartidas) => 
+        total + Object.values(bonusPartidas).reduce((subTotal, medalhas) => subTotal + medalhas, 0), 0
+      );
+      
+      const estrelasBonusTotal = Object.values(dupla.estrelasPorBonus || {}).reduce((total, bonusPartidas) => 
+        total + Object.values(bonusPartidas).reduce((subTotal, estrelas) => subTotal + estrelas, 0), 0
       );
       
       const moedasBonusTotal = Object.values(dupla.moedasPorBonus || {}).reduce((total, bonusPartidas) => 
         total + Object.values(bonusPartidas).reduce((subTotal, moedas) => subTotal + moedas, 0), 0
       );
-      
-      const medalhasBonusTotal = Object.values(dupla.medalhasPorBonus || {}).reduce((total, bonusPartidas) => 
-        total + Object.values(bonusPartidas).reduce((subTotal, medalhas) => subTotal + medalhas, 0), 0
-      );
 
       // Atualizar totais
       await updateDoc(duplaRef, {
-        pontos: pontosRodadas + pontosBonusTotal,
-        moedas: moedasRodadas + moedasBonusTotal,
-        medalhas: medalhasRodadas + medalhasBonusTotal
+        medalhas: medalhasRodadas + medalhasBonusTotal,
+        estrelas: estrelasRodadas + estrelasBonusTotal,
+        moedas: moedasRodadas + moedasBonusTotal
       });
     }
   },
@@ -176,28 +176,28 @@ export const duplaService = {
       const dupla = duplaDoc.data() as Dupla;
       
       // Calcular totais das rodadas
-      const pontosRodadas = Object.values(dupla.pontosPorRodada || {}).reduce((total, pontos) => total + pontos, 0);
-      const moedasRodadas = Object.values(dupla.moedasPorRodada || {}).reduce((total, moedas) => total + moedas, 0);
       const medalhasRodadas = Object.values(dupla.medalhasPorRodada || {}).reduce((total, medalhas) => total + medalhas, 0);
+      const estrelasRodadas = Object.values(dupla.estrelasPorRodada || {}).reduce((total, estrelas) => total + estrelas, 0);
+      const moedasRodadas = Object.values(dupla.moedasPorRodada || {}).reduce((total, moedas) => total + moedas, 0);
       
       // Calcular totais dos bônus
-      const pontosBonusTotal = Object.values(dupla.pontosPorBonus || {}).reduce((total, bonusPartidas) => 
-        total + Object.values(bonusPartidas).reduce((subTotal, pontos) => subTotal + pontos, 0), 0
+      const medalhasBonusTotal = Object.values(dupla.medalhasPorBonus || {}).reduce((total, bonusPartidas) => 
+        total + Object.values(bonusPartidas).reduce((subTotal, medalhas) => subTotal + medalhas, 0), 0
+      );
+      
+      const estrelasBonusTotal = Object.values(dupla.estrelasPorBonus || {}).reduce((total, bonusPartidas) => 
+        total + Object.values(bonusPartidas).reduce((subTotal, estrelas) => subTotal + estrelas, 0), 0
       );
       
       const moedasBonusTotal = Object.values(dupla.moedasPorBonus || {}).reduce((total, bonusPartidas) => 
         total + Object.values(bonusPartidas).reduce((subTotal, moedas) => subTotal + moedas, 0), 0
       );
       
-      const medalhasBonusTotal = Object.values(dupla.medalhasPorBonus || {}).reduce((total, bonusPartidas) => 
-        total + Object.values(bonusPartidas).reduce((subTotal, medalhas) => subTotal + medalhas, 0), 0
-      );
-      
       // Atualizar totais
       await updateDoc(duplaDoc.ref, {
-        pontos: pontosRodadas + pontosBonusTotal,
-        moedas: moedasRodadas + moedasBonusTotal,
-        medalhas: medalhasRodadas + medalhasBonusTotal
+        medalhas: medalhasRodadas + medalhasBonusTotal,
+        estrelas: estrelasRodadas + estrelasBonusTotal,
+        moedas: moedasRodadas + moedasBonusTotal
       });
     }
   },
@@ -573,9 +573,9 @@ export const bonusService = {
     duplaId: string,
     bonusId: string, 
     partidaId: string,
-    pontos: number,
-    moedas: number = 0,
-    medalhas: number = 0
+    medalhas: number,
+    estrelas: number = 0,
+    moedas: number = 0
   ): Promise<void> {
     const duplaRef = doc(db, 'duplas', duplaId);
     const duplaDoc = await getDoc(duplaRef);
@@ -588,16 +588,25 @@ export const bonusService = {
       if (!partidaDoc.exists()) return;
       
       const partida = partidaDoc.data() as Partida;
-      const pontosFinal = pontos * partida.multiplicadorPontos;
-      const moedasFinal = moedas * partida.multiplicadorMoedas;
       const medalhasFinal = medalhas * partida.multiplicadorMedalhas;
+      const estrelasFinal = estrelas * partida.multiplicadorEstrelas;
+      const moedasFinal = moedas * partida.multiplicadorMoedas;
       
-      // Atualizar pontos do bônus específico
-      const novosPontosPorBonus = {
-        ...(duplaAtual.pontosPorBonus || {}),
+      // Atualizar medalhas do bônus específico
+      const novasMedalhasPorBonus = {
+        ...(duplaAtual.medalhasPorBonus || {}),
         [bonusId]: {
-          ...(duplaAtual.pontosPorBonus?.[bonusId] || {}),
-          [partidaId]: pontosFinal
+          ...(duplaAtual.medalhasPorBonus?.[bonusId] || {}),
+          [partidaId]: medalhasFinal
+        }
+      };
+
+      // Atualizar estrelas do bônus específico
+      const novasEstrelasPorBonus = {
+        ...(duplaAtual.estrelasPorBonus || {}),
+        [bonusId]: {
+          ...(duplaAtual.estrelasPorBonus?.[bonusId] || {}),
+          [partidaId]: estrelasFinal
         }
       };
 
@@ -610,61 +619,52 @@ export const bonusService = {
         }
       };
 
-      // Atualizar medalhas do bônus específico
-      const novasMedalhasPorBonus = {
-        ...(duplaAtual.medalhasPorBonus || {}),
-        [bonusId]: {
-          ...(duplaAtual.medalhasPorBonus?.[bonusId] || {}),
-          [partidaId]: medalhasFinal
-        }
-      };
-
       // Recalcular totais gerais incluindo bônus
-      const pontosTotaisBonus = Object.values(novosPontosPorBonus).reduce((total, bonusPartidas) => 
-        total + Object.values(bonusPartidas).reduce((subTotal, pontos) => subTotal + pontos, 0), 0
+      const medalhasTotaisBonus = Object.values(novasMedalhasPorBonus).reduce((total, bonusPartidas) => 
+        total + Object.values(bonusPartidas).reduce((subTotal, medalhas) => subTotal + medalhas, 0), 0
+      );
+      
+      const estrelasTotaisBonus = Object.values(novasEstrelasPorBonus).reduce((total, bonusPartidas) => 
+        total + Object.values(bonusPartidas).reduce((subTotal, estrelas) => subTotal + estrelas, 0), 0
       );
       
       const moedasTotaisBonus = Object.values(novasMoedasPorBonus).reduce((total, bonusPartidas) => 
         total + Object.values(bonusPartidas).reduce((subTotal, moedas) => subTotal + moedas, 0), 0
       );
       
-      const medalhasTotaisBonus = Object.values(novasMedalhasPorBonus).reduce((total, bonusPartidas) => 
-        total + Object.values(bonusPartidas).reduce((subTotal, medalhas) => subTotal + medalhas, 0), 0
-      );
-
-      // Somar com pontos das rodadas normais
-      const pontosRodadas = Object.values(duplaAtual.pontosPorRodada || {}).reduce((total, pontos) => total + pontos, 0);
-      const moedasRodadas = Object.values(duplaAtual.moedasPorRodada || {}).reduce((total, moedas) => total + moedas, 0);
+      // Somar com medalhas/estrelas/moedas das rodadas normais
       const medalhasRodadas = Object.values(duplaAtual.medalhasPorRodada || {}).reduce((total, medalhas) => total + medalhas, 0);
+      const estrelasRodadas = Object.values(duplaAtual.estrelasPorRodada || {}).reduce((total, estrelas) => total + estrelas, 0);
+      const moedasRodadas = Object.values(duplaAtual.moedasPorRodada || {}).reduce((total, moedas) => total + moedas, 0);
 
       await updateDoc(duplaRef, {
-        pontosPorBonus: novosPontosPorBonus,
-        moedasPorBonus: novasMoedasPorBonus,
         medalhasPorBonus: novasMedalhasPorBonus,
+        estrelasPorBonus: novasEstrelasPorBonus,
+        moedasPorBonus: novasMoedasPorBonus,
         // Atualizar totais gerais
-        pontos: pontosRodadas + pontosTotaisBonus,
-        moedas: moedasRodadas + moedasTotaisBonus,
-        medalhas: medalhasRodadas + medalhasTotaisBonus
+        medalhas: medalhasRodadas + medalhasTotaisBonus,
+        estrelas: estrelasRodadas + estrelasTotaisBonus,
+        moedas: moedasRodadas + moedasTotaisBonus
       });
     }
   },
 
   // Calcular pontuação total de um bônus para uma dupla
-  async calcularPontuacaoBonus(duplaId: string, bonusId: string): Promise<{pontos: number, moedas: number, medalhas: number}> {
+  async calcularPontuacaoBonus(duplaId: string, bonusId: string): Promise<{medalhas: number, estrelas: number, moedas: number}> {
     const duplaDoc = await getDoc(doc(db, 'duplas', duplaId));
-    if (!duplaDoc.exists()) return {pontos: 0, moedas: 0, medalhas: 0};
+    if (!duplaDoc.exists()) return {medalhas: 0, estrelas: 0, moedas: 0};
     
     const dupla = duplaDoc.data() as Dupla;
     
-    const pontosPorBonus = dupla.pontosPorBonus?.[bonusId] || {};
-    const moedasPorBonus = dupla.moedasPorBonus?.[bonusId] || {};
     const medalhasPorBonus = dupla.medalhasPorBonus?.[bonusId] || {};
+    const estrelasPorBonus = dupla.estrelasPorBonus?.[bonusId] || {};
+    const moedasPorBonus = dupla.moedasPorBonus?.[bonusId] || {};
     
-    const pontos = Object.values(pontosPorBonus).reduce((total, pontos) => total + pontos, 0);
-    const moedas = Object.values(moedasPorBonus).reduce((total, moedas) => total + moedas, 0);
     const medalhas = Object.values(medalhasPorBonus).reduce((total, medalhas) => total + medalhas, 0);
+    const estrelas = Object.values(estrelasPorBonus).reduce((total, estrelas) => total + estrelas, 0);
+    const moedas = Object.values(moedasPorBonus).reduce((total, moedas) => total + moedas, 0);
     
-    return { pontos, moedas, medalhas };
+    return { medalhas, estrelas, moedas };
   },
 
   // Remover bônus

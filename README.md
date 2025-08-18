@@ -1,6 +1,6 @@
-# Torneio Escolar
+# Torneio Jamboree
 
-Sistema para gerenciamento de torneios escolares com upload de banners de duplas.
+Sistema para gerenciamento de Torneios Jamboree com upload de banners de duplas.
 
 ## Configuração para Deploy no Netlify
 
@@ -11,7 +11,7 @@ Para que o upload de imagens funcione no Netlify, é necessário configurar um t
 #### Passo 1: Criar Personal Access Token
 1. Vá em https://github.com/settings/tokens
 2. Clique em "Generate new token" > "Generate new token (classic)"
-3. Dê um nome para o token (ex: "torneio-escolar-uploads")
+3. Dê um nome para o token (ex: "torneio-jamboree-uploads")
 4. Selecione as permissões:
    - **Contents**: Read and write (para criar/editar arquivos)
 5. Clique em "Generate token"
