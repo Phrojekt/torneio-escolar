@@ -53,9 +53,12 @@ export function useTorneio() {
 
   // Escutar mudanças nas duplas em tempo real
   useEffect(() => {
+    console.log('🚀 Registrando listener de duplas...');
     const unsubscribe = duplaService.escutarMudancas((novasDuplas) => {
+      console.log('📊 Hook recebeu duplas do listener:', novasDuplas.length);
       // Normalizar todas as duplas recebidas
       const duplasNormalizadas = novasDuplas.map(normalizarDupla);
+      console.log('✅ Duplas normalizadas:', duplasNormalizadas.length);
       setDuplas(duplasNormalizadas);
     });
 
@@ -155,13 +158,13 @@ export function useTorneio() {
 
   const adicionarPontuacao = async (
     duplaId: string,
-    pontos: number,
-    moedas: number,
     medalhas: number,
+    estrelas: number,
+    moedas: number,
     rodada: string
   ) => {
     try {
-      await duplaService.atualizarPontuacao(duplaId, pontos, moedas, medalhas, rodada);
+      await duplaService.atualizarPontuacao(duplaId, medalhas, estrelas, moedas, rodada);
       // Os dados serão atualizados automaticamente pelo listener
     } catch (error) {
       console.error('Erro ao adicionar pontuação:', error);
@@ -367,12 +370,12 @@ export function useTorneio() {
     duplaId: string,
     bonusId: string,
     partidaId: string,
-    pontos: number,
-    moedas: number = 0,
-    medalhas: number = 0
+    medalhas: number,
+    estrelas: number = 0,
+    moedas: number = 0
   ) => {
     try {
-      await bonusService.adicionarPontuacao(duplaId, bonusId, partidaId, pontos, moedas, medalhas);
+      await bonusService.adicionarPontuacao(duplaId, bonusId, partidaId, medalhas, estrelas, moedas);
       // Os dados serão atualizados automaticamente pelo listener
     } catch (error) {
       console.error('Erro ao adicionar pontuação de bônus:', error);
@@ -461,12 +464,12 @@ export function useTorneio() {
     }
   };
 
-  const calcularPontuacaoBonus = async (duplaId: string, bonusId: string): Promise<{estrelas: number, moedas: number, medalhas: number}> => {
+  const calcularPontuacaoBonus = async (duplaId: string, bonusId: string): Promise<{medalhas: number, estrelas: number, moedas: number}> => {
     try {
       return await bonusService.calcularPontuacaoBonus(duplaId, bonusId);
     } catch (error) {
       console.error('Erro ao calcular pontuação do bônus:', error);
-      return {estrelas: 0, moedas: 0, medalhas: 0};
+      return {medalhas: 0, estrelas: 0, moedas: 0};
     }
   };
 
@@ -494,50 +497,36 @@ export function useTorneio() {
     }
   };
 
-  // Função para calcular totais reais (rodadas + bônus) de uma dupla
+  // Função para calcular APENAS os totais das rodadas (sem bônus) para o ranking geral
   const calcularTotaisReais = (dupla: any) => {
-    // Totais das rodadas
-    const pontosRodadas = Object.values(dupla.pontosPorRodada || {})
-      .reduce((total: number, pontos: any) => total + (Number(pontos) || 0), 0);
-    const moedasRodadas = Object.values(dupla.moedasPorRodada || {})
-      .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
+    // Para o ranking geral, calculamos APENAS os valores das rodadas, SEM incluir bônus
     const medalhasRodadas = Object.values(dupla.medalhasPorRodada || {})
       .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
-
-    // Totais dos bônus
-    const pontosBonusTotal = Object.values(dupla.pontosPorBonus || {})
-      .reduce((total: number, bonusPartidas: any) => 
-        total + Object.values(bonusPartidas || {})
-          .reduce((subTotal: number, pontos: any) => subTotal + (Number(pontos) || 0), 0), 0
-      );
     
-    const moedasBonusTotal = Object.values(dupla.moedasPorBonus || {})
-      .reduce((total: number, bonusPartidas: any) => 
-        total + Object.values(bonusPartidas || {})
-          .reduce((subTotal: number, moedas: any) => subTotal + (Number(moedas) || 0), 0), 0
-      );
+    const estrelasRodadas = Object.values(dupla.estrelasPorRodada || {})
+      .reduce((total: number, estrelas: any) => total + (Number(estrelas) || 0), 0);
     
-    const medalhasBonusTotal = Object.values(dupla.medalhasPorBonus || {})
-      .reduce((total: number, bonusPartidas: any) => 
-        total + Object.values(bonusPartidas || {})
-          .reduce((subTotal: number, medalhas: any) => subTotal + (Number(medalhas) || 0), 0), 0
-      );
+    const moedasRodadas = Object.values(dupla.moedasPorRodada || {})
+      .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
 
     const totais = {
-      pontos: pontosRodadas + pontosBonusTotal,
-      moedas: moedasRodadas + moedasBonusTotal,
-      medalhas: medalhasRodadas + medalhasBonusTotal
+      estrelas: estrelasRodadas,
+      moedas: moedasRodadas,
+      medalhas: medalhasRodadas
     };
 
     // Log para debug
     if (dupla.tag) {
-      console.log(`🏆 Totais ${dupla.tag}:`, {
-        rodadas: { pontosRodadas, moedasRodadas, medalhasRodadas },
-        bonus: { pontosBonusTotal, moedasBonusTotal, medalhasBonusTotal },
-        totais,
+      console.log(`🏆 Totais APENAS RODADAS ${dupla.tag}:`, {
+        totaisRodadas: totais,
+        totalBanco: {
+          estrelas: dupla.estrelas,
+          moedas: dupla.moedas,
+          medalhas: dupla.medalhas
+        },
         estrutura: {
-          pontosPorRodada: dupla.pontosPorRodada,
-          pontosPorBonus: dupla.pontosPorBonus
+          medalhasPorRodada: dupla.medalhasPorRodada,
+          estrelasPorRodada: dupla.estrelasPorRodada
         }
       });
     }
@@ -560,14 +549,14 @@ export function useTorneio() {
         console.log(`🔢 ${dupla.tag} - Totais calculados:`, totaisReais);
         return {
           ...dupla,
-          pontos: totaisReais.pontos,
+          estrelas: totaisReais.estrelas,
           moedas: totaisReais.moedas,
           medalhas: totaisReais.medalhas
         };
       })
-      .sort((a, b) => (b.pontos || 0) - (a.pontos || 0));
+      .sort((a, b) => (b.estrelas || 0) - (a.estrelas || 0));
 
-    console.log("🏆 Ranking final ordenado:", ranking.map(d => ({ tag: d.tag, pontos: d.pontos })));
+    console.log("🏆 Ranking final ordenado:", ranking.map(d => ({ tag: d.tag, estrelas: d.estrelas })));
     return ranking;
   };
 

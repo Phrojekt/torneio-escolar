@@ -349,4 +349,53 @@
 .hover-scale-item:hover {
   z-index: 10;
 }
+
+/* Tooltip styles for item descriptions - Simplified approach */
+.item-tooltip {
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  white-space: normal;
+  word-wrap: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+  /* Ensure it's always on top */
+  z-index: 100 !important;
+}
+
+/* Ensure tooltips don't overflow container */
+.tooltip-container {
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Special handling for scroll containers with tooltips */
+.tooltip-container .overflow-x-auto {
+  overflow-y: visible !important;
+}
+
+/* Ensure parent containers don't clip tooltips */
+.hover-scale-container {
+  overflow-y: visible !important;
+}
+
+/* Make sure card containers don't clip tooltips */
+.rounded-xl, .rounded-2xl, .rounded-3xl {
+  overflow: visible !important;
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
 }

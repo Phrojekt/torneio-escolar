@@ -13,6 +13,18 @@ import { useTorneio } from "@/hooks/use-torneio"
 import { Dupla } from "@/types/torneio"
 import { toast } from "sonner"
 
+// Função utilitária para calcular valores apenas das rodadas (sem bônus)
+const calcularValoresRodadas = (dupla: any) => {
+  const medalhasRodadas = Object.values(dupla.medalhasPorRodada || {})
+    .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
+  const estrelasRodadas = Object.values(dupla.estrelasPorRodada || {})
+    .reduce((total: number, estrelas: any) => total + (Number(estrelas) || 0), 0);
+  const moedasRodadas = Object.values(dupla.moedasPorRodada || {})
+    .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
+  
+  return { medalhasRodadas, estrelasRodadas, moedasRodadas };
+};
+
 export default function LoginPage() {
   const [userType, setUserType] = useState<"administrador" | "jogador" | null>(null)
   const [password, setPassword] = useState("")
@@ -377,28 +389,28 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
   const [aluno1, setAluno1] = useState("")
   const [aluno2, setAluno2] = useState("")
   const [duplaId, setDuplaId] = useState("")
-  const [pontos, setPontos] = useState("")
+  const [estrelas, setEstrelas] = useState("")
   const [moedas, setMoedas] = useState("")
   const [medalhas, setMedalhas] = useState("")
   const [rodadaSelecionada, setRodadaSelecionada] = useState("")
 
   const handleAdicionarPontuacao = async () => {
     try {
-      if (!duplaId || !pontos || !moedas || !medalhas || !rodadaSelecionada) {
+      if (!duplaId || !estrelas || !moedas || !medalhas || !rodadaSelecionada) {
         toast.error("Preencha todos os campos!")
         return
       }
 
       await torneio.adicionarPontuacao(
         duplaId,
-        parseInt(pontos),
-        parseInt(moedas),
-        parseInt(medalhas),
+        parseInt(medalhas), // medalhas
+        parseInt(estrelas),   // estrelas
+        parseInt(moedas),   // moedas
         rodadaSelecionada
       )
 
       toast.success("Pontuação adicionada com sucesso!")
-      setPontos("")
+      setEstrelas("")
       setMoedas("")
       setMedalhas("")
     } catch (error) {
@@ -487,12 +499,22 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label className="font-bold text-gray-700">Pontos</Label>
+                <Label className="font-bold text-gray-700">Medalhas</Label>
                 <Input
                   type="number"
                   placeholder="0"
-                  value={pontos}
-                  onChange={(e) => setPontos(e.target.value)}
+                  value={medalhas}
+                  onChange={(e) => setMedalhas(e.target.value)}
+                  className="rounded-full border-2 border-gray-300 h-12"
+                />
+              </div>
+              <div>
+                <Label className="font-bold text-gray-700">Estrelas</Label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  value={estrelas}
+                  onChange={(e) => setEstrelas(e.target.value)}
                   className="rounded-full border-2 border-gray-300 h-12"
                 />
               </div>
@@ -503,16 +525,6 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                   placeholder="0"
                   value={moedas}
                   onChange={(e) => setMoedas(e.target.value)}
-                  className="rounded-full border-2 border-gray-300 h-12"
-                />
-              </div>
-              <div>
-                <Label className="font-bold text-gray-700">Medalhas</Label>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={medalhas}
-                  onChange={(e) => setMedalhas(e.target.value)}
                   className="rounded-full border-2 border-gray-300 h-12"
                 />
               </div>
@@ -557,15 +569,17 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
         </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-4">
-            {torneio.duplas.map((dupla: Dupla) => (
-              <div key={dupla.id} className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200 flex justify-between items-center">
-                <div>
-                  <h3 className="font-black text-lg text-gray-800">{dupla.tag}</h3>
-                  <p className="text-sm text-gray-600 font-semibold">
-                    {dupla.estrelas} estrelas • {dupla.moedas} moedas • {dupla.medalhas} medalhas
-                  </p>
-                  <p className="text-xs text-gray-500">Status: {dupla.status}</p>
-                </div>
+            {torneio.duplas.map((dupla: Dupla) => {
+              const valores = calcularValoresRodadas(dupla);
+              return (
+                <div key={dupla.id} className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-black text-lg text-gray-800">{dupla.tag}</h3>
+                    <p className="text-sm text-gray-600 font-semibold">
+                      {valores.medalhasRodadas} medalhas • {valores.estrelasRodadas} estrelas • {valores.moedasRodadas} moedas
+                    </p>
+                    <p className="text-xs text-gray-500">Status: {dupla.status}</p>
+                  </div>
                 <div className="flex space-x-2">
                   <Button
                     onClick={() => torneio.atualizarStatusDupla(dupla.id, 'aguardando')}
@@ -583,7 +597,8 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
                   </Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -886,7 +901,7 @@ function RankingTable({ title, data }: { title: string; data: Dupla[] }) {
                   <span className="font-black text-sm">{dupla.medalhas}</span>
                 </div>
 
-                {/* Estrelas (calculadas dos pontos) */}
+                {/* Estrelas (calculadas das estrelas) */}
                 <div className="w-16 h-16 bg-green-400 rounded-2xl flex flex-col items-center justify-center text-white">
                   <Image src="/star_icon.png" alt="Star" width={20} height={20} className="w-5 h-5 mb-1" />
                   <span className="font-black text-sm">{dupla.estrelas}</span>
@@ -925,15 +940,23 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
             {showComprarButton ? 'Use suas moedas para comprar itens especiais' : 'Veja os itens especiais disponíveis'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-2 hover-scale-container">
+        <CardContent className="p-6 tooltip-container overflow-visible">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-2 pt-24 pb-4 hover-scale-container">
             {torneio.itensLoja.map((item: any, index: number) => (
               <div
                 key={index}
-                className="p-6 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl border-2 border-orange-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105 hover-scale-item"
+                className="p-6 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl border-2 border-orange-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105 hover-scale-item relative group"
               >
                 <h3 className="font-black text-xl text-gray-800 mb-2">{item.nome}</h3>
-                <p className="text-gray-600 text-sm mb-4 font-semibold">{item.descricao}</p>
+                <p className="text-gray-600 text-sm mb-4 font-semibold line-clamp-3 cursor-help">{item.descricao}</p>
+                
+                {/* Tooltip com descrição completa */}
+                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-72 sm:w-80 max-w-[90vw] bg-white border-2 border-gray-200 rounded-xl shadow-xl p-4 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible item-tooltip pointer-events-none">
+                  <div className="text-sm font-semibold text-gray-800 mb-2">{item.nome}</div>
+                  <div className="text-xs text-gray-600 leading-relaxed">{item.descricao}</div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
+                </div>
+                
                 <div className="flex justify-between items-center">
                   <span className="text-2xl font-black text-orange-600">{item.preco} moedas</span>
                   {showComprarButton && (
@@ -957,12 +980,15 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {jambaVIP.slice(0, 2).map((dupla: Dupla) => (
-                <div key={dupla.id} className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl border-2 border-purple-200">
-                  <p className="font-black text-gray-800">{dupla.tag}</p>
-                  <p className="text-sm text-gray-600 font-semibold">{dupla.estrelas} estrelas • {dupla.moedas} moedas</p>
-                </div>
-              ))}
+              {jambaVIP.slice(0, 2).map((dupla: Dupla) => {
+                const valores = calcularValoresRodadas(dupla);
+                return (
+                  <div key={dupla.id} className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl border-2 border-purple-200">
+                    <p className="font-black text-gray-800">{dupla.tag}</p>
+                    <p className="text-sm text-gray-600 font-semibold">{valores.estrelasRodadas} estrelas • {valores.moedasRodadas} moedas</p>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -974,12 +1000,15 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {jamberlinda.slice(0, 2).map((dupla: Dupla) => (
-                <div key={dupla.id} className="p-4 bg-gradient-to-r from-pink-100 to-red-100 rounded-2xl border-2 border-pink-200">
-                  <p className="font-black text-gray-800">{dupla.tag}</p>
-                  <p className="text-sm text-gray-600 font-semibold">{dupla.estrelas} estrelas • {dupla.moedas} moedas</p>
-                </div>
-              ))}
+              {jamberlinda.slice(0, 2).map((dupla: Dupla) => {
+                const valores = calcularValoresRodadas(dupla);
+                return (
+                  <div key={dupla.id} className="p-4 bg-gradient-to-r from-pink-100 to-red-100 rounded-2xl border-2 border-pink-200">
+                    <p className="font-black text-gray-800">{dupla.tag}</p>
+                    <p className="text-sm text-gray-600 font-semibold">{valores.estrelasRodadas} estrelas • {valores.moedasRodadas} moedas</p>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>

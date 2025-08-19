@@ -17,6 +17,18 @@ import { toast } from "sonner"
 import { LoginPage } from "@/components/auth/login-page"
 import { BannerDupla } from "@/components/tournament/banner-dupla"
 
+// Função utilitária para calcular valores apenas das rodadas (sem bônus)
+const calcularValoresRodadas = (dupla: any) => {
+  const medalhasRodadas = Object.values(dupla.medalhasPorRodada || {})
+    .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
+  const estrelasRodadas = Object.values(dupla.estrelasPorRodada || {})
+    .reduce((total: number, estrelas: any) => total + (Number(estrelas) || 0), 0);
+  const moedasRodadas = Object.values(dupla.moedasPorRodada || {})
+    .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
+  
+  return { medalhasRodadas, estrelasRodadas, moedasRodadas };
+};
+
 export default function App() {
   const [userType, setUserType] = useState<"administrador" | "jogador" | null>(null)
 
@@ -197,13 +209,13 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
     )
   }
 
-  // Calcular ranking geral diretamente das duplas
+  // Calcular ranking geral diretamente das duplas - APENAS RODADAS (sem bônus)
   const calcularRankingGeral = () => {
     console.log("🏆 [JogadorDashboard] calcularRankingGeral - iniciando com duplas:", torneio.duplas.length);
 
     const resultado = [...torneio.duplas]
       .map(dupla => {
-        // Calcular totais das rodadas
+        // Para ranking geral, calcular APENAS os valores das rodadas (sem bônus)
         const estrelasRodadas = Object.values(dupla.estrelasPorRodada || {})
           .reduce((total: number, estrelas: any) => total + (Number(estrelas) || 0), 0);
         const moedasRodadas = Object.values(dupla.moedasPorRodada || {})
@@ -211,7 +223,7 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
         const medalhasRodadas = Object.values(dupla.medalhasPorRodada || {})
           .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
 
-        // Calcular totais dos bônus
+        // Calcular bônus separadamente para referência
         const estrelasBonusTotal = Object.values(dupla.estrelasPorBonus || {})
           .reduce((total: number, bonusPartidas: any) =>
             total + Object.values(bonusPartidas || {})
@@ -230,30 +242,28 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
 
         const resultado = {
           ...dupla,
-          estrelas: estrelasRodadas + estrelasBonusTotal,
-          moedas: moedasRodadas + moedasBonusTotal,
-          medalhas: medalhasRodadas + medalhasBonusTotal,
+          // Usar APENAS valores das rodadas para o ranking geral
+          estrelas: estrelasRodadas,
+          moedas: moedasRodadas,
+          medalhas: medalhasRodadas,
+          // Manter totais de bônus separados para referência
           estrelasBonus: estrelasBonusTotal,
           moedasBonus: moedasBonusTotal,
           medalhasBonus: medalhasBonusTotal
         };
 
-        console.log(`📊 [JogadorDashboard] ${dupla.tag}: rodadas=${estrelasRodadas}, bonus=${estrelasBonusTotal}, total=${resultado.estrelas}`);
+        console.log(`📊 [JogadorDashboard] ${dupla.tag}: rodadas=${estrelasRodadas}, bonus=${estrelasBonusTotal}, total_banco=${dupla.estrelas}, ranking_geral=${resultado.estrelas}`);
         return resultado;
       })
-      // Ordenar por medalhas, depois estrelas, depois moedas
+      // Ordenar por pontuação total (já incluindo bônus)
       .sort((a, b) => {
-        // Primeiro critério: medalhas totais
-        if ((b.medalhas || 0) !== (a.medalhas || 0)) {
-          return (b.medalhas || 0) - (a.medalhas || 0);
-        }
-        // Desempate por estrelas totais
+        // Primeiro critério: estrelas totais
         if ((b.estrelas || 0) !== (a.estrelas || 0)) {
           return (b.estrelas || 0) - (a.estrelas || 0);
         }
-        // Segundo desempate por estrelas de bônus
-        if ((b.estrelasBonus || 0) !== (a.estrelasBonus || 0)) {
-          return (b.estrelasBonus || 0) - (a.estrelasBonus || 0);
+        // Desempate por medalhas totais
+        if ((b.medalhas || 0) !== (a.medalhas || 0)) {
+          return (b.medalhas || 0) - (a.medalhas || 0);
         }
         // Desempate por moedas totais
         return (b.moedas || 0) - (a.moedas || 0);
@@ -264,9 +274,9 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
     const resultadoComRanking = resultado.map((dupla, index) => {
       if (index > 0) {
         const anterior = resultado[index - 1];
-        // Se medalhas, estrelas e moedas são diferentes da dupla anterior, avança a posição
-        if (dupla.medalhas !== anterior.medalhas ||
-          dupla.estrelas !== anterior.estrelas ||
+        // Se estrelas, medalhas e moedas são diferentes da dupla anterior, avança a posição
+        if (dupla.estrelas !== anterior.estrelas ||
+          dupla.medalhas !== anterior.medalhas ||
           dupla.moedas !== anterior.moedas) {
           posicaoAtual = index + 1;
         }
@@ -596,14 +606,14 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
   // Estados para criação de partidas
   const [nomePartida, setNomePartida] = useState("")
   const [descricaoPartida, setDescricaoPartida] = useState("")
-  const [multiplicadorPontos, setMultiplicadorPontos] = useState("0")
+  const [multiplicadorEstrelas, setMultiplicadorEstrelas] = useState("0")
   const [multiplicadorMoedas, setMultiplicadorMoedas] = useState("0")
   const [multiplicadorMedalhas, setMultiplicadorMedalhas] = useState("0")
 
   // Estados para pontuação
   const [duplaSelecionada, setDuplaSelecionada] = useState("")
   const [partidaSelecionada, setPartidaSelecionada] = useState("")
-  const [pontosInseridos, setPontosInseridos] = useState("0")
+  const [estrelasInseridas, setEstrelasInseridas] = useState("0")
   const [moedasInseridas, setMoedasInseridas] = useState("0")
   const [medalhasInseridas, setMedalhasInseridas] = useState("0")
 
@@ -643,7 +653,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
 
   const handleCriarPartida = async () => {
     try {
-      if (!bonusSelecionado || !nomePartida || !descricaoPartida || !multiplicadorPontos) {
+      if (!bonusSelecionado || !nomePartida || !descricaoPartida || !multiplicadorEstrelas) {
         toast.error("Preencha todos os campos da partida!")
         return
       }
@@ -652,14 +662,14 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
         bonusSelecionado,
         nomePartida,
         descricaoPartida,
-        parseFloat(multiplicadorPontos),
+        parseFloat(multiplicadorEstrelas),
         parseFloat(multiplicadorMoedas) || 1,
         parseFloat(multiplicadorMedalhas) || 1
       )
 
       setNomePartida("")
       setDescricaoPartida("")
-      setMultiplicadorPontos("0")
+      setMultiplicadorEstrelas("0")
       setMultiplicadorMoedas("0")
       setMultiplicadorMedalhas("0")
 
@@ -678,8 +688,8 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
 
   const handleAdicionarPontuacao = async () => {
     try {
-      if (!duplaSelecionada || !partidaSelecionada || !pontosInseridos) {
-        toast.error("Preencha pelo menos a dupla, partida e pontos!")
+      if (!duplaSelecionada || !partidaSelecionada) {
+        toast.error("Preencha pelo menos a dupla e partida!")
         return
       }
 
@@ -687,14 +697,14 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
         duplaSelecionada,
         bonusSelecionado,
         partidaSelecionada,
-        parseInt(pontosInseridos),
-        parseInt(moedasInseridas) || 0,
-        parseInt(medalhasInseridas) || 0
+        parseInt(medalhasInseridas) || 0, // medalhas - padrão 0
+        parseInt(estrelasInseridas) || 0, // estrelas - padrão 0
+        parseInt(moedasInseridas) || 0    // moedas - padrão 0
       )
 
       setDuplaSelecionada("")
       setPartidaSelecionada("")
-      setPontosInseridos("0")
+      setEstrelasInseridas("0")
       setMoedasInseridas("0")
       setMedalhasInseridas("0")
 
@@ -719,11 +729,11 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
     carregarPartidasBonus(bonusId)
   }
 
-  const calcularPontuacaoComMultiplicador = (pontos: number, moedas: number, medalhas: number, partida: any) => {
+  const calcularPontuacaoComMultiplicador = (medalhas: number, estrelas: number, moedas: number, partida: any) => {
     return {
-      pontos: pontos * (partida?.multiplicadorPontos || 1),
-      moedas: moedas * (partida?.multiplicadorMoedas || 1),
-      medalhas: medalhas * (partida?.multiplicadorMedalhas || 1)
+      medalhas: medalhas * (partida?.multiplicadorMedalhas || 1),
+      estrelas: estrelas * (partida?.multiplicadorEstrelas || 1),
+      moedas: moedas * (partida?.multiplicadorMoedas || 1)
     }
   }
 
@@ -857,25 +867,25 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                       />
                     </div>
                     <div className="min-w-0">
-                      <Label htmlFor="multiplicadorPontos">Multiplicador Pontos</Label>
+                      <Label htmlFor="multiplicadorMedalhas">Multiplicador Bônus 1</Label>
                       <Input
-                        id="multiplicadorPontos"
+                        id="multiplicadorMedalhas"
                         type="number"
                         step="0.1"
-                        value={multiplicadorPontos}
-                        onChange={(e) => setMultiplicadorPontos(e.target.value)}
+                        value={multiplicadorMedalhas}
+                        onChange={(e) => setMultiplicadorMedalhas(e.target.value)}
                         placeholder="0"
                         className="w-full"
                       />
                     </div>
                     <div className="min-w-0">
-                      <Label htmlFor="multiplicadorMoedas">Multiplicador Moedas</Label>
+                      <Label htmlFor="multiplicadorEstrelas">Multiplicador Bônus 2</Label>
                       <Input
-                        id="multiplicadorMoedas"
+                        id="multiplicadorEstrelas"
                         type="number"
                         step="0.1"
-                        value={multiplicadorMoedas}
-                        onChange={(e) => setMultiplicadorMoedas(e.target.value)}
+                        value={multiplicadorEstrelas}
+                        onChange={(e) => setMultiplicadorEstrelas(e.target.value)}
                         placeholder="0"
                         className="w-full"
                       />
@@ -887,13 +897,13 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                 <div className="overflow-x-auto">
                   <div className="flex flex-col sm:grid sm:grid-cols-1 md:grid-cols-2 gap-4 min-w-full">
                     <div className="min-w-0">
-                      <Label htmlFor="multiplicadorMedalhas">Multiplicador Medalhas</Label>
+                      <Label htmlFor="multiplicadorMoedas">Multiplicador Bônus 3</Label>
                       <Input
-                        id="multiplicadorMedalhas"
+                        id="multiplicadorMoedas"
                         type="number"
                         step="0.1"
-                        value={multiplicadorMedalhas}
-                        onChange={(e) => setMultiplicadorMedalhas(e.target.value)}
+                        value={multiplicadorMoedas}
+                        onChange={(e) => setMultiplicadorMoedas(e.target.value)}
                         placeholder="0"
                         className="w-full"
                       />
@@ -940,7 +950,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                         <h4 className="font-medium">{partida.nome}</h4>
                         <p className="text-sm text-gray-600">{partida.descricao}</p>
                         <p className="text-sm text-blue-600">
-                          Multiplicadores: Pontos {partida.multiplicadorPontos}x | Moedas {partida.multiplicadorMoedas || 1}x | Medalhas {partida.multiplicadorMedalhas || 1}x
+                          Multiplicadores: Bônus 1 {partida.multiplicadorMedalhas || 1}x | Bônus 2 {partida.multiplicadorEstrelas}x | Bônus 3 {partida.multiplicadorMoedas || 1}x
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -1010,27 +1020,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="pontosInseridos">Pontos Base</Label>
-                    <Input
-                      id="pontosInseridos"
-                      type="number"
-                      value={pontosInseridos}
-                      onChange={(e) => setPontosInseridos(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="moedasInseridas">Moedas Base</Label>
-                    <Input
-                      id="moedasInseridas"
-                      type="number"
-                      value={moedasInseridas}
-                      onChange={(e) => setMoedasInseridas(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="medalhasInseridas">Medalhas Base</Label>
+                    <Label htmlFor="medalhasInseridas">Bônus 1</Label>
                     <Input
                       id="medalhasInseridas"
                       type="number"
@@ -1039,9 +1029,29 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                       placeholder="0"
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="estrelasInseridas">Bônus 2</Label>
+                    <Input
+                      id="estrelasInseridas"
+                      type="number"
+                      value={estrelasInseridas}
+                      onChange={(e) => setEstrelasInseridas(e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="moedasInseridas">Bônus 3</Label>
+                    <Input
+                      id="moedasInseridas"
+                      type="number"
+                      value={moedasInseridas}
+                      onChange={(e) => setMoedasInseridas(e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
 
-                {(pontosInseridos || moedasInseridas || medalhasInseridas) && partidaSelecionada && (
+                {(estrelasInseridas || moedasInseridas || medalhasInseridas) && partidaSelecionada && (
                   <div className="p-3 bg-blue-50 rounded-lg">
                     <p className="text-sm text-blue-800 font-medium mb-2">
                       Valores finais com multiplicadores:
@@ -1050,22 +1060,22 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                       const partida = partidasBonus.find(p => p.id === partidaSelecionada);
                       if (!partida) return null;
 
-                      const pontos = parseInt(pontosInseridos || "0");
+                      const estrelas = parseInt(estrelasInseridas || "0");
                       const moedas = parseInt(moedasInseridas || "0");
                       const medalhas = parseInt(medalhasInseridas || "0");
 
-                      const resultado = calcularPontuacaoComMultiplicador(pontos, moedas, medalhas, partida);
+                      const resultado = calcularPontuacaoComMultiplicador(medalhas, estrelas, moedas, partida);
 
                       return (
                         <div className="space-y-1">
                           <p className="text-sm text-blue-700">
-                            <strong>Pontos:</strong> {pontos} × {partida.multiplicadorPontos} = {resultado.pontos}
+                            <strong>Bônus 1:</strong> {medalhas} × {partida.multiplicadorMedalhas || 1} = {resultado.medalhas}
                           </p>
                           <p className="text-sm text-blue-700">
-                            <strong>Moedas:</strong> {moedas} × {partida.multiplicadorMoedas || 1} = {resultado.moedas}
+                            <strong>Bônus 2:</strong> {estrelas} × {partida.multiplicadorEstrelas} = {resultado.estrelas}
                           </p>
                           <p className="text-sm text-blue-700">
-                            <strong>Medalhas:</strong> {medalhas} × {partida.multiplicadorMedalhas || 1} = {resultado.medalhas}
+                            <strong>Bônus 3:</strong> {moedas} × {partida.multiplicadorMoedas || 1} = {resultado.moedas}
                           </p>
                         </div>
                       );
@@ -1118,7 +1128,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
   const [tag, setTag] = useState("")
   const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [duplaId, setDuplaId] = useState("")
-  const [pontos, setPontos] = useState("0")
+  const [estrelasPontuacao, setEstrelasPontuacao] = useState("0")
   const [moedas, setMoedas] = useState("0")
   const [medalhas, setMedalhas] = useState("0")
   const [rodadaSelecionada, setRodadaSelecionada] = useState("")
@@ -1166,14 +1176,14 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
 
   const handleAdicionarPontuacao = async () => {
     try {
-      if (!duplaId || !pontos || !moedas || !medalhas || !rodadaSelecionada) {
+      if (!duplaId || !estrelasPontuacao || !moedas || !medalhas || !rodadaSelecionada) {
         toast.error("Preencha todos os campos!")
         return
       }
 
       console.log("🎯 Adicionando pontuação:", {
         duplaId,
-        pontos: parseInt(pontos),
+        estrelas: parseInt(estrelasPontuacao),
         moedas: parseInt(moedas),
         medalhas: parseInt(medalhas),
         rodada: rodadaSelecionada
@@ -1181,15 +1191,15 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
 
       await torneio.adicionarPontuacao(
         duplaId,
-        parseInt(pontos),
-        parseInt(moedas),
-        parseInt(medalhas),
+        parseInt(medalhas), // medalhas
+        parseInt(estrelasPontuacao),   // estrelas
+        parseInt(moedas),   // moedas
         rodadaSelecionada
       )
 
       console.log("✅ Pontuação adicionada com sucesso!");
       toast.success("Pontuação adicionada com sucesso!")
-      setPontos("0")
+      setEstrelasPontuacao("0")
       setMoedas("0")
       setMedalhas("0")
     } catch (error) {
@@ -1219,8 +1229,8 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
         return
       }
 
-      if (tag.length < 2 || tag.length > 5) {
-        toast.error("A tag deve ter entre 2 e 5 caracteres!")
+      if (tag.length < 2) {
+        toast.error("A tag deve ter pelo menos 2 caracteres!")
         return
       }
 
@@ -1355,7 +1365,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
           </div>
           <Button
             onClick={handleCriarDupla}
-            disabled={isCreating || !tag || tag.length < 2 || tag.length > 5}
+            disabled={isCreating || !tag || tag.length < 2}
             className="w-full h-10 sm:h-12 rounded-full font-bold bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white mt-3 sm:mt-4 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isCreating ? (
@@ -1424,12 +1434,22 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
             <div className="overflow-x-auto">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 min-w-full">
                 <div className="flex-1 min-w-0">
-                  <Label className="font-bold text-gray-700 text-sm">Pontos</Label>
+                  <Label className="font-bold text-gray-700 text-sm">Medalhas</Label>
                   <Input
                     type="number"
                     placeholder="0"
-                    value={pontos}
-                    onChange={(e) => setPontos(e.target.value)}
+                    value={medalhas}
+                    onChange={(e) => setMedalhas(e.target.value)}
+                    className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <Label className="font-bold text-gray-700 text-sm">Estrelas</Label>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={estrelasPontuacao}
+                    onChange={(e) => setEstrelasPontuacao(e.target.value)}
                     className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
                   />
                 </div>
@@ -1443,16 +1463,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                     className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
                   />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <Label className="font-bold text-gray-700 text-sm">Medalhas</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={medalhas}
-                    onChange={(e) => setMedalhas(e.target.value)}
-                    className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
-                  />
-                </div>
+                
               </div>
             </div>
 
@@ -1544,7 +1555,10 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
                   <div className="flex-1">
                     <h3 className="font-black text-base text-gray-800">{dupla.tag}</h3>
                     <p className="text-xs text-gray-600 font-semibold">
-                      ⭐ {dupla.estrelas} • 🪙 {dupla.moedas} • 🏅 {dupla.medalhas}
+                      {(() => {
+                        const valores = calcularValoresRodadas(dupla);
+                        return `🏅 ${valores.medalhasRodadas} • ⭐ ${valores.estrelasRodadas} • 🪙 ${valores.moedasRodadas}`;
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -1670,23 +1684,23 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
 function RankingsManager({ torneio }: { torneio: any }) {
   const [activeTab, setActiveTab] = useState("geral")
 
-  // Calcular ranking geral diretamente das duplas
+  // Calcular ranking geral diretamente das duplas - APENAS RODADAS (sem bônus)
   const calcularRankingGeral = () => {
     const resultado = [...torneio.duplas]
       .map(dupla => {
-        // Calcular totais das rodadas
-        const pontosRodadas = Object.values(dupla.pontosPorRodada || {})
-          .reduce((total: number, pontos: any) => total + (Number(pontos) || 0), 0);
+        // Para ranking geral, calcular APENAS os valores das rodadas (sem bônus)
+        const estrelasRodadas = Object.values(dupla.estrelasPorRodada || {})
+          .reduce((total: number, estrelas: any) => total + (Number(estrelas) || 0), 0);
         const moedasRodadas = Object.values(dupla.moedasPorRodada || {})
           .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
         const medalhasRodadas = Object.values(dupla.medalhasPorRodada || {})
           .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
 
-        // Calcular totais dos bônus
-        const pontosBonusTotal = Object.values(dupla.pontosPorBonus || {})
+        // Calcular bônus separadamente para referência
+        const estrelasBonusTotal = Object.values(dupla.estrelasPorBonus || {})
           .reduce((total: number, bonusPartidas: any) =>
             total + Object.values(bonusPartidas || {})
-              .reduce((subTotal: number, pontos: any) => subTotal + (Number(pontos) || 0), 0), 0
+              .reduce((subTotal: number, estrelas: any) => subTotal + (Number(estrelas) || 0), 0), 0
           );
         const moedasBonusTotal = Object.values(dupla.moedasPorBonus || {})
           .reduce((total: number, bonusPartidas: any) =>
@@ -1701,29 +1715,26 @@ function RankingsManager({ torneio }: { torneio: any }) {
 
         return {
           ...dupla,
-          pontos: pontosRodadas + pontosBonusTotal,
-          moedas: moedasRodadas + moedasBonusTotal,
-          medalhas: medalhasRodadas + medalhasBonusTotal,
-          pontosBonus: pontosBonusTotal,
+          // Usar APENAS valores das rodadas para o ranking geral
+          estrelas: estrelasRodadas,
+          moedas: moedasRodadas,
+          medalhas: medalhasRodadas,
+          estrelasBonus: estrelasBonusTotal,
           moedasBonus: moedasBonusTotal,
           medalhasBonus: medalhasBonusTotal
         };
       })
-      // Ordenar por pontos totais, depois por bônus como desempate
+      // Ordenar por estrelas das rodadas (sem bônus)
       .sort((a, b) => {
-        // Primeiro critério: pontos totais
-        if ((b.pontos || 0) !== (a.pontos || 0)) {
-          return (b.pontos || 0) - (a.pontos || 0);
+        // Primeiro critério: estrelas das rodadas apenas
+        if ((b.estrelas || 0) !== (a.estrelas || 0)) {
+          return (b.estrelas || 0) - (a.estrelas || 0);
         }
-        // Desempate por pontos de bônus
-        if ((b.estrelasBonus || 0) !== (a.estrelasBonus || 0)) {
-          return (b.estrelasBonus || 0) - (a.estrelasBonus || 0);
-        }
-        // Desempate por medalhas totais
+        // Desempate por medalhas das rodadas
         if ((b.medalhas || 0) !== (a.medalhas || 0)) {
           return (b.medalhas || 0) - (a.medalhas || 0);
         }
-        // Desempate por moedas totais
+        // Desempate por moedas das rodadas
         return (b.moedas || 0) - (a.moedas || 0);
       });
 
@@ -1732,8 +1743,8 @@ function RankingsManager({ torneio }: { torneio: any }) {
     const resultadoComRanking = resultado.map((dupla, index) => {
       if (index > 0) {
         const anterior = resultado[index - 1];
-        // Se pontos, medalhas e moedas são diferentes da dupla anterior, avança a posição
-        if (dupla.pontos !== anterior.pontos ||
+        // Se estrelas, medalhas e moedas são diferentes da dupla anterior, avança a posição
+        if (dupla.estrelas !== anterior.estrelas ||
           dupla.medalhas !== anterior.medalhas ||
           dupla.moedas !== anterior.moedas) {
           posicaoAtual = index + 1;
@@ -1754,32 +1765,32 @@ function RankingsManager({ torneio }: { torneio: any }) {
   const calcularRankingPorRodada = (rodadaId: string) => {
     const resultado = [...torneio.duplas]
       .map(dupla => {
-        const pontosRodada = Number(dupla.pontosPorRodada?.[rodadaId]) || 0;
+        const estrelasRodada = Number(dupla.estrelasPorRodada?.[rodadaId]) || 0;
         const moedasRodada = Number(dupla.moedasPorRodada?.[rodadaId]) || 0;
         const medalhasRodada = Number(dupla.medalhasPorRodada?.[rodadaId]) || 0;
 
         // Calcular bônus total para desempate
-        const pontosBonusTotal = Object.values(dupla.pontosPorBonus || {})
+        const estrelasBonusTotal = Object.values(dupla.estrelasPorBonus || {})
           .reduce((total: number, bonusPartidas: any) =>
             total + Object.values(bonusPartidas || {})
-              .reduce((subTotal: number, pontos: any) => subTotal + (Number(pontos) || 0), 0), 0
+              .reduce((subTotal: number, estrelas: any) => subTotal + (Number(estrelas) || 0), 0), 0
           );
 
         return {
           ...dupla,
-          pontosRodada: isNaN(pontosRodada) ? 0 : pontosRodada,
+          estrelasRodada: isNaN(estrelasRodada) ? 0 : estrelasRodada,
           moedasRodada: isNaN(moedasRodada) ? 0 : moedasRodada,
           medalhasRodada: isNaN(medalhasRodada) ? 0 : medalhasRodada,
-          pontosBonusTotal
+          estrelasBonusTotal
         };
       })
-      // Ordenar por pontos da rodada, depois por bônus como desempate
+      // Ordenar por estrelas da rodada, depois por bônus como desempate
       .sort((a, b) => {
-        // Primeiro critério: pontos da rodada
-        if ((b.pontosRodada || 0) !== (a.pontosRodada || 0)) {
-          return (b.pontosRodada || 0) - (a.pontosRodada || 0);
+        // Primeiro critério: estrelas da rodada
+        if ((b.estrelasRodada || 0) !== (a.estrelasRodada || 0)) {
+          return (b.estrelasRodada || 0) - (a.estrelasRodada || 0);
         }
-        // Desempate por pontos de bônus total
+        // Desempate por estrelas de bônus total
         if ((b.estrelasBonusTotal || 0) !== (a.estrelasBonusTotal || 0)) {
           return (b.estrelasBonusTotal || 0) - (a.estrelasBonusTotal || 0);
         }
@@ -1796,8 +1807,8 @@ function RankingsManager({ torneio }: { torneio: any }) {
     const resultadoComRanking = resultado.map((dupla, index) => {
       if (index > 0) {
         const anterior = resultado[index - 1];
-        // Se pontos, medalhas e moedas da rodada são diferentes, avança a posição
-        if (dupla.pontosRodada !== anterior.pontosRodada ||
+        // Se estrelas, medalhas e moedas da rodada são diferentes, avança a posição
+        if (dupla.estrelasRodada !== anterior.estrelasRodada ||
           dupla.medalhasRodada !== anterior.medalhasRodada ||
           dupla.moedasRodada !== anterior.moedasRodada) {
           posicaoAtual = index + 1;
@@ -2340,9 +2351,9 @@ function RankingTable({
   // Verificar se há dados relevantes
   const hasRelevantData = data.some(dupla => {
     if (showRoundPoints) {
-      return ((dupla as any).estrelasRodada || 0) > 0 || ((dupla as any).moedasRodada || 0) > 0 || ((dupla as any).medalhasRodada || 0) > 0;
+      return ((dupla as any).medalhasRodada || 0) > 0 || ((dupla as any).estrelasRodada || 0) > 0 || ((dupla as any).moedasRodada || 0) > 0;
     } else if (showBonusPoints) {
-      return ((dupla as any).estrelasBonus || 0) > 0 || ((dupla as any).moedasBonus || 0) > 0 || ((dupla as any).medalhasBonus || 0) > 0;
+      return ((dupla as any).medalhasBonus || 0) > 0 || ((dupla as any).estrelasBonus || 0) > 0 || ((dupla as any).moedasBonus || 0) > 0;
     }
     return true; // Para ranking geral, sempre mostrar
   });
@@ -2378,32 +2389,38 @@ function RankingTable({
             ) : (
               data.map((dupla, index) => {
                 // Determinar quais valores exibir baseado no tipo de tabela
-                let estrelasParaExibir, moedasParaExibir, medalhasParaExibir;
+                let medalhasParaExibir, estrelasParaExibir, moedasParaExibir;
 
                 if (showBonusPoints) {
-                  // Para tabelas de bônus, mostrar apenas os valores do bônus
-                  estrelasParaExibir = Number((dupla as any).estrelasBonus) || 0;
-                  moedasParaExibir = Number((dupla as any).moedasBonus) || 0;
-                  medalhasParaExibir = Number((dupla as any).medalhasBonus) || 0;
-                  console.log('DEBUG BONUS:', dupla.tag, { estrelasBonus: (dupla as any).estrelasBonus, estrelasParaExibir });
+                  // Para tabelas de bônus, mostrar a soma total dos bônus em uma única box
+                  const medalhasBonus = Number((dupla as any).medalhasBonus) || 0;
+                  const estrelasBonus = Number((dupla as any).estrelasBonus) || 0;
+                  const moedasBonus = Number((dupla as any).moedasBonus) || 0;
+                  const totalBonus = medalhasBonus + estrelasBonus + moedasBonus;
+                  
+                  medalhasParaExibir = 0; // Não exibir campos separados
+                  estrelasParaExibir = 0;
+                  moedasParaExibir = 0;
+                  (dupla as any).totalBonus = totalBonus; // Adicionar campo para exibição
+                  console.log('DEBUG BONUS:', dupla.tag, { medalhasBonus, estrelasBonus, moedasBonus, totalBonus });
                 } else if (showRoundPoints) {
                   // Para tabelas de rodada, mostrar apenas valores da rodada
+                  medalhasParaExibir = Number((dupla as any).medalhasRodada) || 0;
                   estrelasParaExibir = Number((dupla as any).estrelasRodada) || 0;
                   moedasParaExibir = Number((dupla as any).moedasRodada) || 0;
-                  medalhasParaExibir = Number((dupla as any).medalhasRodada) || 0;
                   console.log('DEBUG RODADA:', dupla.tag, { estrelasRodada: (dupla as any).estrelasRodada, estrelasParaExibir });
                 } else {
                   // Para ranking geral, mostrar totais
+                  medalhasParaExibir = Number(dupla.medalhas) || 0;
                   estrelasParaExibir = Number(dupla.estrelas) || 0;
                   moedasParaExibir = Number(dupla.moedas) || 0;
-                  medalhasParaExibir = Number(dupla.medalhas) || 0;
                   console.log('DEBUG GERAL:', dupla.tag, { estrelas: dupla.estrelas, estrelasParaExibir });
                 }
 
                 // Garantir que todos os valores são números válidos
+                medalhasParaExibir = isNaN(medalhasParaExibir) ? 0 : medalhasParaExibir;
                 estrelasParaExibir = isNaN(estrelasParaExibir) ? 0 : estrelasParaExibir;
-                moedasParaExibir = isNaN(moedasParaExibir) ? 0 : moedasParaExibir;
-                medalhasParaExibir = isNaN(medalhasParaExibir) ? 0 : medalhasParaExibir; return (
+                moedasParaExibir = isNaN(moedasParaExibir) ? 0 : moedasParaExibir; return (
                   <div
                     key={dupla.id}
                     className="ranking-card flex items-center gap-3 sm:gap-4 lg:gap-6 p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl border-2 border-transparent min-w-max mobile-scroll-item desktop-compact shadow-sm hover:shadow-md transition-all duration-300"
@@ -2428,23 +2445,33 @@ function RankingTable({
 
                     {/* Estatísticas - com classes CSS customizadas */}
                     <div className="flex gap-2 sm:gap-3 lg:gap-4 flex-shrink-0">
-                      {/* Medalhas */}
-                      <div className="medals-badge stat-badge w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
-                        <Image src="/medal_icon.png" alt="Medal" width={16} height={16} className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mb-0.5" />
-                        <span className="font-black text-xs sm:text-sm lg:text-base">{medalhasParaExibir}</span>
-                      </div>
+                      {showBonusPoints ? (
+                        // Para ranking de bônus, mostrar apenas uma caixa com o total
+                        <div className="bonus-total-badge bg-purple-500 stat-badge w-16 h-12 sm:w-18 sm:h-14 lg:w-20 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
+                          <span className="font-bold text-xs mb-0.5">BÔNUS</span>
+                          <span className="font-black text-xs sm:text-sm lg:text-base">{(dupla as any).totalBonus || 0}</span>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Medalhas */}
+                          <div className="medals-badge stat-badge w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
+                            <Image src="/medal_icon.png" alt="Medal" width={16} height={16} className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mb-0.5" />
+                            <span className="font-black text-xs sm:text-sm lg:text-base">{medalhasParaExibir}</span>
+                          </div>
 
-                      {/* Estrelas */}
-                      <div className="stars-badge stat-badge w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
-                        <Image src="/star_icon.png" alt="Star" width={16} height={16} className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mb-0.5" />
-                        <span className="font-black text-xs sm:text-sm lg:text-base">{estrelasParaExibir}</span>
-                      </div>
+                          {/* Estrelas */}
+                          <div className="stars-badge stat-badge w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
+                            <Image src="/star_icon.png" alt="Star" width={16} height={16} className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mb-0.5" />
+                            <span className="font-black text-xs sm:text-sm lg:text-base">{estrelasParaExibir}</span>
+                          </div>
 
-                      {/* Moedas */}
-                      <div className="coins-badge bg-amber-300 stat-badge w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
-                        <Image src="/coin_icon.png" alt="Coin" width={16} height={16} className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mb-0.5" />
-                        <span className="font-black text-xs sm:text-sm lg:text-base">{moedasParaExibir}</span>
-                      </div>
+                          {/* Moedas */}
+                          <div className="coins-badge bg-amber-300 stat-badge w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-white flex-shrink-0 touch-target">
+                            <Image src="/coin_icon.png" alt="Coin" width={16} height={16} className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 mb-0.5" />
+                            <span className="font-black text-xs sm:text-sm lg:text-base">{moedasParaExibir}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
@@ -2467,7 +2494,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
     <div className="space-y-3 sm:space-y-4 lg:space-y-6 max-w-6xl mx-auto relative">
 
       {/* Mascote da Lojinha - Fora do card para não ser cortado */}
-      <div className="absolute -top-2 -right-2 sm:-top-4 sm:-right-4 w-20 h-20 sm:w-32 sm:h-32 z-50">
+      <div className="absolute transform scale-x-[-1] -top-2 -right-2 sm:-top-4 sm:-right-4 w-20 h-20 sm:w-32 sm:h-32 z-50">
         <img
           src="/shop_crazy.png"
           alt="Mascote da Lojinha"
@@ -2479,7 +2506,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
       {/* Balão de fala do mascote */}
       <div className="absolute top-2 right-16 sm:right-28 bg-white rounded-2xl p-2 sm:p-3 shadow-lg border-2 border-yellow-300 z-30 hidden sm:block">
         <div className="text-xs sm:text-sm font-bold text-gray-800 whitespace-nowrap">
-          🎪 Bem-vindos à minha loja!
+          🎪 HA HA HA! Bem-vindos à minha loja misteriosa!
         </div>
         <div className="absolute -bottom-2 right-4 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
       </div>
@@ -2495,10 +2522,10 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
             {showComprarButton ? 'Use suas moedas para comprar itens especiais' : 'Veja os itens especiais disponíveis'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-2 sm:p-3 lg:p-6">
+        <CardContent className="p-2 sm:p-3 lg:p-6 overflow-visible">
           {/* Container com scroll horizontal otimizado */}
-          <div className="overflow-x-auto custom-scrollbar hover-scale-container">
-            <div className="flex gap-3 sm:gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-4 xl:gap-6 min-w-full scroll-smooth-x p-1 sm:p-2">
+          <div className="overflow-x-auto overflow-y-visible custom-scrollbar hover-scale-container tooltip-container">
+            <div className="flex gap-3 sm:gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-4 xl:gap-6 min-w-full scroll-smooth-x p-1 sm:p-2 pt-24 pb-4">
               {torneio.itensLoja.map((item: any, index: number) => (
                 <div
                   key={index}
@@ -2527,9 +2554,18 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                     </div>
                     
                     {/* Conteúdo do Item */}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 relative group">
                       <h3 className="font-black text-sm sm:text-base lg:text-xl text-gray-800 mb-2 line-clamp-1">{item.nome}</h3>
-                      <p className="text-gray-600 text-xs sm:text-sm mb-2 font-semibold line-clamp-2 lg:line-clamp-3">{item.descricao}</p>
+                      <p className="text-gray-600 text-xs sm:text-sm mb-2 font-semibold line-clamp-2 lg:line-clamp-3 cursor-help">
+                        {item.descricao}
+                      </p>
+                      
+                      {/* Tooltip com descrição completa */}
+                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-72 sm:w-80 max-w-[90vw] bg-white border-2 border-gray-200 rounded-xl shadow-xl p-4 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible item-tooltip pointer-events-none">
+                        <div className="text-sm font-semibold text-gray-800 mb-2">{item.nome}</div>
+                        <div className="text-xs text-gray-600 leading-relaxed">{item.descricao}</div>
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
+                      </div>
                       
                       {/* Quantidade Disponível */}
                       <div className="mb-2 sm:mb-3 lg:mb-4">
@@ -2590,7 +2626,6 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                         className="w-full h-12 rounded-lg text-sm"
                       />
                     </div>
-                    <p className="text-sm text-gray-600 font-semibold">{dupla.estrelas} estrelas • {dupla.moedas} moedas</p>
                   </div>
                 ))
               )}
@@ -2619,7 +2654,6 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                         className="w-full h-12 rounded-lg text-sm"
                       />
                     </div>
-                    <p className="text-sm text-gray-600 font-semibold">{dupla.estrelas} estrelas • {dupla.moedas} moedas</p>
                   </div>
                 ))
               )}

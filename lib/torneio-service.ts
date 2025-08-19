@@ -252,7 +252,7 @@ export const duplaService = {
   // Escutar mudanças em tempo real
   escutarMudancas(callback: (duplas: Dupla[]) => void) {
     return onSnapshot(
-      query(collection(db, 'duplas'), orderBy('pontos', 'desc')),
+      collection(db, 'duplas'),
       (snapshot) => {
         console.log('🔄 Firestore listener triggered, docs:', snapshot.docs.length);
         const duplas = snapshot.docs.map(doc => {
@@ -268,13 +268,20 @@ export const duplaService = {
             id: doc.id,
             ...data
           } as Dupla;
-        });
+        }).sort((a, b) => (b.medalhas || 0) - (a.medalhas || 0)); // Ordenar no cliente
+        
         console.log('📦 Duplas processadas para callback:', duplas.map(d => ({ 
           id: d.id, 
           tag: d.tag, 
-          bannerUrl: d.bannerUrl 
+          bannerUrl: d.bannerUrl,
+          medalhas: d.medalhas 
         })));
         callback(duplas);
+      },
+      (error) => {
+        console.error('❌ Erro no listener de duplas:', error);
+        // Chamar callback com array vazio em caso de erro
+        callback([]);
       }
     );
   }
@@ -685,7 +692,25 @@ export const bonusService = {
 
   // Remover bônus
   async remover(id: string): Promise<void> {
-    await deleteDoc(doc(db, 'bonus', id));
+    // Primeiro, buscar e excluir todas as partidas relacionadas ao bônus
+    const partidasQuery = query(
+      collection(db, 'partidas'), 
+      where('bonusId', '==', id)
+    );
+    const partidasSnapshot = await getDocs(partidasQuery);
+    
+    // Excluir todas as partidas em lote
+    const batch = writeBatch(db);
+    partidasSnapshot.docs.forEach((partidaDoc) => {
+      batch.delete(partidaDoc.ref);
+    });
+    
+    // Excluir o bônus
+    const bonusRef = doc(db, 'bonus', id);
+    batch.delete(bonusRef);
+    
+    // Executar todas as exclusões
+    await batch.commit();
   },
 
   // Escutar mudanças nos bônus em tempo real
