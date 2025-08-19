@@ -1661,7 +1661,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
           icone={<span className="text-lg"></span>}
         />
         <StatusCard 
-          titulo="⏳ Aguardando Resultado" 
+          titulo="Aguardando Resultado" 
           duplas={aguardandoResultado} 
           cor="#F97316" 
           icone={<span className="text-lg"></span>}
