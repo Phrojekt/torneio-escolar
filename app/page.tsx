@@ -1380,27 +1380,6 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
         </CardContent>
       </Card>
 
-      {/* Botão temporário para migração */}
-      <Card className="border-0 shadow-lg bg-orange-50 rounded-xl overflow-hidden">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-
-            <Button 
-              onClick={async () => {
-                try {
-                  await torneio.migrarBannersAntigos();
-                  toast.success("Migração concluída!");
-                } catch (error) {
-                  toast.error("Erro na migração");
-                }
-              }}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
-            >
-              Migrar Banners
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Adicionar Pontuação */}
       <Card className="border-0 shadow-lg sm:shadow-xl lg:shadow-2xl bg-white rounded-xl sm:rounded-2xl overflow-hidden">
