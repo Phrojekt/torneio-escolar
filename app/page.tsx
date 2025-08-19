@@ -1574,7 +1574,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
                     size="sm"
                     className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'Jamberlinda' ? 'bg-pink-600' : 'bg-pink-400 hover:bg-pink-500'}`}
                   >
-                    💄 Jamberlinda
+                   Jamberlinda
                   </Button>
                   <Button
                     onClick={() => handleAtualizarStatusEspecial(dupla.id, 'Dupla Aguardando Resultado')}
@@ -1649,28 +1649,28 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
       {/* Grid responsivo de status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
         <StatusCard 
-          titulo="👑 JambaVIP" 
+          titulo=" JambaVIP" 
           duplas={jambaVIP} 
           cor="#8B5CF6" 
-          icone={<Crown className="w-5 h-5" />}
+          icone={<span className="text-lg" />}
         />
         <StatusCard 
-          titulo="💄 Jamberlinda" 
+          titulo=" Jamberlinda" 
           duplas={jamberlinda} 
           cor="#EC4899" 
-          icone={<span className="text-lg">💄</span>}
+          icone={<span className="text-lg"></span>}
         />
         <StatusCard 
           titulo="⏳ Aguardando Resultado" 
           duplas={aguardandoResultado} 
           cor="#F97316" 
-          icone={<span className="text-lg">⏳</span>}
+          icone={<span className="text-lg"></span>}
         />
         <StatusCard 
-          titulo="👥 Duplas Normais" 
+          titulo=" Duplas Normais" 
           duplas={normais} 
           cor="#6B7280" 
-          icone={<Users className="w-5 h-5" />}
+          icone={<span className="text-lg"></span>}
         />
       </div>
     </div>

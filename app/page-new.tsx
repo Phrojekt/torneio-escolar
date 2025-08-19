@@ -1005,7 +1005,6 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                 return (
                   <div key={dupla.id} className="p-4 bg-gradient-to-r from-pink-100 to-red-100 rounded-2xl border-2 border-pink-200">
                     <p className="font-black text-gray-800">{dupla.tag}</p>
-                    <p className="text-sm text-gray-600 font-semibold">{valores.estrelasRodadas} estrelas • {valores.moedasRodadas} moedas</p>
                   </div>
                 );
               })}
