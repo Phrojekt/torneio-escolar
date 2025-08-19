@@ -1384,10 +1384,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
       <Card className="border-0 shadow-lg bg-orange-50 rounded-xl overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-orange-800">Migração de Banners</h3>
-              <p className="text-sm text-orange-600">Limpar URLs antigas de banners que não funcionam mais</p>
-            </div>
+
             <Button 
               onClick={async () => {
                 try {
