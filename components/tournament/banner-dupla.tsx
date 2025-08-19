@@ -81,8 +81,6 @@ export const BannerDupla = ({ dupla, className = "", showTag = true, objectFit =
             setImagemCarregada(true);
           }}
         />
-        {/* Overlay sutil para melhorar contraste e legibilidade */}
-        {imagemCarregada && <div className="absolute inset-0 bg-black bg-opacity-5 pointer-events-none"></div>}
       </div>
     )
   }
