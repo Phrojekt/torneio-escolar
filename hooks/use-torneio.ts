@@ -59,6 +59,12 @@ export function useTorneio() {
       // Normalizar todas as duplas recebidas
       const duplasNormalizadas = novasDuplas.map(normalizarDupla);
       console.log('✅ Duplas normalizadas:', duplasNormalizadas.length);
+      console.log('📋 Status das duplas carregadas:', duplasNormalizadas.map(d => ({
+        id: d.id, 
+        tag: d.tag, 
+        status: d.status, 
+        categoria: d.categoria 
+      })));
       setDuplas(duplasNormalizadas);
     });
 
@@ -644,7 +650,13 @@ export function useTorneio() {
   };
 
   const getDuplasAguardando = () => {
-    return duplas.filter(dupla => dupla.status === 'aguardando');
+    const aguardando = duplas.filter(dupla => dupla.status === 'Dupla Aguardando Resultado');
+    console.log('🔍 Buscando duplas aguardando resultado:', {
+      totalDuplas: duplas.length,
+      duplasAguardando: aguardando.length,
+      statusDuplas: duplas.map(d => ({ id: d.id, tag: d.tag, status: d.status }))
+    });
+    return aguardando;
   };
 
   // Função para recalcular todos os totais de uma vez

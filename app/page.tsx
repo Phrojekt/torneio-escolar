@@ -2411,7 +2411,7 @@ function RankingTable({
 
                     {/* Nome da Dupla - com banner quando disponível */}
                     <div className="ranking-name-container rounded-xl sm:rounded-2xl overflow-hidden min-w-0 w-64 sm:w-32 md:flex-1">
-                      <div className="relative w-full h-14 sm:h-32 md:h-18 lg:h-20">
+                      <div className="relative w-full h-14 sm:h-32 md:h-18 lg:h-32">
                         <BannerDupla 
                           dupla={dupla} 
                           className="w-full h-full rounded-xl sm:rounded-2xl text-xs sm:text-base"
@@ -2468,6 +2468,13 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
   const jambaVIP = torneio.getDuplasPorCategoria('JambaVIP')
   const jamberlinda = torneio.getDuplasPorCategoria('Jamberlinda')
   const aguardando = torneio.getDuplasAguardando()
+
+  console.log('🎮 JogadorView - Duplas carregadas:', {
+    jambaVIP: jambaVIP.length,
+    jamberlinda: jamberlinda.length,  
+    aguardando: aguardando.length,
+    aguardandoData: aguardando.map((d: any) => ({ id: d.id, tag: d.tag, status: d.status }))
+  });
 
   const handleTooltipToggle = (index: number, event?: React.MouseEvent) => {
     if (activeTooltip === index) {
@@ -2655,12 +2662,47 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                 </div>
               ) : (
                 jambaVIP.slice(0, 2).map((dupla: Dupla) => (
-                  <div key={dupla.id} className="p-4 rounded-2xl border-2" style={{ backgroundColor: "#F0F8FF", borderColor: "#0f006d" }}>
-                    <div className="mb-2">
-                      <BannerDupla 
-                        dupla={dupla} 
-                        className="w-full h-14 sm:h-16 rounded-lg text-sm"
-                      />
+                  <div
+                    key={dupla.id}
+                    className="ranking-card flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border-2 border-transparent shadow-sm hover:shadow-md transition-all duration-300"
+                    style={{ '--hover-border-color': '#0f006d' } as React.CSSProperties}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0f006d'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
+                  >
+                    {/* Posição VIP - menor */}
+                    <div className="ranking-position w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-white text-xs sm:text-sm flex-shrink-0">
+                      VIP
+                    </div>
+
+                    {/* Nome da Dupla - flexível */}
+                    <div className="ranking-name-container rounded-lg sm:rounded-xl overflow-hidden min-w-0 flex-1">
+                      <div className="relative w-full h-12 sm:h-14">
+                        <BannerDupla 
+                          dupla={dupla} 
+                          className="w-full h-full rounded-lg sm:rounded-xl text-xs sm:text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Estatísticas - compactas */}
+                    <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+                      {/* Medalhas */}
+                      <div className="medals-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
+                        <Image src="/medal_icon.png" alt="Medal" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
+                        <span className="font-bold text-xs">{dupla.medalhas || 0}</span>
+                      </div>
+
+                      {/* Estrelas */}
+                      <div className="stars-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
+                        <Image src="/star_icon.png" alt="Star" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
+                        <span className="font-bold text-xs">{dupla.estrelas || 0}</span>
+                      </div>
+
+                      {/* Moedas */}
+                      <div className="coins-badge bg-amber-300 stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
+                        <Image src="/coin_icon.png" alt="Coin" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
+                        <span className="font-bold text-xs">{dupla.moedas || 0}</span>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -2683,12 +2725,47 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                 </div>
               ) : (
                 jamberlinda.slice(0, 2).map((dupla: Dupla) => (
-                  <div key={dupla.id} className="p-4 rounded-2xl border-2" style={{ backgroundColor: "#F0F8FF", borderColor: "#0f006d" }}>
-                    <div className="mb-2">
-                      <BannerDupla 
-                        dupla={dupla} 
-                        className="w-full h-14 sm:h-16 rounded-lg text-sm"
-                      />
+                  <div
+                    key={dupla.id}
+                    className="ranking-card flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border-2 border-transparent shadow-sm hover:shadow-md transition-all duration-300"
+                    style={{ '--hover-border-color': '#0f006d' } as React.CSSProperties}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0f006d'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
+                  >
+                    {/* Posição Linda - menor */}
+                    <div className="ranking-position w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-white text-xs sm:text-sm flex-shrink-0">
+                      ⭐
+                    </div>
+
+                    {/* Nome da Dupla - flexível */}
+                    <div className="ranking-name-container rounded-lg sm:rounded-xl overflow-hidden min-w-0 flex-1">
+                      <div className="relative w-full h-12 sm:h-14">
+                        <BannerDupla 
+                          dupla={dupla} 
+                          className="w-full h-full rounded-lg sm:rounded-xl text-xs sm:text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Estatísticas - compactas */}
+                    <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+                      {/* Medalhas */}
+                      <div className="medals-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
+                        <Image src="/medal_icon.png" alt="Medal" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
+                        <span className="font-bold text-xs">{dupla.medalhas || 0}</span>
+                      </div>
+
+                      {/* Estrelas */}
+                      <div className="stars-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
+                        <Image src="/star_icon.png" alt="Star" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
+                        <span className="font-bold text-xs">{dupla.estrelas || 0}</span>
+                      </div>
+
+                      {/* Moedas */}
+                      <div className="coins-badge bg-amber-300 stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
+                        <Image src="/coin_icon.png" alt="Coin" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
+                        <span className="font-bold text-xs">{dupla.moedas || 0}</span>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -2704,29 +2781,61 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
           <CardTitle className="text-xl font-black">Duplas Aguardando Resultado</CardTitle>
         </CardHeader>
         <CardContent className="p-3 sm:p-6">
-          <div className="overflow-x-auto">
-            <div className="flex flex-col sm:grid sm:grid-cols-1 md:grid-cols-3 gap-4 min-w-full">
-              {aguardando.length === 0 ? (
-                <div className="col-span-full text-center py-8">
-                  <div className="w-12 h-12 mx-auto bg-yellow-300 rounded-full flex items-center justify-center mb-2">
-                    <span className="text-yellow-800 font-bold">!</span>
-                  </div>
-                  <p className="text-yellow-600 font-bold text-sm">Nenhuma dupla aguardando resultado</p>
+          <div className="space-y-3 sm:space-y-4 max-h-96 overflow-y-auto">
+            {aguardando.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 mx-auto bg-yellow-300 rounded-full flex items-center justify-center mb-2">
+                  <span className="text-yellow-800 font-bold">!</span>
                 </div>
-              ) : (
-                aguardando.map((dupla: Dupla) => (
-                  <div key={dupla.id} className="flex-shrink-0 p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl text-center border-2 border-yellow-200 min-w-48">
-                    <div className="mb-2">
+                <p className="text-yellow-600 font-bold text-sm">Nenhuma dupla aguardando resultado</p>
+              </div>
+            ) : (
+              aguardando.map((dupla: Dupla) => (
+                <div
+                  key={dupla.id}
+                  className="ranking-card flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border-2 border-transparent shadow-sm hover:shadow-md transition-all duration-300"
+                  style={{ '--hover-border-color': '#f59e0b' } as React.CSSProperties}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#f59e0b'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
+                >
+                  {/* Posição Aguardando - menor */}
+                  <div className="bg-gradient-to-r from-yellow-400 to-orange-400 w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-white text-xs sm:text-sm flex-shrink-0">
+                    ⏳
+                  </div>
+
+                  {/* Nome da Dupla - flexível */}
+                  <div className="ranking-name-container rounded-lg sm:rounded-xl overflow-hidden min-w-0 flex-1">
+                    <div className="relative w-full h-12 sm:h-14">
                       <BannerDupla 
                         dupla={dupla} 
-                        className="w-full h-14 sm:h-16 rounded-lg text-sm mx-auto"
+                        className="w-full h-full rounded-lg sm:rounded-xl text-xs sm:text-sm"
                       />
                     </div>
-                    <p className="text-sm text-gray-600 font-semibold">Aguardando...</p>
                   </div>
-                ))
-              )}
-            </div>
+
+                  {/* Estatísticas - compactas */}
+                  <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+                    {/* Medalhas */}
+                    <div className="medals-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
+                      <Image src="/medal_icon.png" alt="Medal" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
+                      <span className="font-bold text-xs">{dupla.medalhas || 0}</span>
+                    </div>
+
+                    {/* Estrelas */}
+                    <div className="stars-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
+                      <Image src="/star_icon.png" alt="Star" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
+                      <span className="font-bold text-xs">{dupla.estrelas || 0}</span>
+                    </div>
+
+                    {/* Moedas */}
+                    <div className="coins-badge bg-amber-300 stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
+                      <Image src="/coin_icon.png" alt="Coin" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
+                      <span className="font-bold text-xs">{dupla.moedas || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
