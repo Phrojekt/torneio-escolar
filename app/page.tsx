@@ -2528,16 +2528,20 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
           {/* Container com scroll horizontal otimizado - Carrossel sem quebra */}
           <div className="relative carousel-wrapper">
             <div className="loja-carousel custom-scrollbar">
-              <div className="flex gap-3 sm:gap-4 min-w-max scroll-smooth-x p-1 sm:p-2 pb-4 items-center justify-center min-h-[280px]">
+              <div className="flex gap-3 sm:gap-4 min-w-max scroll-smooth-x p-1 sm:p-2 pb-4 
+                             items-start justify-start sm:items-center sm:justify-center 
+                             min-h-[240px] sm:min-h-[280px]">
                 {torneio.itensLoja.map((item: any, index: number) => (
                   <div
                     key={index}
                     ref={(el) => { tooltipRefs.current[index] = el }}
-                    className="loja-carousel-item flex-shrink-0 w-72 sm:w-80 md:w-84 p-3 sm:p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg sm:rounded-xl border-2 border-orange-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105 cursor-pointer"
+                    className="loja-carousel-item flex-shrink-0 w-72 sm:w-80 md:w-84 p-3 sm:p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg sm:rounded-xl border-2 border-orange-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105 cursor-pointer sm:cursor-default"
                     style={{ minWidth: '288px', maxWidth: '320px' }}
                     onClick={(e) => {
-                      e.stopPropagation()
-                      handleTooltipToggle(index, e)
+                      if (window.innerWidth < 640) { // Apenas mobile
+                        e.stopPropagation()
+                        handleTooltipToggle(index, e)
+                      }
                     }}
                   >
                     <div className="flex gap-3 sm:gap-4">
@@ -2571,14 +2575,14 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                         
                         {/* Tooltip com descrição completa - Ativo por hover no desktop e clique no mobile */}
                         <div className={`fixed bg-white border-2 border-gray-200 rounded-xl shadow-2xl p-4 transition-all duration-200 ${
-                          activeTooltip === index ? 'opacity-100 visible z-[9999]' : 'opacity-0 invisible sm:group-hover:opacity-100 sm:group-hover:visible sm:group-hover:z-[9999] z-[-1]'
+                          activeTooltip === index ? 'sm:hidden opacity-100 visible z-[9999]' : 'opacity-0 invisible sm:group-hover:opacity-100 sm:group-hover:visible sm:group-hover:z-[9999] z-[-1]'
                         } pointer-events-none`}
                         style={{
                           left: '50%',
-                          top: `${tooltipPosition.y - 100}px`,
-                          transform: 'translateX(-50%)',
+                          top: '50%',
+                          transform: 'translate(-50%, -50%)',
                           width: '280px',
-                          maxWidth: '85vw'
+                          maxWidth: '90vw'
                         }}>
                           <div className="text-sm font-semibold text-gray-800 mb-2">{item.nome}</div>
                           <div className="text-xs text-gray-600 leading-relaxed max-h-32 overflow-y-auto">{item.descricao}</div>
