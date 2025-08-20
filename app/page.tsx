@@ -148,12 +148,12 @@ function AdministradorDashboard({ onLogout }: { onLogout: () => void }) {
                           setActiveTab(tab.id)
                           setIsMobileMenuOpen(false)
                         }}
-                        className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm flex items-center space-x-2 transition-all whitespace-nowrap touch-target ${activeTab === tab.id
+                        className={`flex-shrink-0 px-6 py-4 rounded-xl font-bold text-base flex items-center space-x-3 transition-all whitespace-nowrap touch-target ${activeTab === tab.id
                           ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
                           : "bg-gray-100 text-gray-600"
                           }`}
                       >
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-5 h-5" />
                         <span>{tab.label}</span>
                       </button>
                     )
@@ -165,10 +165,10 @@ function AdministradorDashboard({ onLogout }: { onLogout: () => void }) {
                       onLogout()
                       setIsMobileMenuOpen(false)
                     }}
-                    className="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm flex items-center space-x-2 transition-all text-white whitespace-nowrap touch-target"
+                    className="flex-shrink-0 px-6 py-4 rounded-xl font-bold text-base flex items-center space-x-3 transition-all text-white whitespace-nowrap touch-target"
                     style={{ backgroundColor: "#AEE1F9" }}
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-5 h-5" />
                     <span>Sair</span>
                   </button>
                 </nav>
@@ -447,20 +447,20 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
             <div className="flex items-center space-x-2">
               <Button
                 onClick={() => setActiveTab("loja")}
-                className={`rounded-full px-3 py-2 sm:px-4 sm:py-3 font-bold text-xs sm:text-base flex items-center space-x-2 cursor-pointer transition-all duration-300 transform ${activeTab === "loja"
+                className={`rounded-full px-6 py-4 sm:px-4 sm:py-3 font-bold text-base sm:text-base flex items-center justify-center sm:space-x-3 cursor-pointer transition-all duration-300 transform ${activeTab === "loja"
                   ? "bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:scale-105 hover:shadow-lg scale-105 shadow-lg"
                   : "bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:scale-105 hover:shadow-lg"
                   }`}
               >
-                <img src="/shop_icon.png" alt="Loja" className="w-4 h-4" />
-                <span className="hidden sm:inline">Lojinha</span>
+                <img src="/shop_icon.png" alt="Loja" className="w-5 h-5" />
+                <span className="hidden sm:inline sm:ml-0">Lojinha</span>
               </Button>
               <Button
                 onClick={onLogout}
-                className="bg-slate-700 text-white border-0 rounded-full px-3 py-2 sm:px-6 sm:py-3 font-bold hover:bg-slate-800 text-xs sm:text-base flex items-center space-x-2 cursor-pointer"
+                className="bg-slate-700 text-white border-0 rounded-full px-6 py-4 sm:px-6 sm:py-3 font-bold hover:bg-slate-800 text-base sm:text-base flex items-center justify-center sm:space-x-3 cursor-pointer"
               >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Sair</span>
+                <LogOut className="w-5 h-5" />
+                <span className="hidden sm:inline sm:ml-0">Sair</span>
               </Button>
             </div>
           </div>
@@ -473,9 +473,9 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
           <div className="block sm:hidden">
             <Button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="w-full mb-3 bg-gray-300 text-gray-700 hover:bg-gray-400 rounded-full font-bold cursor-pointer"
+              className="w-full mb-3 bg-gray-300 text-gray-700 hover:bg-gray-400 rounded-full font-bold cursor-pointer px-6 py-4 text-base"
             >
-              {menuOpen ? <X className="w-4 h-4 mr-2" /> : <Menu className="w-4 h-4 mr-2" />}
+              {menuOpen ? <X className="w-5 h-5 mr-3" /> : <Menu className="w-5 h-5 mr-3" />}
               Menu
             </Button>
             {menuOpen && (
@@ -485,7 +485,7 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
                     setActiveTab("geral")
                     setMenuOpen(false)
                   }}
-                  className={`rounded-full px-4 py-3 font-bold text-sm cursor-pointer ${activeTab === "geral"
+                  className={`rounded-full px-6 py-4 font-bold text-base cursor-pointer ${activeTab === "geral"
                     ? "bg-gradient-to-r bg-[#AEE1F9] text-white"
                     : "bg-gray-300 text-black hover:bg-gray-400"
                     }`}
@@ -499,7 +499,7 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
                       setActiveTab(rodada.id)
                       setMenuOpen(false)
                     }}
-                    className={`rounded-full px-4 py-3 font-bold text-sm cursor-pointer ${activeTab === rodada.id
+                    className={`rounded-full px-6 py-4 font-bold text-base cursor-pointer ${activeTab === rodada.id
                       ? "bg-gradient-to-r bg-[#AEE1F9] text-white"
                       : "bg-gray-300 text-black hover:bg-gray-400"
                       }`}
@@ -514,7 +514,7 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
                       setActiveTab(bonus.id)
                       setMenuOpen(false)
                     }}
-                    className={`rounded-full px-4 py-3 font-bold text-sm cursor-pointer ${activeTab === bonus.id
+                    className={`rounded-full px-6 py-4 font-bold text-base cursor-pointer ${activeTab === bonus.id
                       ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-white"
                       : "bg-gray-300 text-black hover:bg-gray-400"
                       }`}
@@ -1522,7 +1522,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
             duplas.map((dupla: Dupla) => (
               <div key={dupla.id} className="p-3 rounded-xl border-2 bg-gray-50 border-gray-200">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-16 h-12 sm:w-20 sm:h-14 md:w-24 md:h-16 rounded-lg overflow-hidden flex-shrink-0">
                     <BannerDupla 
                       dupla={dupla} 
                       className="w-full h-full text-xs"
@@ -2410,8 +2410,8 @@ function RankingTable({
                     </div>
 
                     {/* Nome da Dupla - com banner quando disponível */}
-                    <div className="ranking-name-container rounded-xl sm:rounded-2xl overflow-hidden min-w-0 w-24 sm:flex-1">
-                      <div className="relative w-full h-12 sm:h-16 lg:h-20">
+                    <div className="ranking-name-container rounded-xl sm:rounded-2xl overflow-hidden min-w-0 w-64 sm:w-32 md:flex-1">
+                      <div className="relative w-full h-14 sm:h-32 md:h-18 lg:h-20">
                         <BannerDupla 
                           dupla={dupla} 
                           className="w-full h-full rounded-xl sm:rounded-2xl text-xs sm:text-base"
@@ -2462,12 +2462,38 @@ function RankingTable({
 
 // Componente da loja para jogadores
 function LojaView({ torneio, showComprarButton = true }: { torneio: any; showComprarButton?: boolean }) {
+  const [activeTooltip, setActiveTooltip] = useState<number | null>(null)
+  const [tooltipPosition, setTooltipPosition] = useState<{x: number, y: number}>({ x: 0, y: 0 })
+  const tooltipRefs = useRef<{ [key: number]: HTMLDivElement | null }>({})
   const jambaVIP = torneio.getDuplasPorCategoria('JambaVIP')
   const jamberlinda = torneio.getDuplasPorCategoria('Jamberlinda')
   const aguardando = torneio.getDuplasAguardando()
 
+  const handleTooltipToggle = (index: number, event?: React.MouseEvent) => {
+    if (activeTooltip === index) {
+      setActiveTooltip(null)
+    } else {
+      setActiveTooltip(index)
+      
+      // Calcular posição do tooltip baseada no elemento clicado
+      if (event && tooltipRefs.current[index]) {
+        const rect = event.currentTarget.getBoundingClientRect()
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop
+        
+        setTooltipPosition({
+          x: rect.left + rect.width / 2,
+          y: rect.top + scrollY - 10 // 10px acima do elemento
+        })
+      }
+    }
+  }
+
+  const handleClickOutside = () => {
+    setActiveTooltip(null)
+  }
+
   return (
-    <div className="space-y-3 sm:space-y-4 lg:space-y-6 max-w-6xl mx-auto relative">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6 max-w-6xl mx-auto relative" onClick={handleClickOutside}>
 
       {/* Mascote da Lojinha - Fora do card para não ser cortado */}
       <div className="absolute transform scale-x-[-1] -top-2 -right-2 sm:-top-4 sm:-right-4 w-20 h-20 sm:w-32 sm:h-32 z-50">
@@ -2498,83 +2524,113 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
             {showComprarButton ? 'Use suas moedas para comprar itens especiais' : 'Veja os itens especiais disponíveis'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-2 sm:p-3 lg:p-6 overflow-visible">
-          {/* Container com scroll horizontal otimizado */}
-          <div className="overflow-x-auto overflow-y-visible custom-scrollbar hover-scale-container tooltip-container">
-            <div className="flex gap-3 sm:gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-4 xl:gap-6 min-w-full scroll-smooth-x p-1 sm:p-2 pt-24 pb-4">
-              {torneio.itensLoja.map((item: any, index: number) => (
-                <div
-                  key={index}
-                  className="flex-shrink-0 w-64 sm:w-72 lg:w-auto p-3 sm:p-4 lg:p-6 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg sm:rounded-xl lg:rounded-2xl border-2 border-orange-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105 hover-scale-item"
-                >
-                  <div className="flex gap-3 sm:gap-4">
-                    {/* Imagem do Item */}
-                    <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-lg overflow-hidden bg-orange-200 flex items-center justify-center">
-                      {item.imagem ? (
-                        <img
-                          src={item.imagem}
-                          alt={item.nome}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div className={`w-full h-full flex items-center justify-center ${item.imagem ? 'hidden' : 'flex'}`}>
-                        <span className="text-orange-400 text-xl sm:text-2xl lg:text-3xl font-bold">
-                          {item.nome?.charAt(0)?.toUpperCase() || '?'}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Conteúdo do Item */}
-                    <div className="flex-1 min-w-0 relative group">
-                      <h3 className="font-black text-sm sm:text-base lg:text-xl text-gray-800 mb-2 line-clamp-1">{item.nome}</h3>
-                      <p className="text-gray-600 text-xs sm:text-sm mb-2 font-semibold line-clamp-2 lg:line-clamp-3 cursor-help">
-                        {item.descricao}
-                      </p>
-                      
-                      {/* Tooltip com descrição completa */}
-                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-72 sm:w-80 max-w-[90vw] bg-white border-2 border-gray-200 rounded-xl shadow-xl p-4 z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible item-tooltip pointer-events-none">
-                        <div className="text-sm font-semibold text-gray-800 mb-2">{item.nome}</div>
-                        <div className="text-xs text-gray-600 leading-relaxed">{item.descricao}</div>
-                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
+        <CardContent className="p-2 sm:p-3 lg:p-6 carousel-container">
+          {/* Container com scroll horizontal otimizado - Carrossel sem quebra */}
+          <div className="relative carousel-wrapper">
+            <div className="loja-carousel custom-scrollbar">
+              <div className="flex gap-3 sm:gap-4 min-w-max scroll-smooth-x p-1 sm:p-2 pt-24 pb-4">
+                {torneio.itensLoja.map((item: any, index: number) => (
+                  <div
+                    key={index}
+                    ref={(el) => { tooltipRefs.current[index] = el }}
+                    className="loja-carousel-item flex-shrink-0 w-72 sm:w-80 md:w-84 p-3 sm:p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg sm:rounded-xl border-2 border-orange-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105 cursor-pointer"
+                    style={{ minWidth: '288px', maxWidth: '320px' }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleTooltipToggle(index, e)
+                    }}
+                  >
+                    <div className="flex gap-3 sm:gap-4">
+                      {/* Imagem do Item */}
+                      <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-orange-200 flex items-center justify-center">
+                        {item.imagem ? (
+                          <img
+                            src={item.imagem}
+                            alt={item.nome}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-full h-full flex items-center justify-center ${item.imagem ? 'hidden' : 'flex'}`}>
+                          <span className="text-orange-400 text-xl sm:text-2xl font-bold">
+                            {item.nome?.charAt(0)?.toUpperCase() || '?'}
+                          </span>
+                        </div>
                       </div>
                       
-                      {/* Quantidade Disponível */}
-                      <div className="mb-2 sm:mb-3 lg:mb-4">
-                        <span className={`text-xs sm:text-sm font-bold px-2 py-1 rounded-full ${
-                          item.quantidadeDisponivel <= 0 
-                            ? 'bg-red-100 text-red-600' 
-                            : item.quantidadeDisponivel <= 5 
-                              ? 'bg-yellow-100 text-yellow-600' 
-                              : 'bg-green-100 text-green-600'
-                        }`}>
-                          {item.quantidadeDisponivel <= 0 
-                            ? 'Esgotado' 
-                            : `${item.quantidadeDisponivel} ${item.quantidadeDisponivel === 1 ? 'disponível' : 'disponíveis'}`
-                          }
-                        </span>
-                      </div>
-                      
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
-                        <span className="text-base sm:text-lg lg:text-2xl font-black text-orange-600">{item.preco} moedas</span>
-                        {showComprarButton && (
-                          <Button 
-                            className="w-full sm:w-auto rounded-full bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white font-bold px-3 sm:px-4 lg:px-6 py-1 sm:py-2 text-xs sm:text-sm lg:text-base touch-target disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={item.quantidadeDisponivel <= 0}
-                          >
-                            {item.quantidadeDisponivel <= 0 ? 'Esgotado' : 'Comprar'}
-                          </Button>
-                        )}
+                      {/* Conteúdo do Item */}
+                      <div className="flex-1 min-w-0 relative group">
+                        <h3 className="font-black text-sm sm:text-base text-gray-800 mb-2 line-clamp-1">{item.nome}</h3>
+                        <p className="text-gray-600 text-xs sm:text-sm mb-2 font-semibold line-clamp-2">
+                          {item.descricao}
+                        </p>
+                        
+                        {/* Tooltip com descrição completa - Ativo por hover no desktop e clique no mobile */}
+                        <div className={`fixed bg-white border-2 border-gray-200 rounded-xl shadow-2xl p-4 transition-all duration-200 ${
+                          activeTooltip === index ? 'opacity-100 visible z-[9999]' : 'opacity-0 invisible sm:group-hover:opacity-100 sm:group-hover:visible sm:group-hover:z-[9999] z-[-1]'
+                        } pointer-events-none`}
+                        style={{
+                          left: '50%',
+                          top: `${tooltipPosition.y - 100}px`,
+                          transform: 'translateX(-50%)',
+                          width: '280px',
+                          maxWidth: '85vw'
+                        }}>
+                          <div className="text-sm font-semibold text-gray-800 mb-2">{item.nome}</div>
+                          <div className="text-xs text-gray-600 leading-relaxed max-h-32 overflow-y-auto">{item.descricao}</div>
+                        </div>
+                        
+                        {/* Quantidade Disponível */}
+                        <div className="mb-2 sm:mb-3">
+                          <span className={`text-xs sm:text-sm font-bold px-2 py-1 rounded-full ${
+                            item.quantidadeDisponivel <= 0 
+                              ? 'bg-red-100 text-red-600' 
+                              : item.quantidadeDisponivel <= 5 
+                                ? 'bg-yellow-100 text-yellow-600' 
+                                : 'bg-green-100 text-green-600'
+                          }`}>
+                            {item.quantidadeDisponivel <= 0 
+                              ? 'Esgotado' 
+                              : `${item.quantidadeDisponivel} ${item.quantidadeDisponivel === 1 ? 'disponível' : 'disponíveis'}`
+                            }
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-col gap-2">
+                          <span className="text-base sm:text-lg font-black text-orange-600">{item.preco} moedas</span>
+                          {showComprarButton && (
+                            <Button 
+                              className="w-full rounded-full bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-500 hover:to-emerald-500 text-white font-bold px-4 py-2 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              disabled={item.quantidadeDisponivel <= 0}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                // Lógica de compra aqui
+                                console.log('Comprando item:', item.nome)
+                              }}
+                            >
+                              {item.quantidadeDisponivel <= 0 ? 'Esgotado' : 'Comprar'}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+            
+            {/* Indicadores de scroll (opcional) */}
+            {torneio.itensLoja.length > 1 && (
+              <div className="flex justify-center mt-2 gap-1">
+                {Array.from({ length: Math.min(torneio.itensLoja.length, 5) }).map((_, index) => (
+                  <div key={index} className="w-2 h-2 rounded-full bg-gray-300"></div>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -2599,7 +2655,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                     <div className="mb-2">
                       <BannerDupla 
                         dupla={dupla} 
-                        className="w-full h-12 rounded-lg text-sm"
+                        className="w-full h-14 sm:h-16 rounded-lg text-sm"
                       />
                     </div>
                   </div>
@@ -2627,7 +2683,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                     <div className="mb-2">
                       <BannerDupla 
                         dupla={dupla} 
-                        className="w-full h-12 rounded-lg text-sm"
+                        className="w-full h-14 sm:h-16 rounded-lg text-sm"
                       />
                     </div>
                   </div>
@@ -2659,7 +2715,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                     <div className="mb-2">
                       <BannerDupla 
                         dupla={dupla} 
-                        className="w-full h-12 rounded-lg text-sm mx-auto"
+                        className="w-full h-14 sm:h-16 rounded-lg text-sm mx-auto"
                       />
                     </div>
                     <p className="text-sm text-gray-600 font-semibold">Aguardando...</p>

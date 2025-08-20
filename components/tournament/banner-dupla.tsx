@@ -56,11 +56,11 @@ export const BannerDupla = ({ dupla, className = "", showTag = true, objectFit =
     
     // Adicionar key para forçar re-render quando tentativas mudar
     return (
-      <div className="w-full h-full relative overflow-hidden rounded-lg bg-gray-100">
+      <div className="banner-dupla-container w-full h-full relative overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center banner-mobile-large sm:banner-tablet lg:banner-desktop">
         {/* Loading placeholder */}
         {carregando && (
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 animate-pulse flex items-center justify-center">
+            <div className="w-8 h-8 border-3 border-gray-500 border-t-transparent rounded-full animate-spin shadow-lg"></div>
           </div>
         )}
         
@@ -68,9 +68,15 @@ export const BannerDupla = ({ dupla, className = "", showTag = true, objectFit =
           key={`${dupla.id}-${tentativas}`}
           src={dupla.bannerUrl} 
           alt={`Banner da dupla ${dupla.tag}`}
-          className={`w-full h-full object-${objectFit} object-center filter brightness-110 contrast-110 saturate-110 transition-all duration-300 hover:brightness-105 ${carregando ? 'opacity-0' : 'opacity-100'}`}
+          className={`banner-dupla-image w-full h-full object-${objectFit} object-center transition-all duration-500 ease-out banner-aspect-mobile sm:banner-aspect-tablet lg:banner-aspect-desktop ${
+            carregando 
+              ? 'opacity-0 scale-95' 
+              : 'opacity-100 scale-100 hover:scale-[1.02] hover:brightness-105 hover:contrast-105'
+          }`}
           style={{
-            imageRendering: 'crisp-edges'
+            imageRendering: 'optimizeQuality' as any,
+            filter: carregando ? 'none' : 'brightness(1.05) contrast(1.08) saturate(1.1)',
+            transformOrigin: 'center center'
           }}
           onError={handleImageError}
           onLoad={() => {
@@ -88,9 +94,9 @@ export const BannerDupla = ({ dupla, className = "", showTag = true, objectFit =
   // Fallback - sempre mostrar
   console.log('🔄 Usando fallback para dupla:', dupla?.tag);
   return (
-    <div className={`bg-gradient-to-r from-blue-200 to-purple-200 border-2 border-blue-300 flex items-center justify-center rounded-lg p-2 ${className}`}>
+    <div className={`banner-dupla-container bg-gradient-to-br from-blue-100 via-blue-200 to-purple-200 border-2 border-blue-300 flex items-center justify-center rounded-lg p-4 shadow-sm transition-all duration-300 hover:shadow-md banner-mobile-large sm:banner-tablet lg:banner-desktop ${className}`}>
       {showTag && (
-        <p className="font-black text-gray-800 text-center text-xs sm:text-sm">
+        <p className="font-bold text-gray-800 text-center text-sm sm:text-base md:text-lg leading-tight line-clamp-2">
           {dupla?.tag || 'TAG'}
         </p>
       )}

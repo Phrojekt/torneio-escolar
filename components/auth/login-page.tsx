@@ -18,6 +18,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
   const handleLogin = () => {
     console.log("Login attempt:", { userType, password })
+    
     if (userType === "administrador" && password === "admin123") {
       console.log("Administrador login successful")
       toast.success("Login realizado com sucesso!")
@@ -30,6 +31,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       console.log("Login failed")
       toast.error("Credenciais inválidas.")
     }
+  }
+
+  const handleUserTypeSelect = (type: "administrador" | "jogador") => {
+    console.log("User type selected:", type)
+    setUserType(type)
   }
 
   return (
@@ -49,27 +55,27 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div className="space-y-3 sm:space-y-4">
             <Label className="text-base sm:text-lg font-bold text-gray-700">Tipo de Usuário</Label>
-            <div className="grid grid-cols-1 gap-3">
-              <Button
-                variant={userType === "administrador" ? "default" : "outline"}
-                onClick={() => setUserType("administrador")}
-                className={`h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base ${userType === "administrador"
-                  ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                  : "border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+            <div className="grid grid-cols-1 gap-4">
+              <button
+                type="button"
+                onClick={() => handleUserTypeSelect("administrador")}
+                className={`h-16 sm:h-14 rounded-xl font-bold text-base transition-all duration-200 ${userType === "administrador"
+                  ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg border-2 border-purple-500"
+                  : "border-2 border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
                   }`}
               >
                 Administrador
-              </Button>
-              <Button
-                variant={userType === "jogador" ? "default" : "outline"}
-                onClick={() => setUserType("jogador")}
-                className={`h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-base ${userType === "jogador"
-                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
-                  : "border-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUserTypeSelect("jogador")}
+                className={`h-16 sm:h-14 rounded-xl font-bold text-base transition-all duration-200 ${userType === "jogador"
+                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg border-2 border-blue-500"
+                  : "border-2 border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
                   }`}
               >
                 Jogador
-              </Button>
+              </button>
             </div>
           </div>
 
@@ -81,7 +87,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 placeholder="Digite a senha do administrador"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-12 sm:h-14 rounded-xl border-2 border-gray-300 text-sm sm:text-base"
+                className="h-14 sm:h-14 rounded-xl border-2 border-gray-300 text-base sm:text-base touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               />
             </div>
           )}
@@ -89,18 +96,19 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           {userType === "jogador" && (
             <div className="p-3 bg-green-50 rounded-lg border-2 border-green-200">
               <p className="text-sm text-green-700 font-semibold text-center">
-                ✅ Acesso liberado para jogadores - clique em "ENTRAR"
+                Acesso liberado para jogadores - clique em "ENTRAR"
               </p>
             </div>
           )}
 
-          <Button
+          <button
+            type="button"
             onClick={handleLogin}
             disabled={!userType || (userType === "administrador" && !password)}
-            className="w-full h-12 sm:h-14 rounded-xl font-bold text-sm sm:text-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="w-full h-16 sm:h-14 rounded-xl font-bold text-lg bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ENTRAR
-          </Button>
+          </button>
         </CardContent>
       </Card>
     </div>
