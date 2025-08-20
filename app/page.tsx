@@ -2524,11 +2524,11 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
             {showComprarButton ? 'Use suas moedas para comprar itens especiais' : 'Veja os itens especiais disponíveis'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-2 sm:p-3 lg:p-6 carousel-container">
+        <CardContent className="p-2 sm:p-3 carousel-container">
           {/* Container com scroll horizontal otimizado - Carrossel sem quebra */}
           <div className="relative carousel-wrapper">
             <div className="loja-carousel custom-scrollbar">
-              <div className="flex gap-3 sm:gap-4 min-w-max scroll-smooth-x p-1 sm:p-2 pt-24 pb-4">
+              <div className="flex gap-3 sm:gap-4 min-w-max scroll-smooth-x p-1 sm:p-2 pb-4 items-center justify-center min-h-[280px]">
                 {torneio.itensLoja.map((item: any, index: number) => (
                   <div
                     key={index}
