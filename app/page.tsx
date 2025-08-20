@@ -2784,7 +2784,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
           <div className="space-y-3 sm:space-y-4 max-h-96 overflow-y-auto">
             {aguardando.length === 0 ? (
               <div className="text-center py-8">
-                <div className="w-12 h-12 mx-auto bg-yellow-300 rounded-full flex items-center justify-center mb-2">
+                <div className="w-12 h-32 mx-auto bg-yellow-300 rounded-full flex items-center justify-center mb-2">
                   <span className="text-yellow-800 font-bold">!</span>
                 </div>
                 <p className="text-yellow-600 font-bold text-sm">Nenhuma dupla aguardando resultado</p>
@@ -2805,7 +2805,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
 
                   {/* Nome da Dupla - flexível */}
                   <div className="ranking-name-container rounded-lg sm:rounded-xl overflow-hidden min-w-0 flex-1">
-                    <div className="relative w-full h-12 sm:h-14">
+                    <div className="relative w-full h-14 sm:h-32">
                       <BannerDupla 
                         dupla={dupla} 
                         className="w-full h-full rounded-lg sm:rounded-xl text-xs sm:text-sm"
