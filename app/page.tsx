@@ -126,7 +126,7 @@ function AdministradorDashboard({ onLogout }: { onLogout: () => void }) {
               <Button
                 onClick={onLogout}
                 className="hidden sm:flex items-center space-x-2 text-white px-4 py-2 rounded-xl font-bold text-sm"
-                style={{ backgroundColor: "#AEE1F9" }}
+                style={{ backgroundColor: "#0f006d" }}
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sair</span>
@@ -166,7 +166,7 @@ function AdministradorDashboard({ onLogout }: { onLogout: () => void }) {
                       setIsMobileMenuOpen(false)
                     }}
                     className="flex-shrink-0 px-6 py-4 rounded-xl font-bold text-base flex items-center space-x-3 transition-all text-white whitespace-nowrap touch-target"
-                    style={{ backgroundColor: "#AEE1F9" }}
+                    style={{ backgroundColor: "#0f006d" }}
                   >
                     <LogOut className="w-5 h-5" />
                     <span>Sair</span>
@@ -434,7 +434,7 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div className="min-h-screen bg-[url('/background.png')] bg-cover bg-center bg-no-repeat overflow-x-hidden">
-      <header className="shadow-lg" style={{ backgroundColor: "#AEE1F9" }}>
+      <header className="shadow-lg" style={{ backgroundColor: "#0f006d" }}>
         <div className="px-3 sm:px-6 lg:px-8">
           <div className="flex justify-around items-center py-3 sm:py-6">
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -448,8 +448,8 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
               <Button
                 onClick={() => setActiveTab("loja")}
                 className={`rounded-full px-6 py-4 sm:px-4 sm:py-3 font-bold text-base sm:text-base flex items-center justify-center sm:space-x-3 cursor-pointer transition-all duration-300 transform ${activeTab === "loja"
-                  ? "bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:scale-105 hover:shadow-lg scale-105 shadow-lg"
-                  : "bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:scale-105 hover:shadow-lg"
+                  ? "bg-purple-600 text-white hover:bg-purple-700 hover:scale-105 hover:shadow-lg scale-105 shadow-lg"
+                  : "bg-purple-500 text-white hover:bg-purple-600 hover:scale-105 hover:shadow-lg"
                   }`}
               >
                 <img src="/shop_icon.png" alt="Loja" className="w-5 h-5" />
@@ -486,7 +486,7 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
                     setMenuOpen(false)
                   }}
                   className={`rounded-full px-6 py-4 font-bold text-base cursor-pointer ${activeTab === "geral"
-                    ? "bg-gradient-to-r bg-[#AEE1F9] text-white"
+                    ? "bg-gradient-to-r bg-[#0f006d] text-white"
                     : "bg-gray-300 text-black hover:bg-gray-400"
                     }`}
                 >
@@ -500,7 +500,7 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
                       setMenuOpen(false)
                     }}
                     className={`rounded-full px-6 py-4 font-bold text-base cursor-pointer ${activeTab === rodada.id
-                      ? "bg-gradient-to-r bg-[#AEE1F9] text-white"
+                      ? "bg-gradient-to-r bg-[#0f006d] text-white"
                       : "bg-gray-300 text-black hover:bg-gray-400"
                       }`}
                   >
@@ -533,7 +533,7 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
                 <Button
                   onClick={() => setActiveTab("geral")}
                   className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target cursor-pointer ${activeTab === "geral"
-                    ? "bg-gradient-to-r bg-[#AEE1F9] text-white"
+                    ? "bg-gradient-to-r bg-[#0f006d] text-white"
                     : "bg-gray-300 text-black hover:bg-gray-400"
                     }`}
                 >
@@ -544,7 +544,7 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
                     key={rodada.id}
                     onClick={() => setActiveTab(rodada.id)}
                     className={`rounded-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2 lg:py-3 font-bold text-xs sm:text-sm lg:text-base flex-shrink-0 touch-target cursor-pointer ${activeTab === rodada.id
-                      ? "bg-gradient-to-r bg-[#AEE1F9] text-white"
+                      ? "bg-gradient-to-r bg-[#0f006d] text-white"
                       : "bg-gray-300 text-black hover:bg-gray-400"
                       }`}
                   >
@@ -1383,7 +1383,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
 
       {/* Adicionar Pontuação */}
       <Card className="border-0 shadow-lg sm:shadow-xl lg:shadow-2xl bg-white rounded-xl sm:rounded-2xl overflow-hidden">
-        <CardHeader className="text-white px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6" style={{ backgroundColor: "#AEE1F9" }}>
+        <CardHeader className="text-white px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6" style={{ backgroundColor: "#0f006d" }}>
           <CardTitle className="text-lg sm:text-xl lg:text-2xl font-black flex items-center space-x-2">
             <Target className="w-5 h-5 sm:w-6 sm:h-6" />
             <span>Adicionar Pontuação</span>
@@ -1459,7 +1459,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
               </Select>
             </div>
 
-            <Button onClick={handleAdicionarPontuacao} className="w-full h-12 rounded-full font-bold text-white" style={{ backgroundColor: "#AEE1F9" }}>
+            <Button onClick={handleAdicionarPontuacao} className="w-full h-12 rounded-full font-bold text-white" style={{ backgroundColor: "#0f006d" }}>
               ADICIONAR PONTUAÇÃO
             </Button>
           </div>
@@ -1614,7 +1614,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
     <div className="space-y-6">
       {/* Header geral */}
       <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
-        <CardHeader className="text-white px-6 py-6" style={{ backgroundColor: "#AEE1F9" }}>
+        <CardHeader className="text-white px-6 py-6" style={{ backgroundColor: "#0f006d" }}>
           <CardTitle className="text-2xl font-black flex items-center space-x-2">
             <Users className="w-6 h-6" />
             <span>Gerenciamento de Duplas</span>
@@ -2336,7 +2336,7 @@ function RankingTable({
   return (
     <div className="ranking-card table-container-responsive bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden border-0 max-w-full">
       {title && (
-        <div className="p-4 sm:p-6 bg-gradient-to-r bg-[#AEE1F9]">
+        <div className="p-4 sm:p-6 bg-gradient-to-r bg-[#0f006d]">
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white text-center drop-shadow-lg">{title}</h2>
         </div>
       )}
@@ -2400,8 +2400,8 @@ function RankingTable({
                   <div
                     key={dupla.id}
                     className="ranking-card flex items-center gap-3 sm:gap-4 lg:gap-6 p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl border-2 border-transparent min-w-max mobile-scroll-item desktop-compact shadow-sm hover:shadow-md transition-all duration-300"
-                    style={{ '--hover-border-color': '#AEE1F9' } as React.CSSProperties}
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#AEE1F9'}
+                    style={{ '--hover-border-color': '#0f006d' } as React.CSSProperties}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0f006d'}
                     onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
                   >
                     {/* Posição - com gradiente da classe CSS */}
@@ -2643,7 +2643,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
       <div className="space-y-3 sm:space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4 xl:gap-6">
         {/* JambaVIP */}
         <Card className="border-0 shadow-lg sm:shadow-xl lg:shadow-2xl bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden">
-          <CardHeader className="text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4" style={{ backgroundColor: "#AEE1F9" }}>
+          <CardHeader className="text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4" style={{ backgroundColor: "#0f006d" }}>
             <CardTitle className="text-sm sm:text-base lg:text-xl font-black">JambaVIP</CardTitle>
           </CardHeader>
           <CardContent className="p-2 sm:p-3 lg:p-6">
@@ -2655,7 +2655,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                 </div>
               ) : (
                 jambaVIP.slice(0, 2).map((dupla: Dupla) => (
-                  <div key={dupla.id} className="p-4 rounded-2xl border-2" style={{ backgroundColor: "#F0F8FF", borderColor: "#AEE1F9" }}>
+                  <div key={dupla.id} className="p-4 rounded-2xl border-2" style={{ backgroundColor: "#F0F8FF", borderColor: "#0f006d" }}>
                     <div className="mb-2">
                       <BannerDupla 
                         dupla={dupla} 
@@ -2671,19 +2671,19 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
 
         {/* Jamberlinda */}
         <Card className="border-0 shadow-2xl bg-white rounded-3xl overflow-hidden">
-          <CardHeader className="text-white px-6 py-4" style={{ backgroundColor: "#AEE1F9" }}>
+          <CardHeader className="text-white px-6 py-4" style={{ backgroundColor: "#0f006d" }}>
             <CardTitle className="text-xl font-black">Jamberlinda</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
               {jamberlinda.length === 0 ? (
                 <div className="text-center py-8">
-                  <Crown className="w-12 h-12 mx-auto mb-2" style={{ color: "#AEE1F9" }} />
-                  <p className="font-bold text-sm" style={{ color: "#AEE1F9" }}>Categoria vazia</p>
+                  <Crown className="w-12 h-12 mx-auto mb-2" style={{ color: "#0f006d" }} />
+                  <p className="font-bold text-sm" style={{ color: "#0f006d" }}>Categoria vazia</p>
                 </div>
               ) : (
                 jamberlinda.slice(0, 2).map((dupla: Dupla) => (
-                  <div key={dupla.id} className="p-4 rounded-2xl border-2" style={{ backgroundColor: "#F0F8FF", borderColor: "#AEE1F9" }}>
+                  <div key={dupla.id} className="p-4 rounded-2xl border-2" style={{ backgroundColor: "#F0F8FF", borderColor: "#0f006d" }}>
                     <div className="mb-2">
                       <BannerDupla 
                         dupla={dupla} 
