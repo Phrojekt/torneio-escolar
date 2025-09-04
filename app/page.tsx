@@ -2768,19 +2768,19 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                       {/* Medalhas */}
                       <div className="medals-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
                         <Image src="/medal_icon.png" alt="Medal" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
-                        <span className="font-bold text-xs">{dupla.medalhas || 0}</span>
+                        <span className="font-bold text-xs">{medalhas || 0}</span>
                       </div>
 
                       {/* Estrelas */}
                       <div className="stars-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
                         <Image src="/star_icon.png" alt="Star" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
-                        <span className="font-bold text-xs">{dupla.estrelas || 0}</span>
+                        <span className="font-bold text-xs">{estrelas || 0}</span>
                       </div>
 
                       {/* Moedas */}
                       <div className="coins-badge bg-amber-300 stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
                         <Image src="/coin_icon.png" alt="Coin" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
-                        <span className="font-bold text-xs">{dupla.moedas || 0}</span>
+                        <span className="font-bold text-xs">{moedas || 0}</span>
                       </div>
                     </div>
                     </div>
@@ -2840,19 +2840,19 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                     {/* Medalhas */}
                     <div className="medals-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
                       <Image src="/medal_icon.png" alt="Medal" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
-                      <span className="font-bold text-xs">{dupla.medalhas || 0}</span>
+                      <span className="font-bold text-xs">{medalhas || 0}</span>
                     </div>
 
                     {/* Estrelas */}
                     <div className="stars-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
                       <Image src="/star_icon.png" alt="Star" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
-                      <span className="font-bold text-xs">{dupla.estrelas || 0}</span>
+                      <span className="font-bold text-xs">{estrelas || 0}</span>
                     </div>
 
                     {/* Moedas */}
                     <div className="coins-badge bg-amber-300 stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
                       <Image src="/coin_icon.png" alt="Coin" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
-                      <span className="font-bold text-xs">{dupla.moedas || 0}</span>
+                      <span className="font-bold text-xs">{moedas || 0}</span>
                     </div>
                   </div>
                   </div>
