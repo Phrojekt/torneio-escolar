@@ -2469,6 +2469,11 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
   const jamberlinda = torneio.getDuplasPorCategoria('Jamberlinda')
   const aguardando = torneio.getDuplasAguardando()
 
+  // Usar rankingGeral como fonte de verdade para totais das rodadas
+  const rankingGeral = torneio.getRankingGeral()
+  const rankingLookup: Record<string, any> = {}
+  rankingGeral.forEach((d: any) => { if (d && d.id) rankingLookup[d.id] = d })
+
   console.log('🎮 JogadorView - Duplas carregadas:', {
     jambaVIP: jambaVIP.length,
     jamberlinda: jamberlinda.length,  
@@ -2661,14 +2666,19 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                   <p className="text-purple-600 font-bold text-sm">Categoria vazia</p>
                 </div>
               ) : (
-                jambaVIP.slice(0, 2).map((dupla: Dupla) => (
-                  <div
-                    key={dupla.id}
-                    className="ranking-card flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border-2 border-transparent shadow-sm hover:shadow-md transition-all duration-300"
-                    style={{ '--hover-border-color': '#0f006d' } as React.CSSProperties}
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0f006d'}
-                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
-                  >
+                jambaVIP.slice(0, 2).map((dupla: Dupla) => {
+                  const ranked = rankingLookup[dupla.id]
+                  const medalhas = ranked?.medalhas ?? calcularValoresRodadas(dupla).medalhasRodadas
+                  const estrelas = ranked?.estrelas ?? calcularValoresRodadas(dupla).estrelasRodadas
+                  const moedas = ranked?.moedas ?? calcularValoresRodadas(dupla).moedasRodadas
+                  return (
+                    <div
+                      key={dupla.id}
+                      className="ranking-card flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border-2 border-transparent shadow-sm hover:shadow-md transition-all duration-300"
+                      style={{ '--hover-border-color': '#0f006d' } as React.CSSProperties}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0f006d'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
+                    >
                     {/* Posição VIP - menor */}
                     <div className="ranking-position w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-white text-xs sm:text-sm flex-shrink-0">
                       VIP
@@ -2684,28 +2694,29 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                       </div>
                     </div>
 
-                    {/* Estatísticas - compactas */}
+                      {/* Estatísticas - compactas (usar rankingGeral como fonte) */}
                     <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                       {/* Medalhas */}
                       <div className="medals-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
                         <Image src="/medal_icon.png" alt="Medal" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
-                        <span className="font-bold text-xs">{dupla.medalhas || 0}</span>
+                        <span className="font-bold text-xs">{medalhas || 0}</span>
                       </div>
 
                       {/* Estrelas */}
                       <div className="stars-badge stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
                         <Image src="/star_icon.png" alt="Star" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
-                        <span className="font-bold text-xs">{dupla.estrelas || 0}</span>
+                        <span className="font-bold text-xs">{estrelas || 0}</span>
                       </div>
 
                       {/* Moedas */}
                       <div className="coins-badge bg-amber-300 stat-badge w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex flex-col items-center justify-center text-white">
                         <Image src="/coin_icon.png" alt="Coin" width={12} height={12} className="w-2 h-2 sm:w-3 sm:h-3 mb-0.5" />
-                        <span className="font-bold text-xs">{dupla.moedas || 0}</span>
+                        <span className="font-bold text-xs">{moedas || 0}</span>
                       </div>
                     </div>
                   </div>
-                ))
+                    )
+                  })
               )}
             </div>
           </CardContent>
@@ -2724,14 +2735,19 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                   <p className="font-bold text-sm" style={{ color: "#0f006d" }}>Categoria vazia</p>
                 </div>
               ) : (
-                jamberlinda.slice(0, 2).map((dupla: Dupla) => (
-                  <div
-                    key={dupla.id}
-                    className="ranking-card flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border-2 border-transparent shadow-sm hover:shadow-md transition-all duration-300"
-                    style={{ '--hover-border-color': '#0f006d' } as React.CSSProperties}
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0f006d'}
-                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
-                  >
+                jamberlinda.slice(0, 2).map((dupla: Dupla) => {
+                  const ranked = rankingLookup[dupla.id]
+                  const medalhas = ranked?.medalhas ?? calcularValoresRodadas(dupla).medalhasRodadas
+                  const estrelas = ranked?.estrelas ?? calcularValoresRodadas(dupla).estrelasRodadas
+                  const moedas = ranked?.moedas ?? calcularValoresRodadas(dupla).moedasRodadas
+                  return (
+                    <div
+                      key={dupla.id}
+                      className="ranking-card flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border-2 border-transparent shadow-sm hover:shadow-md transition-all duration-300"
+                      style={{ '--hover-border-color': '#0f006d' } as React.CSSProperties}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0f006d'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
+                    >
                     {/* Posição Linda - menor */}
                     <div className="ranking-position w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-white text-xs sm:text-sm flex-shrink-0">
                       ⭐
@@ -2767,8 +2783,9 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                         <span className="font-bold text-xs">{dupla.moedas || 0}</span>
                       </div>
                     </div>
-                  </div>
-                ))
+                    </div>
+                  )
+                })
               )}
             </div>
           </CardContent>
@@ -2790,14 +2807,19 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                 <p className="text-yellow-600 font-bold text-sm">Nenhuma dupla aguardando resultado</p>
               </div>
             ) : (
-              aguardando.map((dupla: Dupla) => (
-                <div
-                  key={dupla.id}
-                  className="ranking-card flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border-2 border-transparent shadow-sm hover:shadow-md transition-all duration-300"
-                  style={{ '--hover-border-color': '#f59e0b' } as React.CSSProperties}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#f59e0b'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
-                >
+              aguardando.map((dupla: Dupla) => {
+                const ranked = rankingLookup[dupla.id]
+                const medalhas = ranked?.medalhas ?? calcularValoresRodadas(dupla).medalhasRodadas
+                const estrelas = ranked?.estrelas ?? calcularValoresRodadas(dupla).estrelasRodadas
+                const moedas = ranked?.moedas ?? calcularValoresRodadas(dupla).moedasRodadas
+                return (
+                  <div
+                    key={dupla.id}
+                    className="ranking-card flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border-2 border-transparent shadow-sm hover:shadow-md transition-all duration-300"
+                    style={{ '--hover-border-color': '#f59e0b' } as React.CSSProperties}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#f59e0b'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'transparent'}
+                  >
                   {/* Posição Aguardando - menor */}
                   <div className="bg-gradient-to-r from-yellow-400 to-orange-400 w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-white text-xs sm:text-sm flex-shrink-0">
                     ⏳
@@ -2833,8 +2855,9 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                       <span className="font-bold text-xs">{dupla.moedas || 0}</span>
                     </div>
                   </div>
-                </div>
-              ))
+                  </div>
+                )
+              })
             )}
           </div>
         </CardContent>

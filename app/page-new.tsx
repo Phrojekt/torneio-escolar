@@ -927,6 +927,13 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
   const jamberlinda = torneio.getDuplasPorCategoria('Jamberlinda')
   const aguardando = torneio.getDuplasAguardando()
 
+  // Obter ranking geral (que já calcula APENAS totais das rodadas) e construir lookup por dupla id
+  const rankingGeral = torneio.getRankingGeral()
+  const rankingLookup: Record<string, any> = {}
+  rankingGeral.forEach((d: any) => {
+    if (d && d.id) rankingLookup[d.id] = d
+  })
+
   return (
     <div className="space-y-6">
       {/* Loja Misteriosa */}
@@ -981,11 +988,14 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
           <CardContent className="p-6">
             <div className="space-y-4">
               {jambaVIP.slice(0, 2).map((dupla: Dupla) => {
-                const valores = calcularValoresRodadas(dupla);
+                // Preferir valores do ranking geral para garantir igualdade exata
+                const ranked = rankingLookup[dupla.id]
+                const estrelas = ranked?.estrelas ?? calcularValoresRodadas(dupla).estrelasRodadas
+                const moedas = ranked?.moedas ?? calcularValoresRodadas(dupla).moedasRodadas
                 return (
                   <div key={dupla.id} className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl border-2 border-purple-200">
                     <p className="font-black text-gray-800">{dupla.tag}</p>
-                    <p className="text-sm text-gray-600 font-semibold">{valores.estrelasRodadas} estrelas • {valores.moedasRodadas} moedas</p>
+                    <p className="text-sm text-gray-600 font-semibold">{estrelas} estrelas • {moedas} moedas</p>
                   </div>
                 );
               })}
@@ -1001,10 +1011,13 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
           <CardContent className="p-6">
             <div className="space-y-4">
               {jamberlinda.slice(0, 2).map((dupla: Dupla) => {
-                const valores = calcularValoresRodadas(dupla);
+                const ranked = rankingLookup[dupla.id]
+                const estrelas = ranked?.estrelas ?? calcularValoresRodadas(dupla).estrelasRodadas
+                const moedas = ranked?.moedas ?? calcularValoresRodadas(dupla).moedasRodadas
                 return (
                   <div key={dupla.id} className="p-4 bg-gradient-to-r from-pink-100 to-red-100 rounded-2xl border-2 border-pink-200">
                     <p className="font-black text-gray-800">{dupla.tag}</p>
+                    <p className="text-sm text-gray-600 font-semibold">{estrelas} estrelas • {moedas} moedas</p>
                   </div>
                 );
               })}
@@ -1020,12 +1033,17 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {aguardando.map((dupla: Dupla) => (
-              <div key={dupla.id} className="p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl text-center border-2 border-yellow-200">
-                <p className="font-black text-gray-800">{dupla.tag}</p>
-                <p className="text-sm text-gray-600 font-semibold">Aguardando...</p>
-              </div>
-            ))}
+            {aguardando.map((dupla: Dupla) => {
+              const ranked = rankingLookup[dupla.id]
+              const estrelas = ranked?.estrelas ?? calcularValoresRodadas(dupla).estrelasRodadas
+              const moedas = ranked?.moedas ?? calcularValoresRodadas(dupla).moedasRodadas
+              return (
+                <div key={dupla.id} className="p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl text-center border-2 border-yellow-200">
+                  <p className="font-black text-gray-800">{dupla.tag}</p>
+                  <p className="text-sm text-gray-600 font-semibold">Aguardando... • {estrelas} estrelas • {moedas} moedas</p>
+                </div>
+              )
+            })}
           </div>
         </CardContent>
       </Card>
