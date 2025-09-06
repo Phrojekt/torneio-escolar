@@ -285,18 +285,18 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
         return 0; // total empate
       });
 
-    // Calcular posições com empates
+    // Calcular posições com empates (dense ranking)
     let posicaoAtual = 1;
-    const resultadoComRanking = resultado.map((dupla, index) => {
-      if (index > 0) {
-        const anterior = resultado[index - 1];
-        // Se estrelas, medalhas e moedas são diferentes da dupla anterior, avança a posição
-        if (dupla.estrelas !== anterior.estrelas ||
-          dupla.medalhas !== anterior.medalhas ||
-          dupla.moedas !== anterior.moedas) {
-          posicaoAtual = index + 1;
-        }
-        // Se são iguais, mantém a mesma posição (empate)
+    let chaveAnterior: string | null = null;
+    const resultadoComRanking = resultado.map((dupla) => {
+      const chaveAtual = `${dupla.medalhas || 0}|${dupla.estrelas || 0}|${dupla.moedas || 0}`;
+      if (chaveAnterior === null) {
+        // primeira entrada
+        chaveAnterior = chaveAtual;
+      } else if (chaveAtual !== chaveAnterior) {
+        // diferente -> próxima posição (dense)
+        posicaoAtual += 1;
+        chaveAnterior = chaveAtual;
       }
 
       return {
@@ -354,18 +354,16 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
         return (b.moedasRodada || 0) - (a.moedasRodada || 0);
       });
 
-    // Calcular posições com empates para rodada
+    // Calcular posições com empates para rodada (dense ranking)
     let posicaoAtual = 1;
-    const resultadoComRanking = resultado.map((dupla, index) => {
-      if (index > 0) {
-        const anterior = resultado[index - 1];
-        // Se estrelas, medalhas e moedas da rodada são diferentes, avança a posição
-        if (dupla.estrelasRodada !== anterior.estrelasRodada ||
-          dupla.medalhasRodada !== anterior.medalhasRodada ||
-          dupla.moedasRodada !== anterior.moedasRodada) {
-          posicaoAtual = index + 1;
-        }
-        // Se são iguais, mantém a mesma posição (empate)
+    let chaveAnteriorRodada: string | null = null;
+    const resultadoComRanking = resultado.map((dupla) => {
+      const chaveAtual = `${dupla.estrelasRodada || 0}|${dupla.medalhasRodada || 0}|${dupla.moedasRodada || 0}`;
+      if (chaveAnteriorRodada === null) {
+        chaveAnteriorRodada = chaveAtual;
+      } else if (chaveAtual !== chaveAnteriorRodada) {
+        posicaoAtual += 1;
+        chaveAnteriorRodada = chaveAtual;
       }
 
       return {
@@ -408,19 +406,33 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
           medalhasBonus: isNaN(medalhasBonus) ? 0 : medalhasBonus
         };
       })
-      // Ordenar por pontos de bônus, depois por medalhas e moedas
+      // Ordenar por pontos de bônus (apenas bônus: estrelasBonus -> moedasBonus -> medalhasBonus)
       .sort((a, b) => {
-        // Primeiro critério: pontos de bônus
-        if ((b.estrelasBonus || 0) !== (a.estrelasBonus || 0)) {
-          return (b.estrelasBonus || 0) - (a.estrelasBonus || 0);
-        }
-        // Desempate por medalhas de bônus
-        if ((b.medalhasBonus || 0) !== (a.medalhasBonus || 0)) {
-          return (b.medalhasBonus || 0) - (a.medalhasBonus || 0);
-        }
-        // Desempate por moedas de bônus
-        return (b.moedasBonus || 0) - (a.moedasBonus || 0);
+        if ((b.estrelasBonus || 0) !== (a.estrelasBonus || 0)) return (b.estrelasBonus || 0) - (a.estrelasBonus || 0);
+        if ((b.moedasBonus || 0) !== (a.moedasBonus || 0)) return (b.moedasBonus || 0) - (a.moedasBonus || 0);
+        if ((b.medalhasBonus || 0) !== (a.medalhasBonus || 0)) return (b.medalhasBonus || 0) - (a.medalhasBonus || 0);
+        return 0;
       });
+
+    // Calcular posições com empates para bônus (dense ranking, baseado apenas em campos de bônus)
+    let posicaoAtualBonus = 1;
+    let chaveAnteriorBonus: string | null = null;
+    const resultadoComRankingBonus = resultado.map((dupla) => {
+      const chaveAtual = `${dupla.estrelasBonus || 0}|${dupla.moedasBonus || 0}|${dupla.medalhasBonus || 0}`;
+      if (chaveAnteriorBonus === null) {
+        chaveAnteriorBonus = chaveAtual;
+      } else if (chaveAtual !== chaveAnteriorBonus) {
+        posicaoAtualBonus += 1;
+        chaveAnteriorBonus = chaveAtual;
+      }
+
+      return {
+        ...dupla,
+        posicao: posicaoAtualBonus
+      };
+    });
+
+    return resultadoComRankingBonus;
 
     // Calcular posições com empates para bônus
     let posicaoAtual = 1;

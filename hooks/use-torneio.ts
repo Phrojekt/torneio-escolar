@@ -620,8 +620,26 @@ export function useTorneio() {
         return 0;
       });
 
-    console.log("🏆 Ranking final ordenado:", ranking.map(d => ({ tag: d.tag, estrelas: d.estrelas })));
-    return ranking;
+    // Calcular posições com empates (dense ranking) para o ranking geral
+    let posicaoAtual = 1;
+    let chaveAnterior: string | null = null;
+    const rankingComPosicao = ranking.map((dupla) => {
+      const chaveAtual = `${dupla.medalhas || 0}|${dupla.estrelas || 0}|${dupla.moedas || 0}`;
+      if (chaveAnterior === null) {
+        chaveAnterior = chaveAtual;
+      } else if (chaveAtual !== chaveAnterior) {
+        posicaoAtual += 1;
+        chaveAnterior = chaveAtual;
+      }
+
+      return {
+        ...dupla,
+        posicao: posicaoAtual
+      };
+    });
+
+    console.log("🏆 Ranking final ordenado:", rankingComPosicao.map(d => ({ tag: d.tag, estrelas: d.estrelas, posicao: d.posicao })));
+    return rankingComPosicao;
   };
 
   const getRankingPorRodada = (rodadaId: string) => {
@@ -656,17 +674,39 @@ export function useTorneio() {
           medalhasRodada: isNaN(medalhasRodada) ? 0 : medalhasRodada
         };
       })
-      .sort((a, b) => (b.estrelasRodada || 0) - (a.estrelasRodada || 0));
+      .sort((a, b) => {
+        // Ordenação principal: estrelas da rodada
+        if ((b.estrelasRodada || 0) !== (a.estrelasRodada || 0)) return (b.estrelasRodada || 0) - (a.estrelasRodada || 0);
+        // Desempate por medalhas da rodada
+        if ((b.medalhasRodada || 0) !== (a.medalhasRodada || 0)) return (b.medalhasRodada || 0) - (a.medalhasRodada || 0);
+        // Desempate por moedas da rodada
+        return (b.moedasRodada || 0) - (a.moedasRodada || 0);
+      });
 
-    console.log("🎯 Ranking por rodada final:", ranking.map(d => ({ 
-      tag: d.tag, 
-      estrelasRodada: d.estrelasRodada 
-    })));
-    return ranking;
+    // Dense ranking para a rodada
+    let posicaoAtualRodada = 1;
+    let chaveAnteriorRodada: string | null = null;
+    const rankingComPosicaoRodada = ranking.map((dupla) => {
+      const chaveAtual = `${dupla.estrelasRodada || 0}|${dupla.medalhasRodada || 0}|${dupla.moedasRodada || 0}`;
+      if (chaveAnteriorRodada === null) {
+        chaveAnteriorRodada = chaveAtual;
+      } else if (chaveAtual !== chaveAnteriorRodada) {
+        posicaoAtualRodada += 1;
+        chaveAnteriorRodada = chaveAtual;
+      }
+
+      return {
+        ...dupla,
+        posicao: posicaoAtualRodada
+      };
+    });
+
+    console.log("🎯 Ranking por rodada final:", rankingComPosicaoRodada.map(d => ({ tag: d.tag, posicao: d.posicao, estrelasRodada: d.estrelasRodada })));
+    return rankingComPosicaoRodada;
   };
 
   const getRankingPorBonus = (bonusId: string, bonusData: Bonus) => {
-    return [...duplas]
+    const ranking = [...duplas]
       .map(dupla => {
         // Calcular estrelas, moedas e medalhas totais do bônus (já com multiplicadores aplicados)
         let estrelasBonus = 0;
@@ -700,7 +740,33 @@ export function useTorneio() {
           medalhasBonus
         };
       })
-      .sort((a, b) => (b.estrelasBonus || 0) - (a.estrelasBonus || 0));
+      // Ordenar apenas por campos de bônus: estrelasBonus -> moedasBonus -> medalhasBonus
+      .sort((a, b) => {
+        if ((b.estrelasBonus || 0) !== (a.estrelasBonus || 0)) return (b.estrelasBonus || 0) - (a.estrelasBonus || 0);
+        if ((b.moedasBonus || 0) !== (a.moedasBonus || 0)) return (b.moedasBonus || 0) - (a.moedasBonus || 0);
+        if ((b.medalhasBonus || 0) !== (a.medalhasBonus || 0)) return (b.medalhasBonus || 0) - (a.medalhasBonus || 0);
+        return 0;
+      });
+
+    // Dense ranking para bonus (apenas campos de bônus)
+    let posicaoAtualBonus = 1;
+    let chaveAnteriorBonus: string | null = null;
+    const rankingComPosicaoBonus = ranking.map((dupla) => {
+      const chaveAtual = `${dupla.estrelasBonus || 0}|${dupla.moedasBonus || 0}|${dupla.medalhasBonus || 0}`;
+      if (chaveAnteriorBonus === null) {
+        chaveAnteriorBonus = chaveAtual;
+      } else if (chaveAtual !== chaveAnteriorBonus) {
+        posicaoAtualBonus += 1;
+        chaveAnteriorBonus = chaveAtual;
+      }
+
+      return {
+        ...dupla,
+        posicao: posicaoAtualBonus
+      };
+    });
+
+    return rankingComPosicaoBonus;
   };
 
   const getDuplasPorCategoria = (categoria: 'JambaVIP' | 'Jamberlinda') => {
