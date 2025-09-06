@@ -255,18 +255,34 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
         console.log(`📊 [JogadorDashboard] ${dupla.tag}: rodadas=${estrelasRodadas}, bonus=${estrelasBonusTotal}, total_banco=${dupla.estrelas}, ranking_geral=${resultado.estrelas}`);
         return resultado;
       })
-      // Ordenar por pontuação total (já incluindo bônus)
+      // Ordenar por: medalhas (principal), depois estrelas, depois moedas, depois bônus
       .sort((a, b) => {
-        // Primeiro critério: estrelas totais
-        if ((b.estrelas || 0) !== (a.estrelas || 0)) {
-          return (b.estrelas || 0) - (a.estrelas || 0);
-        }
-        // Desempate por medalhas totais
-        if ((b.medalhas || 0) !== (a.medalhas || 0)) {
-          return (b.medalhas || 0) - (a.medalhas || 0);
-        }
-        // Desempate por moedas totais
-        return (b.moedas || 0) - (a.moedas || 0);
+        const medalhasA = a.medalhas || 0;
+        const medalhasB = b.medalhas || 0;
+        if (medalhasB !== medalhasA) return medalhasB - medalhasA;
+
+        const estrelasA = a.estrelas || 0;
+        const estrelasB = b.estrelas || 0;
+        if (estrelasB !== estrelasA) return estrelasB - estrelasA;
+
+        const moedasA = a.moedas || 0;
+        const moedasB = b.moedas || 0;
+        if (moedasB !== moedasA) return moedasB - moedasA;
+
+        // Desempates por bônus
+        const estrelasBonusA = a.estrelasBonus || 0;
+        const estrelasBonusB = b.estrelasBonus || 0;
+        if (estrelasBonusB !== estrelasBonusA) return estrelasBonusB - estrelasBonusA;
+
+        const moedasBonusA = a.moedasBonus || 0;
+        const moedasBonusB = b.moedasBonus || 0;
+        if (moedasBonusB !== moedasBonusA) return moedasBonusB - moedasBonusA;
+
+        const medalhasBonusA = a.medalhasBonus || 0;
+        const medalhasBonusB = b.medalhasBonus || 0;
+        if (medalhasBonusB !== medalhasBonusA) return medalhasBonusB - medalhasBonusA;
+
+        return 0; // total empate
       });
 
     // Calcular posições com empates
@@ -1700,18 +1716,34 @@ function RankingsManager({ torneio }: { torneio: any }) {
           medalhasBonus: medalhasBonusTotal
         };
       })
-      // Ordenar por estrelas das rodadas (sem bônus)
+      // Ordenar por: medalhas (principal), depois estrelas, depois moedas, depois bônus
       .sort((a, b) => {
-        // Primeiro critério: estrelas das rodadas apenas
-        if ((b.estrelas || 0) !== (a.estrelas || 0)) {
-          return (b.estrelas || 0) - (a.estrelas || 0);
-        }
-        // Desempate por medalhas das rodadas
-        if ((b.medalhas || 0) !== (a.medalhas || 0)) {
-          return (b.medalhas || 0) - (a.medalhas || 0);
-        }
-        // Desempate por moedas das rodadas
-        return (b.moedas || 0) - (a.moedas || 0);
+        const medalhasA = a.medalhas || 0;
+        const medalhasB = b.medalhas || 0;
+        if (medalhasB !== medalhasA) return medalhasB - medalhasA;
+
+  const estrelasA = a.estrelas || 0;
+  const estrelasB = b.estrelas || 0;
+  if (estrelasB !== estrelasA) return estrelasB - estrelasA;
+
+        const moedasA = a.moedas || 0;
+        const moedasB = b.moedas || 0;
+        if (moedasB !== moedasA) return moedasB - moedasA;
+
+        // Desempates por bônus
+        const estrelasBonusA = a.estrelasBonus || 0;
+        const estrelasBonusB = b.estrelasBonus || 0;
+        if (estrelasBonusB !== estrelasBonusA) return estrelasBonusB - estrelasBonusA;
+
+        const moedasBonusA = a.moedasBonus || 0;
+        const moedasBonusB = b.moedasBonus || 0;
+        if (moedasBonusB !== moedasBonusA) return moedasBonusB - moedasBonusA;
+
+        const medalhasBonusA = a.medalhasBonus || 0;
+        const medalhasBonusB = b.medalhasBonus || 0;
+        if (medalhasBonusB !== medalhasBonusA) return medalhasBonusB - medalhasBonusA;
+
+        return 0;
       });
 
     // Calcular posições com empates
@@ -2465,12 +2497,13 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState<{x: number, y: number}>({ x: 0, y: 0 })
   const tooltipRefs = useRef<{ [key: number]: HTMLDivElement | null }>({})
-  const jambaVIP = torneio.getDuplasPorCategoria('JambaVIP')
-  const jamberlinda = torneio.getDuplasPorCategoria('Jamberlinda')
-  const aguardando = torneio.getDuplasAguardando()
+  // Criar listas ordenadas a partir do ranking geral para garantir consistência
+  const rankingGeral = torneio.getRankingGeral()
+  const jambaVIP = rankingGeral.filter((d: Dupla) => d.status === 'JambaVIP')
+  const jamberlinda = rankingGeral.filter((d: Dupla) => d.status === 'Jamberlinda')
+  const aguardando = rankingGeral.filter((d: Dupla) => d.status === 'Dupla Aguardando Resultado')
 
   // Usar rankingGeral como fonte de verdade para totais das rodadas
-  const rankingGeral = torneio.getRankingGeral()
   const rankingLookup: Record<string, any> = {}
   rankingGeral.forEach((d: any) => { if (d && d.id) rankingLookup[d.id] = d })
 
@@ -2666,7 +2699,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                   <p className="text-purple-600 font-bold text-sm">Categoria vazia</p>
                 </div>
               ) : (
-                jambaVIP.slice(0, 2).map((dupla: Dupla) => {
+                jambaVIP.map((dupla: Dupla) => {
                   const ranked = rankingLookup[dupla.id]
                   const medalhas = ranked?.medalhas ?? calcularValoresRodadas(dupla).medalhasRodadas
                   const estrelas = ranked?.estrelas ?? calcularValoresRodadas(dupla).estrelasRodadas
@@ -2735,7 +2768,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                   <p className="font-bold text-sm" style={{ color: "#0f006d" }}>Categoria vazia</p>
                 </div>
               ) : (
-                jamberlinda.slice(0, 2).map((dupla: Dupla) => {
+                jamberlinda.map((dupla: Dupla) => {
                   const ranked = rankingLookup[dupla.id]
                   const medalhas = ranked?.medalhas ?? calcularValoresRodadas(dupla).medalhasRodadas
                   const estrelas = ranked?.estrelas ?? calcularValoresRodadas(dupla).estrelasRodadas

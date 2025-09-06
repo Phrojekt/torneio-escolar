@@ -923,12 +923,13 @@ function RankingTable({ title, data }: { title: string; data: Dupla[] }) {
 
 // Componente da loja para jogadores
 function LojaView({ torneio, showComprarButton = true }: { torneio: any; showComprarButton?: boolean }) {
-  const jambaVIP = torneio.getDuplasPorCategoria('JambaVIP')
-  const jamberlinda = torneio.getDuplasPorCategoria('Jamberlinda')
-  const aguardando = torneio.getDuplasAguardando()
+  // Criar listas ordenadas a partir do ranking geral para garantir consistência
+  const rankingGeral = torneio.getRankingGeral()
+  const jambaVIP = rankingGeral.filter((d: Dupla) => d.status === 'JambaVIP')
+  const jamberlinda = rankingGeral.filter((d: Dupla) => d.status === 'Jamberlinda')
+  const aguardando = rankingGeral.filter((d: Dupla) => d.status === 'Dupla Aguardando Resultado')
 
   // Obter ranking geral (que já calcula APENAS totais das rodadas) e construir lookup por dupla id
-  const rankingGeral = torneio.getRankingGeral()
   const rankingLookup: Record<string, any> = {}
   rankingGeral.forEach((d: any) => {
     if (d && d.id) rankingLookup[d.id] = d
@@ -987,7 +988,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {jambaVIP.slice(0, 2).map((dupla: Dupla) => {
+                {jambaVIP.map((dupla: Dupla) => {
                 // Preferir valores do ranking geral para garantir igualdade exata
                 const ranked = rankingLookup[dupla.id]
                 const estrelas = ranked?.estrelas ?? calcularValoresRodadas(dupla).estrelasRodadas
@@ -1010,7 +1011,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {jamberlinda.slice(0, 2).map((dupla: Dupla) => {
+                {jamberlinda.map((dupla: Dupla) => {
                 const ranked = rankingLookup[dupla.id]
                 const estrelas = ranked?.estrelas ?? calcularValoresRodadas(dupla).estrelasRodadas
                 const moedas = ranked?.moedas ?? calcularValoresRodadas(dupla).moedasRodadas

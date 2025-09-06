@@ -552,15 +552,73 @@ export function useTorneio() {
     const ranking = [...duplas]
       .map(dupla => {
         const totaisReais = calcularTotaisReais(dupla);
-        console.log(`🔢 ${dupla.tag} - Totais calculados:`, totaisReais);
+        // Calcular totais de bônus para desempate
+        let estrelasBonusTotal = 0;
+        let moedasBonusTotal = 0;
+        let medalhasBonusTotal = 0;
+
+        if (dupla.estrelasPorBonus) {
+          Object.values(dupla.estrelasPorBonus).forEach((bonusPartidas: any) => {
+            estrelasBonusTotal += Object.values(bonusPartidas || {}).reduce((t: number, v: any) => t + (Number(v) || 0), 0);
+          });
+        }
+
+        if (dupla.moedasPorBonus) {
+          Object.values(dupla.moedasPorBonus).forEach((bonusPartidas: any) => {
+            moedasBonusTotal += Object.values(bonusPartidas || {}).reduce((t: number, v: any) => t + (Number(v) || 0), 0);
+          });
+        }
+
+        if (dupla.medalhasPorBonus) {
+          Object.values(dupla.medalhasPorBonus).forEach((bonusPartidas: any) => {
+            medalhasBonusTotal += Object.values(bonusPartidas || {}).reduce((t: number, v: any) => t + (Number(v) || 0), 0);
+          });
+        }
+
+        console.log(`🔢 ${dupla.tag} - Totais calculados (rodadas):`, totaisReais, 'bonus:', { estrelasBonusTotal, moedasBonusTotal, medalhasBonusTotal });
+
         return {
           ...dupla,
           estrelas: totaisReais.estrelas,
           moedas: totaisReais.moedas,
-          medalhas: totaisReais.medalhas
+          medalhas: totaisReais.medalhas,
+          estrelasBonus: estrelasBonusTotal,
+          moedasBonus: moedasBonusTotal,
+          medalhasBonus: medalhasBonusTotal
         };
       })
-      .sort((a, b) => (b.estrelas || 0) - (a.estrelas || 0));
+      .sort((a, b) => {
+        // Ordenar por medalhas (principal)
+        const medalhasA = a.medalhas || 0;
+        const medalhasB = b.medalhas || 0;
+        if (medalhasB !== medalhasA) return medalhasB - medalhasA;
+
+        // Se empate em medalhas -> estrelas
+        const estrelasA = a.estrelas || 0;
+        const estrelasB = b.estrelas || 0;
+        if (estrelasB !== estrelasA) return estrelasB - estrelasA;
+
+        // Se empate em estrelas -> moedas
+        const moedasA = a.moedas || 0;
+        const moedasB = b.moedas || 0;
+        if (moedasB !== moedasA) return moedasB - moedasA;
+
+        // Desempates por pontuações de bônus (estrelasBonus, moedasBonus, medalhasBonus)
+        const estrelasBonusA = a.estrelasBonus || 0;
+        const estrelasBonusB = b.estrelasBonus || 0;
+        if (estrelasBonusB !== estrelasBonusA) return estrelasBonusB - estrelasBonusA;
+
+        const moedasBonusA = a.moedasBonus || 0;
+        const moedasBonusB = b.moedasBonus || 0;
+        if (moedasBonusB !== moedasBonusA) return moedasBonusB - moedasBonusA;
+
+        const medalhasBonusA = a.medalhasBonus || 0;
+        const medalhasBonusB = b.medalhasBonus || 0;
+        if (medalhasBonusB !== medalhasBonusA) return medalhasBonusB - medalhasBonusA;
+
+        // Tudo igual -> empate
+        return 0;
+      });
 
     console.log("🏆 Ranking final ordenado:", ranking.map(d => ({ tag: d.tag, estrelas: d.estrelas })));
     return ranking;
