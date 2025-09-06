@@ -728,31 +728,36 @@ export function useTorneio() {
             .reduce((total: number, medalhas: unknown) => total + (Number(medalhas) || 0), 0);
         }
 
-        // Garantir que todos os valores são números válidos
-        estrelasBonus = isNaN(estrelasBonus) ? 0 : estrelasBonus;
-        moedasBonus = isNaN(moedasBonus) ? 0 : moedasBonus;
-        medalhasBonus = isNaN(medalhasBonus) ? 0 : medalhasBonus;
+        // Garantir que todos os valores são números válidos e calcular total de bônus
+        const estrelasB = isNaN(estrelasBonus) ? 0 : estrelasBonus;
+        const moedasB = isNaN(moedasBonus) ? 0 : moedasBonus;
+        const medalhasB = isNaN(medalhasBonus) ? 0 : medalhasBonus;
+        const totalBonus = estrelasB + moedasB + medalhasB;
 
         return {
           ...dupla,
-          estrelasBonus,
-          moedasBonus,
-          medalhasBonus
+          estrelasBonus: estrelasB,
+          moedasBonus: moedasB,
+          medalhasBonus: medalhasB,
+          totalBonus
         };
       })
-      // Ordenar apenas por campos de bônus: estrelasBonus -> moedasBonus -> medalhasBonus
+      // Ordenar por total de bônus primeiro, depois desempates por campos de bônus
       .sort((a, b) => {
+        const totalA = a.totalBonus || 0;
+        const totalB = b.totalBonus || 0;
+        if (totalB !== totalA) return totalB - totalA;
         if ((b.estrelasBonus || 0) !== (a.estrelasBonus || 0)) return (b.estrelasBonus || 0) - (a.estrelasBonus || 0);
         if ((b.moedasBonus || 0) !== (a.moedasBonus || 0)) return (b.moedasBonus || 0) - (a.moedasBonus || 0);
         if ((b.medalhasBonus || 0) !== (a.medalhasBonus || 0)) return (b.medalhasBonus || 0) - (a.medalhasBonus || 0);
         return 0;
       });
 
-    // Dense ranking para bonus (apenas campos de bônus)
+    // Dense ranking para bonus (baseado em totalBonus e desempates de bônus)
     let posicaoAtualBonus = 1;
     let chaveAnteriorBonus: string | null = null;
     const rankingComPosicaoBonus = ranking.map((dupla) => {
-      const chaveAtual = `${dupla.estrelasBonus || 0}|${dupla.moedasBonus || 0}|${dupla.medalhasBonus || 0}`;
+      const chaveAtual = `${dupla.totalBonus || 0}|${dupla.estrelasBonus || 0}|${dupla.moedasBonus || 0}|${dupla.medalhasBonus || 0}`;
       if (chaveAnteriorBonus === null) {
         chaveAnteriorBonus = chaveAtual;
       } else if (chaveAtual !== chaveAnteriorBonus) {

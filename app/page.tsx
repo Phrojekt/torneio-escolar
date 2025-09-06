@@ -399,26 +399,35 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
             .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
         }
 
+        const estrelasB = isNaN(estrelasBonus) ? 0 : estrelasBonus;
+        const moedasB = isNaN(moedasBonus) ? 0 : moedasBonus;
+        const medalhasB = isNaN(medalhasBonus) ? 0 : medalhasBonus;
+        const totalBonus = estrelasB + moedasB + medalhasB;
+
         return {
           ...dupla,
-          estrelasBonus: isNaN(estrelasBonus) ? 0 : estrelasBonus,
-          moedasBonus: isNaN(moedasBonus) ? 0 : moedasBonus,
-          medalhasBonus: isNaN(medalhasBonus) ? 0 : medalhasBonus
+          estrelasBonus: estrelasB,
+          moedasBonus: moedasB,
+          medalhasBonus: medalhasB,
+          totalBonus
         };
       })
-      // Ordenar por pontos de bônus (apenas bônus: estrelasBonus -> moedasBonus -> medalhasBonus)
+      // Ordenar por total de pontos de bônus primeiro, depois desempates por campos de bônus
       .sort((a, b) => {
+        const totalA = a.totalBonus || 0;
+        const totalB = b.totalBonus || 0;
+        if (totalB !== totalA) return totalB - totalA;
         if ((b.estrelasBonus || 0) !== (a.estrelasBonus || 0)) return (b.estrelasBonus || 0) - (a.estrelasBonus || 0);
         if ((b.moedasBonus || 0) !== (a.moedasBonus || 0)) return (b.moedasBonus || 0) - (a.moedasBonus || 0);
         if ((b.medalhasBonus || 0) !== (a.medalhasBonus || 0)) return (b.medalhasBonus || 0) - (a.medalhasBonus || 0);
         return 0;
       });
 
-    // Calcular posições com empates para bônus (dense ranking, baseado apenas em campos de bônus)
+    // Dense ranking para bônus (baseado em totalBonus e desempates de bônus)
     let posicaoAtualBonus = 1;
     let chaveAnteriorBonus: string | null = null;
     const resultadoComRankingBonus = resultado.map((dupla) => {
-      const chaveAtual = `${dupla.estrelasBonus || 0}|${dupla.moedasBonus || 0}|${dupla.medalhasBonus || 0}`;
+      const chaveAtual = `${dupla.totalBonus || 0}|${dupla.estrelasBonus || 0}|${dupla.moedasBonus || 0}|${dupla.medalhasBonus || 0}`;
       if (chaveAnteriorBonus === null) {
         chaveAnteriorBonus = chaveAtual;
       } else if (chaveAtual !== chaveAnteriorBonus) {
@@ -433,28 +442,6 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
     });
 
     return resultadoComRankingBonus;
-
-    // Calcular posições com empates para bônus
-    let posicaoAtual = 1;
-    const resultadoComRanking = resultado.map((dupla, index) => {
-      if (index > 0) {
-        const anterior = resultado[index - 1];
-        // Se pontos, medalhas e moedas de bônus são diferentes, avança a posição
-        if (dupla.estrelasBonus !== anterior.estrelasBonus ||
-          dupla.medalhasBonus !== anterior.medalhasBonus ||
-          dupla.moedasBonus !== anterior.moedasBonus) {
-          posicaoAtual = index + 1;
-        }
-        // Se são iguais, mantém a mesma posição (empate)
-      }
-
-      return {
-        ...dupla,
-        posicao: posicaoAtual
-      };
-    });
-
-    return resultadoComRanking;
   };
 
   const rankingGeral = calcularRankingGeral();
