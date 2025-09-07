@@ -197,6 +197,17 @@ export function useTorneio() {
       throw error;
     }
   };
+  
+  // Atualizar campos de uma dupla (tag, bannerUrl, etc.)
+  const atualizarDupla = async (duplaId: string, dados: Partial<Dupla>) => {
+    try {
+      await duplaService.atualizar(duplaId, dados);
+      // O listener irá propagar as mudanças
+    } catch (error) {
+      console.error('Erro ao atualizar dupla:', error);
+      throw error;
+    }
+  };
 
   // Função para buscar duplas por status especial
   const getDuplasPorStatusEspecial = (statusEspecial: 'JambaVIP' | 'Jamberlinda' | 'Dupla Aguardando Resultado') => {
@@ -814,6 +825,7 @@ export function useTorneio() {
     // Funções de duplas
     criarDupla,
     adicionarPontuacao,
+  atualizarDupla,
     atualizarStatusDupla,
     atualizarStatusEspecialDupla,
     getDuplasPorStatusEspecial,

@@ -1488,6 +1488,114 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
 function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
   const [duplaParaRemover, setDuplaParaRemover] = useState<string | null>(null)
 
+  // Cada linha terá estado local para edição (evita perda de foco enquanto digita)
+  function DuplaRow({ dupla }: { dupla: Dupla }) {
+    const [isEditing, setIsEditing] = useState(false)
+    const [tagValue, setTagValue] = useState(dupla.tag || '')
+    const [file, setFile] = useState<File | null>(null)
+
+    useEffect(() => {
+      setTagValue(dupla.tag || '')
+      setFile(null)
+    }, [dupla.id])
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const f = e.target.files?.[0] || null
+      setFile(f)
+    }
+
+    const handleSave = async () => {
+      try {
+        let bannerUrlToSave = dupla.bannerUrl || ''
+        if (file) {
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('tag', tagValue.toUpperCase())
+
+          const response = await fetch('/api/upload', { method: 'POST', body: formData })
+          const result = await response.json()
+          if (result.success) {
+            bannerUrlToSave = result.imageUrl
+          } else {
+            toast.error(result.message || 'Erro no upload da imagem')
+            return
+          }
+        }
+
+        await torneio.atualizarDupla(dupla.id, { tag: tagValue, bannerUrl: bannerUrlToSave })
+        toast.success('Dupla atualizada')
+        setIsEditing(false)
+      } catch (error) {
+        toast.error('Erro ao atualizar dupla')
+      }
+    }
+
+    const handleCancel = () => {
+      setIsEditing(false)
+      setTagValue(dupla.tag || '')
+      setFile(null)
+    }
+
+    const valores = calcularValoresRodadas(dupla)
+
+    return (
+      <div key={dupla.id} className="p-3 rounded-xl border-2 bg-gray-50 border-gray-200">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-16 h-12 sm:w-20 sm:h-14 md:w-24 md:h-16 rounded-lg overflow-hidden flex-shrink-0">
+            <BannerDupla dupla={dupla} className="w-full h-full text-xs" />
+          </div>
+          <div className="flex-1">
+            {!isEditing ? (
+              <>
+                <h3 className="font-black text-base text-gray-800">{dupla.tag}</h3>
+                <p className="text-xs text-gray-600 font-semibold">{`🏅 ${valores.medalhasRodadas} • ⭐ ${valores.estrelasRodadas} • 🪙 ${valores.moedasRodadas}`}</p>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <Input value={tagValue} onChange={(e) => setTagValue(e.target.value)} className="rounded-full" />
+                <div className="border-2 rounded-lg p-2 cursor-pointer">
+                  <Label className="text-xs font-semibold cursor-pointer">Upload de novo banner (opcional)</Label>
+                  <input type="file" accept="image/*" className="cursor-pointer" onChange={handleFileChange} />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {!isEditing ? (
+            <Button onClick={() => setIsEditing(true)} size="sm" className="rounded-full text-white text-xs px-3 py-1 bg-blue-500 hover:bg-blue-600">Editar</Button>
+          ) : (
+            <>
+              <Button onClick={handleSave} size="sm" className="rounded-full bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1">Salvar</Button>
+              <Button onClick={handleCancel} size="sm" variant="outline" className="rounded-full border-2 text-xs px-3 py-1">Cancelar</Button>
+            </>
+          )}
+
+          <Button onClick={() => handleAtualizarStatusEspecial(dupla.id, 'JambaVIP')} size="sm" className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'JambaVIP' ? 'bg-purple-600' : 'bg-purple-400 hover:bg-purple-500'}`}>👑 JambaVIP</Button>
+          <Button onClick={() => handleAtualizarStatusEspecial(dupla.id, 'Jamberlinda')} size="sm" className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'Jamberlinda' ? 'bg-pink-600' : 'bg-pink-400 hover:bg-pink-500'}`}>Jamberlinda</Button>
+          <Button onClick={() => handleAtualizarStatusEspecial(dupla.id, 'Dupla Aguardando Resultado')} size="sm" className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'Dupla Aguardando Resultado' ? 'bg-orange-600' : 'bg-orange-400 hover:bg-orange-500'}`}>⏳ Aguardando</Button>
+          <Button onClick={() => handleAtualizarStatusEspecial(dupla.id, 'normal')} size="sm" className={`rounded-full text-white text-xs px-3 py-1 ${!['JambaVIP', 'Jamberlinda', 'Dupla Aguardando Resultado'].includes(dupla.status) ? 'bg-gray-600' : 'bg-gray-400 hover:bg-gray-500'}`}>👥 Normal</Button>
+        </div>
+
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          {duplaParaRemover === dupla.id ? (
+            <div className="flex space-x-2 items-center">
+              <span className="text-sm font-semibold text-red-600 mr-2">Confirmar remoção?</span>
+              <Button onClick={() => handleRemoverDupla(dupla.id)} size="sm" className="rounded-full bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1">Sim</Button>
+              <Button onClick={() => setDuplaParaRemover(null)} size="sm" className="rounded-full bg-gray-500 hover:bg-gray-600 text-white text-xs px-3 py-1">Não</Button>
+            </div>
+          ) : (
+            <Button onClick={() => setDuplaParaRemover(dupla.id)} size="sm" className="rounded-full bg-red-400 hover:bg-red-500 text-white flex items-center space-x-1 text-xs px-3 py-1">
+              <Trash2 className="w-3 h-3" />
+              <span>Remover</span>
+            </Button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   const handleRemoverDupla = async (duplaId: string) => {
     try {
       const dupla = torneio.duplas.find((d: Dupla) => d.id === duplaId)
@@ -1535,89 +1643,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
             </div>
           ) : (
             duplas.map((dupla: Dupla) => (
-              <div key={dupla.id} className="p-3 rounded-xl border-2 bg-gray-50 border-gray-200">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-16 h-12 sm:w-20 sm:h-14 md:w-24 md:h-16 rounded-lg overflow-hidden flex-shrink-0">
-                    <BannerDupla 
-                      dupla={dupla} 
-                      className="w-full h-full text-xs"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-black text-base text-gray-800">{dupla.tag}</h3>
-                    <p className="text-xs text-gray-600 font-semibold">
-                      {(() => {
-                        const valores = calcularValoresRodadas(dupla);
-                        return `🏅 ${valores.medalhasRodadas} • ⭐ ${valores.estrelasRodadas} • 🪙 ${valores.moedasRodadas}`;
-                      })()}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Botões de status especial responsivos */}
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => handleAtualizarStatusEspecial(dupla.id, 'JambaVIP')}
-                    size="sm"
-                    className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'JambaVIP' ? 'bg-purple-600' : 'bg-purple-400 hover:bg-purple-500'}`}
-                  >
-                    👑 JambaVIP
-                  </Button>
-                  <Button
-                    onClick={() => handleAtualizarStatusEspecial(dupla.id, 'Jamberlinda')}
-                    size="sm"
-                    className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'Jamberlinda' ? 'bg-pink-600' : 'bg-pink-400 hover:bg-pink-500'}`}
-                  >
-                   Jamberlinda
-                  </Button>
-                  <Button
-                    onClick={() => handleAtualizarStatusEspecial(dupla.id, 'Dupla Aguardando Resultado')}
-                    size="sm"
-                    className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'Dupla Aguardando Resultado' ? 'bg-orange-600' : 'bg-orange-400 hover:bg-orange-500'}`}
-                  >
-                    ⏳ Aguardando
-                  </Button>
-                  <Button
-                    onClick={() => handleAtualizarStatusEspecial(dupla.id, 'normal')}
-                    size="sm"
-                    className={`rounded-full text-white text-xs px-3 py-1 ${!['JambaVIP', 'Jamberlinda', 'Dupla Aguardando Resultado'].includes(dupla.status) ? 'bg-gray-600' : 'bg-gray-400 hover:bg-gray-500'}`}
-                  >
-                    👥 Normal
-                  </Button>
-                </div>
-                
-                {/* Botão de remover */}
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  {duplaParaRemover === dupla.id ? (
-                    <div className="flex space-x-2 items-center">
-                      <span className="text-sm font-semibold text-red-600 mr-2">Confirmar remoção?</span>
-                      <Button
-                        onClick={() => handleRemoverDupla(dupla.id)}
-                        size="sm"
-                        className="rounded-full bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1"
-                      >
-                        Sim
-                      </Button>
-                      <Button
-                        onClick={() => setDuplaParaRemover(null)}
-                        size="sm"
-                        className="rounded-full bg-gray-500 hover:bg-gray-600 text-white text-xs px-3 py-1"
-                      >
-                        Não
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={() => setDuplaParaRemover(dupla.id)}
-                      size="sm"
-                      className="rounded-full bg-red-400 hover:bg-red-500 text-white flex items-center space-x-1 text-xs px-3 py-1"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      <span>Remover</span>
-                    </Button>
-                  )}
-                </div>
-              </div>
+              <DuplaRow key={dupla.id} dupla={dupla} />
             ))
           )}
         </div>

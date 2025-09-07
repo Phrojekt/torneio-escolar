@@ -558,6 +558,36 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
 
 // Componente para gerenciar todas as duplas
 function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
+  const [editing, setEditing] = useState<Record<string, { tag: string; bannerUrl: string }>>({})
+
+  const startEdit = (dupla: Dupla) => {
+    setEditing(prev => ({ ...prev, [dupla.id]: { tag: dupla.tag || '', bannerUrl: dupla.bannerUrl || '' } }))
+  }
+
+  const cancelEdit = (duplaId: string) => {
+    setEditing(prev => {
+      const copy = { ...prev }
+      delete copy[duplaId]
+      return copy
+    })
+  }
+
+  const updateEditingField = (duplaId: string, field: 'tag' | 'bannerUrl', value: string) => {
+    setEditing(prev => ({ ...prev, [duplaId]: { ...(prev[duplaId] || {}), [field]: value } }))
+  }
+
+  const saveEdit = async (duplaId: string) => {
+    const data = editing[duplaId]
+    if (!data) return
+    try {
+      await torneio.atualizarDupla(duplaId, { tag: data.tag, bannerUrl: data.bannerUrl })
+      toast.success('Dupla atualizada')
+      cancelEdit(duplaId)
+    } catch (error) {
+      toast.error('Erro ao atualizar dupla')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
@@ -571,30 +601,58 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
           <div className="space-y-4">
             {torneio.duplas.map((dupla: Dupla) => {
               const valores = calcularValoresRodadas(dupla);
+              const isEditing = Boolean(editing[dupla.id])
+              const editValues = editing[dupla.id] || { tag: '', bannerUrl: '' }
+
               return (
                 <div key={dupla.id} className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200 flex justify-between items-center">
-                  <div>
-                    <h3 className="font-black text-lg text-gray-800">{dupla.tag}</h3>
-                    <p className="text-sm text-gray-600 font-semibold">
-                      {valores.medalhasRodadas} medalhas • {valores.estrelasRodadas} estrelas • {valores.moedasRodadas} moedas
-                    </p>
-                    <p className="text-xs text-gray-500">Status: {dupla.status}</p>
+                  <div className="flex-1">
+                    {!isEditing ? (
+                      <>
+                        <h3 className="font-black text-lg text-gray-800">{dupla.tag}</h3>
+                        <p className="text-sm text-gray-600 font-semibold">
+                          {valores.medalhasRodadas} medalhas • {valores.estrelasRodadas} estrelas • {valores.moedasRodadas} moedas
+                        </p>
+                        <p className="text-xs text-gray-500">Status: {dupla.status}</p>
+                      </>
+                    ) : (
+                      <div className="space-y-2">
+                        <Input value={editValues.tag} onChange={(e) => updateEditingField(dupla.id, 'tag', e.target.value)} className="rounded-full" />
+                        <Input value={editValues.bannerUrl} onChange={(e) => updateEditingField(dupla.id, 'bannerUrl', e.target.value)} className="rounded-full" />
+                      </div>
+                    )}
                   </div>
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={() => torneio.atualizarStatusDupla(dupla.id, 'aguardando')}
-                    size="sm"
-                    className="rounded-full bg-yellow-500 hover:bg-yellow-600 text-white"
-                  >
-                    Aguardando
-                  </Button>
-                  <Button
-                    onClick={() => torneio.atualizarStatusDupla(dupla.id, 'ativa')}
-                    size="sm"
-                    className="rounded-full bg-green-500 hover:bg-green-600 text-white"
-                  >
-                    Ativar
-                  </Button>
+                <div className="flex space-x-2 ml-4">
+                  {!isEditing ? (
+                    <>
+                      <Button
+                        onClick={() => startEdit(dupla)}
+                        size="sm"
+                        className="rounded-full bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        onClick={() => torneio.atualizarStatusDupla(dupla.id, 'aguardando')}
+                        size="sm"
+                        className="rounded-full bg-yellow-500 hover:bg-yellow-600 text-white"
+                      >
+                        Aguardando
+                      </Button>
+                      <Button
+                        onClick={() => torneio.atualizarStatusDupla(dupla.id, 'ativa')}
+                        size="sm"
+                        className="rounded-full bg-green-500 hover:bg-green-600 text-white"
+                      >
+                        Ativar
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button onClick={() => saveEdit(dupla.id)} size="sm" className="rounded-full bg-green-500 hover:bg-green-600 text-white">Salvar</Button>
+                      <Button onClick={() => cancelEdit(dupla.id)} size="sm" variant="outline" className="rounded-full border-2">Cancelar</Button>
+                    </>
+                  )}
                 </div>
               </div>
               );
