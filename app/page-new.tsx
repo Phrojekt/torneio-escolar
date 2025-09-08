@@ -618,7 +618,20 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
                     ) : (
                       <div className="space-y-2">
                         <Input value={editValues.tag} onChange={(e) => updateEditingField(dupla.id, 'tag', e.target.value)} className="rounded-full" />
-                        <Input value={editValues.bannerUrl} onChange={(e) => updateEditingField(dupla.id, 'bannerUrl', e.target.value)} className="rounded-full" />
+                        <div>
+                          <Label>Enviar novo banner</Label>
+                          <input type="file" accept="image/*" onChange={(e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0]
+                            if (!file) return
+                            // Ler arquivo como base64 temporário para preview/store in editing state
+                            const reader = new FileReader()
+                            reader.onload = () => {
+                              const dataUrl = reader.result as string
+                              updateEditingField(dupla.id, 'bannerUrl', dataUrl)
+                            }
+                            reader.readAsDataURL(file)
+                          }} className="mt-2" />
+                        </div>
                       </div>
                     )}
                   </div>

@@ -336,21 +336,14 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
           estrelasBonusTotal
         };
       })
-      // Ordenar por estrelas da rodada, depois por bônus como desempate
+      // Ordenar por medalhas da rodada, depois estrelas, depois moedas (apenas por essa rodada)
       .sort((a, b) => {
-        // Primeiro critério: estrelas da rodada
-        if ((b.estrelasRodada || 0) !== (a.estrelasRodada || 0)) {
-          return (b.estrelasRodada || 0) - (a.estrelasRodada || 0);
-        }
-        // Desempate por estrelas de bônus total
-        if ((b.estrelasBonusTotal || 0) !== (a.estrelasBonusTotal || 0)) {
-          return (b.estrelasBonusTotal || 0) - (a.estrelasBonusTotal || 0);
-        }
-        // Desempate por medalhas da rodada
         if ((b.medalhasRodada || 0) !== (a.medalhasRodada || 0)) {
           return (b.medalhasRodada || 0) - (a.medalhasRodada || 0);
         }
-        // Desempate por moedas da rodada
+        if ((b.estrelasRodada || 0) !== (a.estrelasRodada || 0)) {
+          return (b.estrelasRodada || 0) - (a.estrelasRodada || 0);
+        }
         return (b.moedasRodada || 0) - (a.moedasRodada || 0);
       });
 
@@ -358,7 +351,7 @@ function JogadorDashboard({ onLogout }: { onLogout: () => void }) {
     let posicaoAtual = 1;
     let chaveAnteriorRodada: string | null = null;
     const resultadoComRanking = resultado.map((dupla) => {
-      const chaveAtual = `${dupla.estrelasRodada || 0}|${dupla.medalhasRodada || 0}|${dupla.moedasRodada || 0}`;
+      const chaveAtual = `${dupla.medalhasRodada || 0}|${dupla.estrelasRodada || 0}|${dupla.moedasRodada || 0}`;
       if (chaveAnteriorRodada === null) {
         chaveAnteriorRodada = chaveAtual;
       } else if (chaveAtual !== chaveAnteriorRodada) {
@@ -1541,7 +1534,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
     return (
       <div key={dupla.id} className="p-3 rounded-xl border-2 bg-gray-50 border-gray-200">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-16 h-12 sm:w-20 sm:h-14 md:w-24 md:h-16 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="w-20 h-14 sm:w-24 sm:h-16 md:w-28 md:h-20 rounded-lg overflow-hidden flex-shrink-0">
             <BannerDupla dupla={dupla} className="w-full h-full text-xs" />
           </div>
           <div className="flex-1">
@@ -1701,229 +1694,12 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
 function RankingsManager({ torneio }: { torneio: any }) {
   const [activeTab, setActiveTab] = useState("geral")
 
-  // Calcular ranking geral diretamente das duplas - APENAS RODADAS (sem bônus)
-  const calcularRankingGeral = () => {
-    const resultado = [...torneio.duplas]
-      .map(dupla => {
-        // Para ranking geral, calcular APENAS os valores das rodadas (sem bônus)
-        const estrelasRodadas = Object.values(dupla.estrelasPorRodada || {})
-          .reduce((total: number, estrelas: any) => total + (Number(estrelas) || 0), 0);
-        const moedasRodadas = Object.values(dupla.moedasPorRodada || {})
-          .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
-        const medalhasRodadas = Object.values(dupla.medalhasPorRodada || {})
-          .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
+  // Use canonical ranking from hook for admin view
+  const calcularRankingGeral = () => torneio.getRankingGeral();
 
-        // Calcular bônus separadamente para referência
-        const estrelasBonusTotal = Object.values(dupla.estrelasPorBonus || {})
-          .reduce((total: number, bonusPartidas: any) =>
-            total + Object.values(bonusPartidas || {})
-              .reduce((subTotal: number, estrelas: any) => subTotal + (Number(estrelas) || 0), 0), 0
-          );
-        const moedasBonusTotal = Object.values(dupla.moedasPorBonus || {})
-          .reduce((total: number, bonusPartidas: any) =>
-            total + Object.values(bonusPartidas || {})
-              .reduce((subTotal: number, moedas: any) => subTotal + (Number(moedas) || 0), 0), 0
-          );
-        const medalhasBonusTotal = Object.values(dupla.medalhasPorBonus || {})
-          .reduce((total: number, bonusPartidas: any) =>
-            total + Object.values(bonusPartidas || {})
-              .reduce((subTotal: number, medalhas: any) => subTotal + (Number(medalhas) || 0), 0), 0
-          );
+  const calcularRankingPorRodada = (rodadaId: string) => torneio.getRankingPorRodada(rodadaId);
 
-        return {
-          ...dupla,
-          // Usar APENAS valores das rodadas para o ranking geral
-          estrelas: estrelasRodadas,
-          moedas: moedasRodadas,
-          medalhas: medalhasRodadas,
-          estrelasBonus: estrelasBonusTotal,
-          moedasBonus: moedasBonusTotal,
-          medalhasBonus: medalhasBonusTotal
-        };
-      })
-      // Ordenar por: medalhas (principal), depois estrelas, depois moedas, depois bônus
-      .sort((a, b) => {
-        const medalhasA = a.medalhas || 0;
-        const medalhasB = b.medalhas || 0;
-        if (medalhasB !== medalhasA) return medalhasB - medalhasA;
-
-  const estrelasA = a.estrelas || 0;
-  const estrelasB = b.estrelas || 0;
-  if (estrelasB !== estrelasA) return estrelasB - estrelasA;
-
-        const moedasA = a.moedas || 0;
-        const moedasB = b.moedas || 0;
-        if (moedasB !== moedasA) return moedasB - moedasA;
-
-        // Desempates por bônus
-        const estrelasBonusA = a.estrelasBonus || 0;
-        const estrelasBonusB = b.estrelasBonus || 0;
-        if (estrelasBonusB !== estrelasBonusA) return estrelasBonusB - estrelasBonusA;
-
-        const moedasBonusA = a.moedasBonus || 0;
-        const moedasBonusB = b.moedasBonus || 0;
-        if (moedasBonusB !== moedasBonusA) return moedasBonusB - moedasBonusA;
-
-        const medalhasBonusA = a.medalhasBonus || 0;
-        const medalhasBonusB = b.medalhasBonus || 0;
-        if (medalhasBonusB !== medalhasBonusA) return medalhasBonusB - medalhasBonusA;
-
-        return 0;
-      });
-
-    // Calcular posições com empates
-    let posicaoAtual = 1;
-    const resultadoComRanking = resultado.map((dupla, index) => {
-      if (index > 0) {
-        const anterior = resultado[index - 1];
-        // Se estrelas, medalhas e moedas são diferentes da dupla anterior, avança a posição
-        if (dupla.estrelas !== anterior.estrelas ||
-          dupla.medalhas !== anterior.medalhas ||
-          dupla.moedas !== anterior.moedas) {
-          posicaoAtual = index + 1;
-        }
-        // Se são iguais, mantém a mesma posição (empate)
-      }
-
-      return {
-        ...dupla,
-        posicao: posicaoAtual
-      };
-    });
-
-    return resultadoComRanking;
-  };
-
-  // Calcular ranking por rodada diretamente das duplas
-  const calcularRankingPorRodada = (rodadaId: string) => {
-    const resultado = [...torneio.duplas]
-      .map(dupla => {
-        const estrelasRodada = Number(dupla.estrelasPorRodada?.[rodadaId]) || 0;
-        const moedasRodada = Number(dupla.moedasPorRodada?.[rodadaId]) || 0;
-        const medalhasRodada = Number(dupla.medalhasPorRodada?.[rodadaId]) || 0;
-
-        // Calcular bônus total para desempate
-        const estrelasBonusTotal = Object.values(dupla.estrelasPorBonus || {})
-          .reduce((total: number, bonusPartidas: any) =>
-            total + Object.values(bonusPartidas || {})
-              .reduce((subTotal: number, estrelas: any) => subTotal + (Number(estrelas) || 0), 0), 0
-          );
-
-        return {
-          ...dupla,
-          estrelasRodada: isNaN(estrelasRodada) ? 0 : estrelasRodada,
-          moedasRodada: isNaN(moedasRodada) ? 0 : moedasRodada,
-          medalhasRodada: isNaN(medalhasRodada) ? 0 : medalhasRodada,
-          estrelasBonusTotal
-        };
-      })
-      // Ordenar por estrelas da rodada, depois por bônus como desempate
-      .sort((a, b) => {
-        // Primeiro critério: estrelas da rodada
-        if ((b.estrelasRodada || 0) !== (a.estrelasRodada || 0)) {
-          return (b.estrelasRodada || 0) - (a.estrelasRodada || 0);
-        }
-        // Desempate por estrelas de bônus total
-        if ((b.estrelasBonusTotal || 0) !== (a.estrelasBonusTotal || 0)) {
-          return (b.estrelasBonusTotal || 0) - (a.estrelasBonusTotal || 0);
-        }
-        // Desempate por medalhas da rodada
-        if ((b.medalhasRodada || 0) !== (a.medalhasRodada || 0)) {
-          return (b.medalhasRodada || 0) - (a.medalhasRodada || 0);
-        }
-        // Desempate por moedas da rodada
-        return (b.moedasRodada || 0) - (a.moedasRodada || 0);
-      });
-
-    // Calcular posições com empates para rodada
-    let posicaoAtual = 1;
-    const resultadoComRanking = resultado.map((dupla, index) => {
-      if (index > 0) {
-        const anterior = resultado[index - 1];
-        // Se estrelas, medalhas e moedas da rodada são diferentes, avança a posição
-        if (dupla.estrelasRodada !== anterior.estrelasRodada ||
-          dupla.medalhasRodada !== anterior.medalhasRodada ||
-          dupla.moedasRodada !== anterior.moedasRodada) {
-          posicaoAtual = index + 1;
-        }
-        // Se são iguais, mantém a mesma posição (empate)
-      }
-
-      return {
-        ...dupla,
-        posicao: posicaoAtual
-      };
-    });
-
-    return resultadoComRanking;
-  };
-
-  // Calcular ranking por bônus diretamente das duplas  
-  const calcularRankingPorBonus = (bonusId: string) => {
-    const resultado = [...torneio.duplas]
-      .map(dupla => {
-        let estrelasBonus = 0;
-        let moedasBonus = 0;
-        let medalhasBonus = 0;
-
-        if (dupla.estrelasPorBonus?.[bonusId]) {
-          estrelasBonus = Object.values(dupla.estrelasPorBonus[bonusId])
-            .reduce((total: number, estrelas: any) => total + (Number(estrelas) || 0), 0);
-        }
-
-        if (dupla.moedasPorBonus?.[bonusId]) {
-          moedasBonus = Object.values(dupla.moedasPorBonus[bonusId])
-            .reduce((total: number, moedas: any) => total + (Number(moedas) || 0), 0);
-        }
-
-        if (dupla.medalhasPorBonus?.[bonusId]) {
-          medalhasBonus = Object.values(dupla.medalhasPorBonus[bonusId])
-            .reduce((total: number, medalhas: any) => total + (Number(medalhas) || 0), 0);
-        }
-
-        return {
-          ...dupla,
-          estrelasBonus: isNaN(estrelasBonus) ? 0 : estrelasBonus,
-          moedasBonus: isNaN(moedasBonus) ? 0 : moedasBonus,
-          medalhasBonus: isNaN(medalhasBonus) ? 0 : medalhasBonus
-        };
-      })
-      // Ordenar por pontos de bônus, depois por medalhas e moedas
-      .sort((a, b) => {
-        // Primeiro critério: pontos de bônus
-        if ((b.estrelasBonus || 0) !== (a.estrelasBonus || 0)) {
-          return (b.estrelasBonus || 0) - (a.estrelasBonus || 0);
-        }
-        // Desempate por medalhas de bônus
-        if ((b.medalhasBonus || 0) !== (a.medalhasBonus || 0)) {
-          return (b.medalhasBonus || 0) - (a.medalhasBonus || 0);
-        }
-        // Desempate por moedas de bônus
-        return (b.moedasBonus || 0) - (a.moedasBonus || 0);
-      });
-
-    // Calcular posições com empates para bônus
-    let posicaoAtual = 1;
-    const resultadoComRanking = resultado.map((dupla, index) => {
-      if (index > 0) {
-        const anterior = resultado[index - 1];
-        // Se pontos, medalhas e moedas de bônus são diferentes, avança a posição
-        if (dupla.estrelasBonus !== anterior.estrelasBonus ||
-          dupla.medalhasBonus !== anterior.medalhasBonus ||
-          dupla.moedasBonus !== anterior.moedasBonus) {
-          posicaoAtual = index + 1;
-        }
-        // Se são iguais, mantém a mesma posição (empate)
-      }
-
-      return {
-        ...dupla,
-        posicao: posicaoAtual
-      };
-    });
-
-    return resultadoComRanking;
-  };
+  const calcularRankingPorBonus = (bonusId: string) => torneio.getRankingPorBonus(bonusId, torneio.bonus.find((b: any) => b.id === bonusId));
 
   const rankingGeral = calcularRankingGeral();
   const rodadas = torneio.rodadas;
@@ -2468,7 +2244,7 @@ function RankingTable({
 
                     {/* Nome da Dupla - com banner quando disponível */}
                     <div className="ranking-name-container rounded-xl sm:rounded-2xl overflow-hidden min-w-0 w-64 sm:w-32 md:flex-1">
-                      <div className="relative w-full h-14 sm:h-32 md:h-18 lg:h-32">
+                      <div className="relative w-full h-16 sm:h-36 md:h-20 lg:h-36">
                         <BannerDupla 
                           dupla={dupla} 
                           className="w-full h-full rounded-xl sm:rounded-2xl text-xs sm:text-base"
@@ -2717,7 +2493,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
             <CardTitle className="text-sm sm:text-base lg:text-xl font-black">JambaVIP</CardTitle>
           </CardHeader>
           <CardContent className="p-2 sm:p-3 lg:p-6">
-            <div className="space-y-2 sm:space-y-3 lg:space-y-4 max-h-48 sm:max-h-56 lg:max-h-80 overflow-y-auto">
+            <div className="space-y-2 sm:space-y-3 lg:space-y-4">
               {jambaVIP.length === 0 ? (
                 <div className="text-center py-8">
                   <Crown className="w-12 h-12 mx-auto text-purple-300 mb-2" />
@@ -2744,7 +2520,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
 
                     {/* Nome da Dupla - flexível */}
                     <div className="ranking-name-container rounded-lg sm:rounded-xl overflow-hidden min-w-0 flex-1">
-                      <div className="relative w-full h-12 sm:h-14">
+                      <div className="relative w-full h-14 sm:h-16">
                         <BannerDupla 
                           dupla={dupla} 
                           className="w-full h-full rounded-lg sm:rounded-xl text-xs sm:text-sm"
@@ -2813,7 +2589,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
 
                     {/* Nome da Dupla - flexível */}
                     <div className="ranking-name-container rounded-lg sm:rounded-xl overflow-hidden min-w-0 flex-1">
-                      <div className="relative w-full h-12 sm:h-14">
+                      <div className="relative w-full h-14 sm:h-16">
                         <BannerDupla 
                           dupla={dupla} 
                           className="w-full h-full rounded-lg sm:rounded-xl text-xs sm:text-sm"
@@ -2885,7 +2661,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
 
                   {/* Nome da Dupla - flexível */}
                   <div className="ranking-name-container rounded-lg sm:rounded-xl overflow-hidden min-w-0 flex-1">
-                    <div className="relative w-full h-14 sm:h-32">
+                    <div className="relative w-full h-16 sm:h-36">
                       <BannerDupla 
                         dupla={dupla} 
                         className="w-full h-full rounded-lg sm:rounded-xl text-xs sm:text-sm"

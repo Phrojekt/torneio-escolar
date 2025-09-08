@@ -456,47 +456,47 @@
 @media (max-width: 640px) {
   /* Containers de banner maiores no mobile */
   .banner-mobile-large {
-    min-height: 60px !important;
-    height: 60px !important;
+    min-height: 72px !important;
+    height: 72px !important;
   }
   
   .banner-mobile-medium {
+    min-height: 56px !important;
+    height: 56px !important;
+  }
+  
+  .banner-mobile-small {
     min-height: 48px !important;
     height: 48px !important;
   }
   
-  .banner-mobile-small {
-    min-height: 40px !important;
-    height: 40px !important;
-  }
-  
-  /* Aspect ratio otimizado para mobile - mais retangular */
+  /* Aspect ratio otimizado para mobile - um pouco mais alto */
   .banner-aspect-mobile {
-    aspect-ratio: 16/10 !important;
+    aspect-ratio: 16/9 !important;
   }
 }
 
 /* Tablets */
 @media (min-width: 641px) and (max-width: 1024px) {
   .banner-tablet {
-    min-height: 56px !important;
-    height: 56px !important;
+    min-height: 72px !important;
+    height: 72px !important;
   }
   
   .banner-aspect-tablet {
-    aspect-ratio: 16/9 !important;
+    aspect-ratio: 16/8.5 !important;
   }
 }
 
 /* Desktop */
 @media (min-width: 1025px) {
   .banner-desktop {
-    min-height: 64px !important;
-    height: 64px !important;
+    min-height: 88px !important;
+    height: 88px !important;
   }
   
   .banner-aspect-desktop {
-    aspect-ratio: 16/8 !important;
+    aspect-ratio: 16/7.5 !important;
   }
 }
 

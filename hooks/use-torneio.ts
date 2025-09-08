@@ -686,10 +686,10 @@ export function useTorneio() {
         };
       })
       .sort((a, b) => {
-        // Ordenação principal: estrelas da rodada
-        if ((b.estrelasRodada || 0) !== (a.estrelasRodada || 0)) return (b.estrelasRodada || 0) - (a.estrelasRodada || 0);
-        // Desempate por medalhas da rodada
+        // Ordenação principal: medalhas da rodada
         if ((b.medalhasRodada || 0) !== (a.medalhasRodada || 0)) return (b.medalhasRodada || 0) - (a.medalhasRodada || 0);
+        // Desempate por estrelas da rodada
+        if ((b.estrelasRodada || 0) !== (a.estrelasRodada || 0)) return (b.estrelasRodada || 0) - (a.estrelasRodada || 0);
         // Desempate por moedas da rodada
         return (b.moedasRodada || 0) - (a.moedasRodada || 0);
       });
@@ -698,7 +698,8 @@ export function useTorneio() {
     let posicaoAtualRodada = 1;
     let chaveAnteriorRodada: string | null = null;
     const rankingComPosicaoRodada = ranking.map((dupla) => {
-      const chaveAtual = `${dupla.estrelasRodada || 0}|${dupla.medalhasRodada || 0}|${dupla.moedasRodada || 0}`;
+      // chave baseada na ordem de desempate usada: medalhas|estrelas|moedas
+      const chaveAtual = `${dupla.medalhasRodada || 0}|${dupla.estrelasRodada || 0}|${dupla.moedasRodada || 0}`;
       if (chaveAnteriorRodada === null) {
         chaveAnteriorRodada = chaveAtual;
       } else if (chaveAtual !== chaveAnteriorRodada) {
