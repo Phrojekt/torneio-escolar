@@ -2087,8 +2087,15 @@ function LojaManager({ torneio }: { torneio: any }) {
                         <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded-full font-semibold">
                           {torneio.rodadas.find((r: any) => r.id === item.rodada)?.nome || 'Rodada não encontrada'}
                         </span>
-                        <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full font-semibold">
-                          {item.quantidadeDisponivel || 0}/{item.quantidadeTotal || 0} disponível
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                          (item.quantidadeDisponivel || 0) <= 0 
+                            ? 'bg-red-200 text-red-800' 
+                            : 'bg-green-200 text-green-800'
+                        }`}>
+                          {(item.quantidadeDisponivel || 0) <= 0 
+                            ? 'Esgotado' 
+                            : `${item.quantidadeDisponivel || 0}/${item.quantidadeTotal || 0} disponível`
+                          }
                         </span>
                       </div>
                     </div>
@@ -2635,7 +2642,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
           <div className="space-y-3 sm:space-y-4 max-h-96 overflow-y-auto">
             {aguardando.length === 0 ? (
               <div className="text-center py-8">
-                <div className="w-12 h-32 mx-auto bg-yellow-300 rounded-full flex items-center justify-center mb-2">
+                <div className="w-12 h-12 mx-auto bg-yellow-300 rounded-full flex items-center justify-center mb-2">
                   <span className="text-yellow-800 font-bold">!</span>
                 </div>
                 <p className="text-yellow-600 font-bold text-sm">Nenhuma dupla aguardando resultado</p>

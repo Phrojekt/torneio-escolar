@@ -334,8 +334,15 @@ export function LojaManager({ torneio }: LojaManagerProps) {
                         <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded-full font-semibold">
                           {torneio.rodadas.find((r: any) => r.id === item.rodada)?.nome || 'Rodada não encontrada'}
                         </span>
-                        <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full font-semibold">
-                          {item.quantidadeDisponivel || 0}/{item.quantidadeTotal || 0} disponível
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                          (item.quantidadeDisponivel || 0) <= 0 
+                            ? 'bg-red-200 text-red-800' 
+                            : 'bg-green-200 text-green-800'
+                        }`}>
+                          {(item.quantidadeDisponivel || 0) <= 0 
+                            ? 'Esgotado' 
+                            : `${item.quantidadeDisponivel || 0}/${item.quantidadeTotal || 0} disponível`
+                          }
                         </span>
                       </div>
                     </div>

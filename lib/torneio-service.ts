@@ -378,8 +378,7 @@ export const lojaService = {
       .map(doc => ({
         id: doc.id,
         ...doc.data()
-      } as ItemLoja))
-      .filter(item => (item.quantidadeDisponivel || 0) > 0);
+      } as ItemLoja));
   },
 
   // Buscar itens por rodada
@@ -395,8 +394,7 @@ export const lojaService = {
       .map(doc => ({
         id: doc.id,
         ...doc.data()
-      } as ItemLoja))
-      .filter(item => (item.quantidadeDisponivel || 0) > 0);
+      } as ItemLoja));
   },
 
   // Realizar compra
@@ -430,8 +428,7 @@ export const lojaService = {
 
     // Decrementar quantidade disponível do item
     batch.update(doc(db, 'itensLoja', itemId), {
-      quantidadeDisponivel: item.quantidadeDisponivel - 1,
-      disponivel: item.quantidadeDisponivel - 1 > 0 // Marcar como indisponível se esgotar
+      quantidadeDisponivel: item.quantidadeDisponivel - 1
     });
     
     // Criar registro de compra
