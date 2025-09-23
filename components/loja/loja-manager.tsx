@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -24,6 +24,22 @@ export function LojaManager({ torneio }: LojaManagerProps) {
   const [imagemArquivo, setImagemArquivo] = useState<File | null>(null)
   const [imagemPreview, setImagemPreview] = useState<string>("")
   const [uploadandoImagem, setUploadandoImagem] = useState(false)
+  
+  // Estados para tooltip móvel
+  const [activeTooltip, setActiveTooltip] = useState<number | null>(null)
+  const tooltipRefs = useRef<{ [key: number]: HTMLDivElement | null }>({})
+
+  const handleTooltipToggle = (index: number, event?: React.MouseEvent) => {
+    if (activeTooltip === index) {
+      setActiveTooltip(null)
+    } else {
+      setActiveTooltip(index)
+    }
+  }
+
+  const handleClickOutside = () => {
+    setActiveTooltip(null)
+  }
 
   const handleImagemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const arquivo = e.target.files?.[0]
@@ -173,7 +189,7 @@ export function LojaManager({ torneio }: LojaManagerProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" onClick={handleClickOutside}>
       {/* Adicionar/Editar Item */}
       <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-slate-600 to-slate-800 text-white px-6 py-6">
@@ -306,16 +322,26 @@ export function LojaManager({ torneio }: LojaManagerProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {torneio.itensLoja.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="col-span-full text-center py-8">
                 <ShoppingBag className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                 <p className="text-gray-500 font-semibold">Nenhum item cadastrado</p>
                 <p className="text-sm text-gray-400">Adicione o primeiro item à loja!</p>
               </div>
             ) : (
-              torneio.itensLoja.map((item: any) => (
-                <div key={item.id} className="p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl border-2 border-orange-200 hover:shadow-lg transition-all">
+              torneio.itensLoja.map((item: any, index: number) => (
+                <div 
+                  key={item.id} 
+                  ref={(el) => { tooltipRefs.current[index] = el }}
+                  className="p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl border-2 border-orange-200 hover:shadow-lg transition-all relative group cursor-pointer sm:cursor-default"
+                  onClick={(e) => {
+                    if (window.innerWidth < 640) { // Apenas mobile
+                      e.stopPropagation()
+                      handleTooltipToggle(index, e)
+                    }
+                  }}
+                >
                   <div className="flex justify-between items-start gap-4">
                     {item.imagem && (
                       <div className="flex-shrink-0">
@@ -326,27 +352,39 @@ export function LojaManager({ torneio }: LojaManagerProps) {
                         />
                       </div>
                     )}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-black text-lg text-gray-800 mb-1">{item.nome}</h3>
-                      <p className="text-sm text-gray-600 font-semibold mb-2">{item.descricao}</p>
-                      <div className="flex items-center gap-4">
-                        <p className="text-lg font-black text-orange-600">{item.preco} moedas</p>
-                        <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded-full font-semibold">
+                      <p className="text-sm text-gray-600 font-semibold mb-2 line-clamp-2 cursor-help">
+                        {item.descricao}
+                      </p>
+                      
+                      {/* Tooltip com descrição completa */}
+                      <div className={`absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 w-80 max-w-[90vw] bg-white border-2 border-gray-200 rounded-xl shadow-xl p-4 z-50 transition-all duration-200 pointer-events-none ${
+                        activeTooltip === index ? 'sm:hidden opacity-100 visible' : 'opacity-0 invisible sm:group-hover:opacity-100 sm:group-hover:visible'
+                      }`}>
+                        <div className="text-sm font-semibold text-gray-800 mb-2">{item.nome}</div>
+                        <div className="text-xs text-gray-600 leading-relaxed max-h-32 overflow-y-auto">{item.descricao}</div>
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-lg font-black text-orange-600 whitespace-nowrap">{item.preco} moedas</p>
+                        <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded-full font-semibold whitespace-nowrap truncate max-w-[120px]">
                           {torneio.rodadas.find((r: any) => r.id === item.rodada)?.nome || 'Rodada não encontrada'}
                         </span>
-                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap ${
                           (item.quantidadeDisponivel || 0) <= 0 
                             ? 'bg-red-200 text-red-800' 
                             : 'bg-green-200 text-green-800'
                         }`}>
                           {(item.quantidadeDisponivel || 0) <= 0 
                             ? 'Esgotado' 
-                            : `${item.quantidadeDisponivel || 0}/${item.quantidadeTotal || 0} disponível`
+                            : `${item.quantidadeDisponivel || 0}/${item.quantidadeTotal || 0}`
                           }
                         </span>
                       </div>
                     </div>
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex gap-2 ml-4 flex-shrink-0">
                       <Button
                         onClick={() => handleEditarItem(item)}
                         variant="outline"
