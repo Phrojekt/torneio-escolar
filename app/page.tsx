@@ -883,7 +883,8 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                         value={multiplicadorMedalhas}
                         onChange={(e) => setMultiplicadorMedalhas(e.target.value)}
                         placeholder="0"
-                        className="w-full"
+                        className="w-full no-scroll"
+                        onWheel={(e) => e.currentTarget.blur()}
                       />
                     </div>
                     <div className="min-w-0">
@@ -895,7 +896,8 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                         value={multiplicadorEstrelas}
                         onChange={(e) => setMultiplicadorEstrelas(e.target.value)}
                         placeholder="0"
-                        className="w-full"
+                        className="w-full no-scroll"
+                        onWheel={(e) => e.currentTarget.blur()}
                       />
                     </div>
                   </div>
@@ -913,7 +915,8 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                         value={multiplicadorMoedas}
                         onChange={(e) => setMultiplicadorMoedas(e.target.value)}
                         placeholder="0"
-                        className="w-full"
+                        className="w-full no-scroll"
+                        onWheel={(e) => e.currentTarget.blur()}
                       />
                     </div>
                   </div>
@@ -1035,6 +1038,8 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                       value={medalhasInseridas}
                       onChange={(e) => setMedalhasInseridas(e.target.value)}
                       placeholder="0"
+                      className="no-scroll"
+                      onWheel={(e) => e.currentTarget.blur()}
                     />
                   </div>
                   <div>
@@ -1045,6 +1050,8 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                       value={estrelasInseridas}
                       onChange={(e) => setEstrelasInseridas(e.target.value)}
                       placeholder="0"
+                      className="no-scroll"
+                      onWheel={(e) => e.currentTarget.blur()}
                     />
                   </div>
                   <div>
@@ -1055,6 +1062,8 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                       value={moedasInseridas}
                       onChange={(e) => setMoedasInseridas(e.target.value)}
                       placeholder="0"
+                      className="no-scroll"
+                      onWheel={(e) => e.currentTarget.blur()}
                     />
                   </div>
                 </div>
@@ -1424,7 +1433,8 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                     placeholder="0"
                     value={medalhas}
                     onChange={(e) => setMedalhas(e.target.value)}
-                    className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
+                    className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base no-scroll"
+                    onWheel={(e) => e.currentTarget.blur()}
                   />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1434,7 +1444,8 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                     placeholder="0"
                     value={estrelasPontuacao}
                     onChange={(e) => setEstrelasPontuacao(e.target.value)}
-                    className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
+                    className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base no-scroll"
+                    onWheel={(e) => e.currentTarget.blur()}
                   />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1444,7 +1455,8 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
                     placeholder="0"
                     value={moedas}
                     onChange={(e) => setMoedas(e.target.value)}
-                    className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base"
+                    className="rounded-full border-2 border-gray-300 h-10 sm:h-12 w-full text-sm sm:text-base no-scroll"
+                    onWheel={(e) => e.currentTarget.blur()}
                   />
                 </div>
                 
@@ -2009,7 +2021,8 @@ function LojaManager({ torneio }: { torneio: any }) {
                 placeholder="0"
                 value={preco}
                 onChange={(e) => setPreco(e.target.value)}
-                className="rounded-full border-2 border-gray-300 h-12"
+                className="rounded-full border-2 border-gray-300 h-12 no-scroll"
+                onWheel={(e) => e.currentTarget.blur()}
               />
             </div>
             <div>
@@ -2019,8 +2032,9 @@ function LojaManager({ torneio }: { torneio: any }) {
                 placeholder="0"
                 value={quantidade}
                 onChange={(e) => setQuantidade(e.target.value)}
-                className="rounded-full border-2 border-gray-300 h-12"
+                className="rounded-full border-2 border-gray-300 h-12 no-scroll"
                 min="0"
+                onWheel={(e) => e.currentTarget.blur()}
               />
             </div>
             <div>
@@ -2813,7 +2827,8 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
                   placeholder="4"
                   value={numero}
                   onChange={(e) => setNumero(e.target.value)}
-                  className="rounded-full border-2 border-gray-300 h-12"
+                  className="rounded-full border-2 border-gray-300 h-12 no-scroll"
+                  onWheel={(e) => e.currentTarget.blur()}
                 />
               </div>
             </div>

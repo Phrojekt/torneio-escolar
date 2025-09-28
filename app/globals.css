@@ -553,4 +553,37 @@
     visibility: visible !important;
   }
 }
+
+/* Desativar setas e scroll em inputs number */
+.no-spinner {
+  -moz-appearance: textfield;
+}
+
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Desativar scroll wheel em inputs number */
+.no-scroll input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.no-scroll input[type="number"]::-webkit-outer-spin-button,
+.no-scroll input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Prevenir scroll wheel em campos numéricos */
+input[type="number"].no-scroll {
+  -moz-appearance: textfield;
+}
+
+input[type="number"].no-scroll::-webkit-outer-spin-button,
+input[type="number"].no-scroll::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 }

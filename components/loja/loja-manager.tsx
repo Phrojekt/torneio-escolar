@@ -256,7 +256,8 @@ export function LojaManager({ torneio }: LojaManagerProps) {
                 placeholder="0"
                 value={preco}
                 onChange={(e) => setPreco(e.target.value)}
-                className="rounded-full border-2 border-gray-300 h-12"
+                className="rounded-full border-2 border-gray-300 h-12 no-scroll"
+                onWheel={(e) => e.currentTarget.blur()}
               />
             </div>
             <div>
@@ -266,8 +267,9 @@ export function LojaManager({ torneio }: LojaManagerProps) {
                 placeholder="0"
                 value={quantidade}
                 onChange={(e) => setQuantidade(e.target.value)}
-                className="rounded-full border-2 border-gray-300 h-12"
+                className="rounded-full border-2 border-gray-300 h-12 no-scroll"
                 min="0"
+                onWheel={(e) => e.currentTarget.blur()}
               />
             </div>
             <div>
