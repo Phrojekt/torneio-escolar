@@ -3,6 +3,7 @@ export interface Dupla {
   id: string;
   tag: string; // Tag para identificação da dupla
   bannerUrl?: string; // URL da imagem banner 700x200 (obrigatório para exibição)
+  itemIcon?: string; // URL do ícone do item atribuído pelo administrador
   medalhas: number;
   estrelas: number;
   moedas: number;

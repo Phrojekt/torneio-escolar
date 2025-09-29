@@ -16,6 +16,7 @@ import { Dupla } from "@/types/torneio"
 import { toast } from "sonner"
 import { LoginPage } from "@/components/auth/login-page"
 import { BannerDupla } from "@/components/tournament/banner-dupla"
+import { deleteField } from 'firebase/firestore'
 
 // Função utilitária para calcular valores apenas das rodadas (sem bônus)
 const calcularValoresRodadas = (dupla: any) => {
@@ -1492,6 +1493,35 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
 // Componente para gerenciar todas as duplas
 function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
   const [duplaParaRemover, setDuplaParaRemover] = useState<string | null>(null)
+  const [modalIconeAberto, setModalIconeAberto] = useState<string | null>(null)
+
+  const handleAtribuirIcone = async (duplaId: string, iconeUrl: string) => {
+    try {
+      if (iconeUrl) {
+        await torneio.atualizarDupla(duplaId, { 
+          itemIcon: iconeUrl 
+        })
+      } else {
+        await torneio.atualizarDupla(duplaId, { 
+          itemIcon: deleteField() 
+        })
+      }
+      toast.success("Ícone atribuído com sucesso!")
+    } catch (error) {
+      toast.error("Erro ao atribuir ícone")
+    }
+  }
+
+  const handleRemoverIcone = async (duplaId: string) => {
+    try {
+      await torneio.atualizarDupla(duplaId, { 
+        itemIcon: deleteField() 
+      })
+      toast.success("Ícone removido com sucesso!")
+    } catch (error) {
+      toast.error("Erro ao remover ícone")
+    }
+  }
 
   // Cada linha terá estado local para edição (evita perda de foco enquanto digita)
   function DuplaRow({ dupla }: { dupla: Dupla }) {
@@ -1552,7 +1582,19 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
           <div className="flex-1">
             {!isEditing ? (
               <>
-                <h3 className="font-black text-base text-gray-800">{dupla.tag}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black text-base text-gray-800">{dupla.tag}</h3>
+                  {dupla.itemIcon && (
+                    <div className="w-6 h-6 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-lg flex items-center justify-center">
+                      <img 
+                        src={dupla.itemIcon} 
+                        alt="Ícone" 
+                        className="w-4 h-4 object-contain"
+                        title="Ícone atribuído à dupla"
+                      />
+                    </div>
+                  )}
+                </div>
                 <p className="text-xs text-gray-600 font-semibold">{`🏅 ${valores.medalhasRodadas} • ⭐ ${valores.estrelasRodadas} • 🪙 ${valores.moedasRodadas}`}</p>
               </>
             ) : (
@@ -1576,6 +1618,23 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
               <Button onClick={handleCancel} size="sm" variant="outline" className="rounded-full border-2 text-xs px-3 py-1">Cancelar</Button>
             </>
           )}
+
+          <Button 
+            onClick={() => setModalIconeAberto(dupla.id)} 
+            size="sm" 
+            className="rounded-full text-white text-xs px-3 py-1 bg-purple-500 hover:bg-purple-600 flex items-center space-x-1"
+          >
+            {dupla.itemIcon ? (
+              <img 
+                src={dupla.itemIcon} 
+                alt="Ícone atual" 
+                className="w-3 h-3 object-contain"
+              />
+            ) : (
+              <Trophy className="w-3 h-3" />
+            )}
+            <span>{dupla.itemIcon ? 'Alterar' : 'Ícone'}</span>
+          </Button>
 
           <Button onClick={() => handleAtualizarStatusEspecial(dupla.id, 'JambaVIP')} size="sm" className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'JambaVIP' ? 'bg-purple-600' : 'bg-purple-400 hover:bg-purple-500'}`}>👑 JambaVIP</Button>
           <Button onClick={() => handleAtualizarStatusEspecial(dupla.id, 'Jamberlinda')} size="sm" className={`rounded-full text-white text-xs px-3 py-1 ${dupla.status === 'Jamberlinda' ? 'bg-pink-600' : 'bg-pink-400 hover:bg-pink-500'}`}>Jamberlinda</Button>
@@ -1698,6 +1757,96 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
           icone={<span className="text-lg"></span>}
         />
       </div>
+
+      {/* Modal de Seleção de Ícone */}
+      {modalIconeAberto && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <Trophy className="w-6 h-6" />
+                Selecionar Ícone para Dupla
+              </h3>
+              <p className="text-purple-100 mt-1">
+                Escolha um item da loja para ser o ícone da dupla: <span className="font-bold">{torneio.duplas.find((d: Dupla) => d.id === modalIconeAberto)?.tag}</span>
+              </p>
+            </div>
+            
+            <div className="p-6 max-h-96 overflow-y-auto">
+              {torneio.itensLoja.length === 0 ? (
+                <div className="text-center py-8">
+                  <ShoppingBag className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <p className="text-gray-500 font-semibold">Nenhum item cadastrado</p>
+                  <p className="text-sm text-gray-400">Adicione itens à loja primeiro!</p>
+                </div>
+              ) : (
+                <>
+                  {/* Opção para remover ícone */}
+                  <div 
+                    className="border-2 border-red-200 rounded-xl p-4 cursor-pointer hover:bg-red-50 transition-colors mb-4"
+                    onClick={() => {
+                      handleRemoverIcone(modalIconeAberto)
+                      setModalIconeAberto(null)
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <X className="w-8 h-8 text-red-500" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-red-600">Remover Ícone</h4>
+                        <p className="text-sm text-red-500">Clique para não mostrar nenhum ícone</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Grid de itens */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {torneio.itensLoja.map((item: any) => (
+                      <div
+                        key={item.id}
+                        className="border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all"
+                        onClick={() => {
+                          handleAtribuirIcone(modalIconeAberto, item.imagem)
+                          setModalIconeAberto(null)
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-16 h-16 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
+                            <img
+                              src={item.imagem}
+                              alt={item.nome}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-gray-800 truncate">{item.nome}</h4>
+                            <p className="text-sm text-gray-600 line-clamp-2">{item.descricao}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                                💰 {item.preco}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="border-t bg-gray-50 p-4">
+              <Button
+                onClick={() => setModalIconeAberto(null)}
+                className="w-full bg-gray-500 hover:bg-gray-600 text-white rounded-lg"
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1953,6 +2102,34 @@ function LojaManager({ torneio }: { torneio: any }) {
     }
   }
 
+  const handleAtribuirIcone = async (duplaId: string, iconeUrl: string) => {
+    try {
+      if (iconeUrl) {
+        await torneio.atualizarDupla(duplaId, { 
+          itemIcon: iconeUrl 
+        })
+      } else {
+        await torneio.atualizarDupla(duplaId, { 
+          itemIcon: deleteField() 
+        })
+      }
+      toast.success("Ícone atribuído com sucesso!")
+    } catch (error) {
+      toast.error("Erro ao atribuir ícone")
+    }
+  }
+
+  const handleRemoverIcone = async (duplaId: string) => {
+    try {
+      await torneio.atualizarDupla(duplaId, { 
+        itemIcon: deleteField() 
+      })
+      toast.success("Ícone removido com sucesso!")
+    } catch (error) {
+      toast.error("Erro ao remover ícone")
+    }
+  }
+
   return (
     <div className="space-y-6" onClick={handleClickOutside}>
       {/* Adicionar/Editar Item */}
@@ -2178,6 +2355,87 @@ function LojaManager({ torneio }: { torneio: any }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Gerenciamento de Ícones das Duplas */}
+      <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-6">
+          <CardTitle className="text-2xl font-black">Gerenciamento de Ícones das Duplas</CardTitle>
+          <CardDescription className="text-purple-100 font-semibold">
+            Atribua ícones de itens às duplas para personalizar as tabelas
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            {torneio.duplas.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p className="text-gray-500 font-semibold">Nenhuma dupla cadastrada</p>
+                <p className="text-sm text-gray-400">Cadastre duplas primeiro para atribuir ícones!</p>
+              </div>
+            ) : (
+              torneio.duplas.map((dupla: Dupla) => (
+                <div key={dupla.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-shrink-0">
+                        <img
+                          src={dupla.bannerUrl}
+                          alt={dupla.tag}
+                          className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-800">{dupla.tag}</h3>
+                        <p className="text-sm text-gray-600">
+                          Status: <span className="font-medium">{dupla.status}</span>
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm text-gray-500">Ícone atual:</span>
+                          {dupla.itemIcon ? (
+                            <img
+                              src={dupla.itemIcon}
+                              alt="Ícone da dupla"
+                              className="w-6 h-6 object-contain"
+                            />
+                          ) : (
+                            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">Nenhum</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <select
+                        className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        value={dupla.itemIcon || ''}
+                        onChange={(e) => handleAtribuirIcone(dupla.id, e.target.value)}
+                        disabled={modoEdicao}
+                      >
+                        <option value="">Selecionar ícone</option>
+                        {torneio.itensLoja.map((item: any) => (
+                          <option key={item.id} value={item.imagem}>
+                            {item.nome}
+                          </option>
+                        ))}
+                      </select>
+                      {dupla.itemIcon && (
+                        <Button
+                          onClick={() => handleRemoverIcone(dupla.id)}
+                          variant="outline"
+                          size="sm"
+                          className="rounded-full border-2 border-red-300 text-red-600 hover:bg-red-50"
+                          disabled={modoEdicao}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -2299,6 +2557,21 @@ function RankingTable({
                     {/* Posição - com gradiente da classe CSS */}
                     <div className="ranking-position w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-white text-sm sm:text-lg lg:text-xl flex-shrink-0">
                       {(dupla as any).posicao || (index + 1)}°
+                    </div>
+
+                    {/* Ícone do Item - container similar ao de posição */}
+                    <div className="item-icon-container w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center bg-gradient-to-r from-orange-400 to-yellow-400 flex-shrink-0">
+                      {dupla.itemIcon ? (
+                        <img 
+                          src={dupla.itemIcon} 
+                          alt="Item Icon" 
+                          className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 object-contain"
+                        />
+                      ) : (
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-white bg-opacity-30 rounded-lg flex items-center justify-center">
+                          <span className="text-white text-xs sm:text-sm font-bold">?</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Nome da Dupla - com banner quando disponível */}

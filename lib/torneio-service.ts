@@ -10,7 +10,8 @@ import {
   where, 
   orderBy, 
   onSnapshot,
-  writeBatch
+  writeBatch,
+  deleteField
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Dupla, Rodada, ItemLoja, Compra, TorneioConfig, Atividade, Bonus, Partida } from '@/types/torneio';
