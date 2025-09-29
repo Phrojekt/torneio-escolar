@@ -1494,6 +1494,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
 function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
   const [duplaParaRemover, setDuplaParaRemover] = useState<string | null>(null)
   const [modalIconeAberto, setModalIconeAberto] = useState<string | null>(null)
+  const [duplaSelecionada, setDuplaSelecionada] = useState<string>('')
 
   const handleAtribuirIcone = async (duplaId: string, iconeUrl: string) => {
     try {
@@ -1947,8 +1948,11 @@ function LojaManager({ torneio }: { torneio: any }) {
   // Estados para tooltip móvel
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null)
   const tooltipRefs = useRef<{ [key: number]: HTMLDivElement | null }>({})
+  
+  // Estado para seleção de dupla no gerenciamento de ícones
+  const [duplaSelecionada, setDuplaSelecionada] = useState<string>('')
 
-  const handleTooltipToggle = (index: number, event?: React.MouseEvent) => {
+  const handleTooltipToggle = (index: number) => {
     if (activeTooltip === index) {
       setActiveTooltip(null)
     } else {
@@ -2282,7 +2286,7 @@ function LojaManager({ torneio }: { torneio: any }) {
                   onClick={(e) => {
                     if (window.innerWidth < 640) { // Apenas mobile
                       e.stopPropagation()
-                      handleTooltipToggle(index, e)
+                      handleTooltipToggle(index)
                     }
                   }}
                 >
@@ -2359,32 +2363,53 @@ function LojaManager({ torneio }: { torneio: any }) {
       {/* Gerenciamento de Ícones das Duplas */}
       <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-6">
-          <CardTitle className="text-2xl font-black">Gerenciamento de Ícones das Duplas</CardTitle>
+          <CardTitle className="text-2xl font-black">Atribuir Ícones às Duplas</CardTitle>
           <CardDescription className="text-purple-100 font-semibold">
-            Atribua ícones de itens às duplas para personalizar as tabelas
+            Selecione uma dupla e atribua um ícone de item da loja
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="space-y-4">
-            {torneio.duplas.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p className="text-gray-500 font-semibold">Nenhuma dupla cadastrada</p>
-                <p className="text-sm text-gray-400">Cadastre duplas primeiro para atribuir ícones!</p>
+          {torneio.duplas.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <p className="text-gray-500 font-semibold">Nenhuma dupla cadastrada</p>
+              <p className="text-sm text-gray-400">Cadastre duplas primeiro para atribuir ícones!</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Seleção de Dupla */}
+              <div>
+                <Label className="text-sm font-semibold text-gray-700 mb-2 block">
+                  Selecionar Dupla
+                </Label>
+                <select
+                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  value={duplaSelecionada}
+                  onChange={(e) => setDuplaSelecionada(e.target.value)}
+                >
+                  <option value="">Escolha uma dupla...</option>
+                  {torneio.duplas.map((dupla: Dupla) => (
+                    <option key={dupla.id} value={dupla.id}>
+                      {dupla.tag} - {dupla.status}
+                    </option>
+                  ))}
+                </select>
               </div>
-            ) : (
-              torneio.duplas.map((dupla: Dupla) => (
-                <div key={dupla.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
+
+              {/* Preview da Dupla Selecionada */}
+              {duplaSelecionada && (() => {
+                const dupla = torneio.duplas.find((d: Dupla) => d.id === duplaSelecionada);
+                return dupla ? (
+                  <div className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
                     <div className="flex items-center gap-4">
                       <div className="flex-shrink-0">
                         <img
                           src={dupla.bannerUrl}
                           alt={dupla.tag}
-                          className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200"
+                          className="w-16 h-16 object-cover rounded-lg border-2 border-gray-300"
                         />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <h3 className="font-bold text-lg text-gray-800">{dupla.tag}</h3>
                         <p className="text-sm text-gray-600">
                           Status: <span className="font-medium">{dupla.status}</span>
@@ -2398,42 +2423,64 @@ function LojaManager({ torneio }: { torneio: any }) {
                               className="w-6 h-6 object-contain"
                             />
                           ) : (
-                            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">Nenhum</span>
+                            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">Nenhum ícone</span>
                           )}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <select
-                        className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        value={dupla.itemIcon || ''}
-                        onChange={(e) => handleAtribuirIcone(dupla.id, e.target.value)}
-                        disabled={modoEdicao}
-                      >
-                        <option value="">Selecionar ícone</option>
-                        {torneio.itensLoja.map((item: any) => (
-                          <option key={item.id} value={item.imagem}>
-                            {item.nome}
-                          </option>
-                        ))}
-                      </select>
-                      {dupla.itemIcon && (
+                  </div>
+                ) : null;
+              })()}
+
+              {/* Seleção de Ícone */}
+              {duplaSelecionada && (
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700 mb-2 block">
+                    Selecionar Ícone
+                  </Label>
+                  <div className="flex gap-3">
+                    <select
+                      className="flex-1 border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      value={(() => {
+                        const dupla = torneio.duplas.find((d: Dupla) => d.id === duplaSelecionada);
+                        return dupla?.itemIcon || '';
+                      })()}
+                      onChange={(e) => handleAtribuirIcone(duplaSelecionada, e.target.value)}
+                      disabled={modoEdicao}
+                    >
+                      <option value="">Remover ícone</option>
+                      {torneio.itensLoja.map((item: any) => (
+                        <option key={item.id} value={item.imagem}>
+                          {item.nome} - 💰 {item.preco}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    {(() => {
+                      const dupla = torneio.duplas.find((d: Dupla) => d.id === duplaSelecionada);
+                      return dupla?.itemIcon ? (
                         <Button
-                          onClick={() => handleRemoverIcone(dupla.id)}
+                          onClick={() => handleRemoverIcone(duplaSelecionada)}
                           variant="outline"
-                          size="sm"
-                          className="rounded-full border-2 border-red-300 text-red-600 hover:bg-red-50"
+                          className="rounded-lg border-2 border-red-300 text-red-600 hover:bg-red-50 px-4"
                           disabled={modoEdicao}
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-4 h-4 mr-1" />
+                          Remover
                         </Button>
-                      )}
-                    </div>
+                      ) : null;
+                    })()}
                   </div>
+                  
+                  {torneio.itensLoja.length === 0 && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      ⚠️ Nenhum item cadastrado na loja. Adicione itens primeiro!
+                    </p>
+                  )}
                 </div>
-              ))
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -3145,7 +3192,7 @@ function GerenciamentoRodadas({ torneio }: { torneio: any }) {
                 <p className="text-sm text-gray-400">Crie a primeira rodada usando o formulário acima</p>
               </div>
             ) : (
-              torneio.rodadas.map((rodada: any, index: number) => (
+              torneio.rodadas.map((rodada: any) => (
                 <div
                   key={rodada.id}
                   className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 flex justify-between items-start"
