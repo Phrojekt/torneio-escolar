@@ -857,7 +857,7 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
                 Adicionar Partida ao Bônus
               </CardTitle>
               <CardDescription>
-                Crie até 3 partidas com multiplicadores para o bônus selecionado
+                Crie partidas com multiplicadores para o bônus selecionado
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -935,10 +935,9 @@ function GerenciamentoBonus({ torneio }: { torneio: any }) {
               <Button
                 onClick={handleCriarPartida}
                 className="w-full"
-                disabled={partidasBonus.length >= 3}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Adicionar Partida {partidasBonus.length >= 3 && "(Máximo atingido)"}
+                Adicionar Partida
               </Button>
             </CardContent>
           </Card>
