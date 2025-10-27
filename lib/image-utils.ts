@@ -88,7 +88,8 @@ export function getProxyImageSrc(imageUrl?: string): string | undefined {
  * Gera URL S3 a partir da chave
  */
 export function generateS3Url(s3Key: string): string {
-  const bucketName = process.env.MY_AWS_S3_BUCKET || 'jambalaia';
+  // Hardcoded bucket name para evitar exposição de env vars no client
+  const bucketName = 'jambalaia';
   return `https://${bucketName}.s3.amazonaws.com/${s3Key}`;
 }
 
