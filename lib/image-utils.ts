@@ -11,15 +11,7 @@ export function isS3Url(url?: string): boolean {
 }
 
 /**
- * Verifica se uma URL é do GitHub
- */
-export function isGithubUrl(url?: string): boolean {
-  if (!url) return false;
-  return url.includes('raw.githubusercontent.com') || url.includes('github.com');
-}
-
-/**
- * Converte URLs para S3 diretas - sem proxy
+ * Converte URLs para S3 diretas - apenas S3, sem GitHub
  */
 export function convertToOptimizedImageUrl(imageUrl?: string): string | undefined {
   if (!imageUrl || imageUrl.trim() === '') {
@@ -31,22 +23,13 @@ export function convertToOptimizedImageUrl(imageUrl?: string): string | undefine
     return imageUrl;
   }
 
-  // Se é uma URL do GitHub, converter para S3 baseado no nome do arquivo
-  if (isGithubUrl(imageUrl)) {
-    const filename = extractFilenameFromUrl(imageUrl);
-    if (filename) {
-      const isBanner = imageUrl.includes('/banners-duplas/') || imageUrl.includes('banner');
-      const s3Path = isBanner ? 'banners_dupla/' : 'itens/';
-      return `https://jambalaia.s3.amazonaws.com/${s3Path}${filename}`;
-    }
-  }
-
-  // Para outras URLs, retornar como está
-  return imageUrl;
+  // Para outras URLs, assumir que são inválidas
+  console.warn('⚠️ URL não é do S3, ignorando:', imageUrl);
+  return undefined;
 }
 
 /**
- * Extrai nome do arquivo de qualquer URL - otimizado para S3
+ * Extrai nome do arquivo de URLs S3 apenas
  */
 export function extractFilenameFromUrl(imageUrl?: string): string | undefined {
   if (!imageUrl) return undefined;
@@ -55,14 +38,6 @@ export function extractFilenameFromUrl(imageUrl?: string): string | undefined {
     // Para URLs do S3 - reconhecer padrões do nosso bucket
     if (isS3Url(imageUrl)) {
       const match = imageUrl.match(/\/(banners_dupla|itens)\/([^?]+)/);
-      if (match) {
-        return decodeURIComponent(match[2].split('?')[0]);
-      }
-    }
-
-    // Para URLs do GitHub raw
-    if (isGithubUrl(imageUrl)) {
-      const match = imageUrl.match(/\/public\/(banners-duplas|itens)\/([^?]+)/);
       if (match) {
         return decodeURIComponent(match[2].split('?')[0]);
       }

@@ -108,14 +108,6 @@ export function getS3PublicUrl(key: string): string {
 }
 
 /**
- * Extrai o nome do arquivo de uma URL do GitHub
- */
-export function extractFilenameFromGithubUrl(url: string): string {
-  const parts = url.split('/');
-  return parts[parts.length - 1];
-}
-
-/**
  * Gera nome de arquivo único para S3
  */
 export function generateS3Filename(originalName: string, prefix?: string): string {
@@ -131,17 +123,6 @@ export function generateS3Filename(originalName: string, prefix?: string): strin
   return prefix 
     ? `${prefix}_${timestamp}_${randomId}_${baseName}.${extension}`
     : `${timestamp}_${randomId}_${baseName}.${extension}`;
-}
-
-/**
- * Converte URL do GitHub para chave S3
- */
-export function githubUrlToS3Key(githubUrl: string, isBanner: boolean = false): string {
-  const filename = extractFilenameFromGithubUrl(githubUrl);
-  const path = isBanner ? BANNERS_PATH : ITENS_PATH;
-  const cleanFilename = generateS3Filename(filename);
-  
-  return `${path}${cleanFilename}`;
 }
 
 export { s3Client, BUCKET_NAME, BANNERS_PATH, ITENS_PATH };

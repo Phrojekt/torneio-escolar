@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { uploadImageToS3, generateS3Filename, extractFilenameFromGithubUrl } from '@/lib/s3-utils';
+import { uploadImageToS3, generateS3Filename } from '@/lib/s3-utils';
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
@@ -182,9 +182,9 @@ async function downloadAndUploadToS3(
 
     const imageBuffer = await response.arrayBuffer();
     const contentType = response.headers.get('content-type') || 'image/jpeg';
-    const originalFilename = extractFilenameFromGithubUrl(githubUrl);
+    const originalFilename = githubUrl.split('/').pop() || 'image.jpg';
     
-    sendUpdate('log', { message: `    � Fazendo upload para S3...` });
+    sendUpdate('log', { message: `    📤 Fazendo upload para S3...` });
     
     // Gerar nome único para S3
     const filename = generateS3Filename(originalFilename, `${entityId}_${type}`);
