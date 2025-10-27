@@ -226,8 +226,8 @@ export const duplaService = {
     if (duplaDoc.exists()) {
       const dupla = duplaDoc.data() as Dupla;
       
-      // Se tem banner, deletar do GitHub
-      if (dupla.bannerUrl && dupla.bannerUrl.includes('raw.githubusercontent.com')) {
+      // Se tem banner, deletar do S3 (ou GitHub para URLs antigas)
+      if (dupla.bannerUrl) {
         try {
           const response = await fetch('/api/delete-image', {
             method: 'DELETE',
@@ -236,9 +236,9 @@ export const duplaService = {
           });
           
           if (response.ok) {
-            console.log('✅ Banner da dupla deletado do GitHub');
+            console.log('✅ Banner da dupla deletado');
           } else {
-            console.warn('⚠️ Erro ao deletar banner da dupla do GitHub');
+            console.warn('⚠️ Erro ao deletar banner da dupla');
           }
         } catch (error) {
           console.error('❌ Erro ao deletar banner:', error);
@@ -456,8 +456,8 @@ export const lojaService = {
     if (itemDoc.exists()) {
       const item = itemDoc.data() as ItemLoja;
       
-      // Se tem imagem, deletar do GitHub
-      if (item.imagem && item.imagem.includes('raw.githubusercontent.com')) {
+      // Se tem imagem, deletar do S3 (ou GitHub para URLs antigas)
+      if (item.imagem) {
         try {
           const response = await fetch('/api/delete-image', {
             method: 'DELETE',
@@ -466,9 +466,9 @@ export const lojaService = {
           });
           
           if (response.ok) {
-            console.log('✅ Imagem do item deletada do GitHub');
+            console.log('✅ Imagem do item deletada');
           } else {
-            console.warn('⚠️ Erro ao deletar imagem do item do GitHub');
+            console.warn('⚠️ Erro ao deletar imagem do item');
           }
         } catch (error) {
           console.error('❌ Erro ao deletar imagem do item:', error);

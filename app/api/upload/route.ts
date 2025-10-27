@@ -1,159 +1,133 @@
-// import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
-
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = process.env.GITHUB_REPO || 'Phrojekt/torneio-escolar';
-const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
-const GITHUB_API_URL = 'https://api.github.com';
-const GITHUB_USER = process.env.GITHUB_USER || 'github-actions[bot]';
-
+import { uploadImageToS3, generateS3Filename } from '@/lib/s3-utils';
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar se o token do GitHub está configurado
-    if (!GITHUB_TOKEN) {
-      console.error('❌ Token do GitHub não configurado');
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Token do GitHub não configurado. Configure a variável GITHUB_TOKEN.' 
-      });
-    }
-
-    console.log('✅ Token do GitHub configurado');
+    console.log('📤 Iniciando upload para S3...');
 
     const data = await request.formData();
     const file: File | null = data.get('file') as unknown as File;
     const tag: string = data.get('tag') as string;
     const type: string = data.get('type') as string || 'banner'; // 'banner' ou 'item'
+    const duplaId: string = data.get('duplaId') as string;
+    const isEdit: string = data.get('isEdit') as string || 'false'; // Se é edição
+    const oldImageUrl: string = data.get('oldImageUrl') as string; // URL da imagem antiga para deletar
 
-    console.log('📁 Dados recebidos:', { fileName: file?.name, tag, type });
+    console.log('📁 Dados recebidos:', { fileName: file?.name, tag, type, duplaId, isEdit, oldImageUrl });
 
     if (!file) {
-      return NextResponse.json({ success: false, message: 'Nenhum arquivo encontrado' });
-    }
-
-    // Validar tamanho (máximo 50MB)
-    if (file.size > 50 * 1024 * 1024) {
       return NextResponse.json({ 
         success: false, 
-        message: 'Arquivo muito grande. Máximo 50MB.' 
+        message: 'Nenhum arquivo encontrado' 
+      });
+    }
+
+    // Se é edição e há uma imagem antiga, deletar primeiro
+    if (isEdit === 'true' && oldImageUrl) {
+      try {
+        console.log('🗑️ Deletando imagem antiga:', oldImageUrl);
+        const deleteResponse = await fetch('/api/delete-image', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl: oldImageUrl })
+        });
+        
+        if (deleteResponse.ok) {
+          console.log('✅ Imagem antiga deletada');
+        } else {
+          console.warn('⚠️ Erro ao deletar imagem antiga, continuando...');
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao deletar imagem antiga:', error);
+        // Continua mesmo se falhar ao deletar
+      }
+    }
+
+    if (!file) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Nenhum arquivo encontrado' 
+      });
+    }
+
+    // Validar tamanho (máximo 10MB para S3)
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Arquivo muito grande. Máximo 10MB.' 
       });
     }
 
     // Validar tipo de arquivo
-    if (!file.type.startsWith('image/')) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ 
         success: false, 
-        message: 'Apenas arquivos de imagem são permitidos.' 
+        message: 'Tipo de arquivo não suportado. Use JPEG, PNG, WebP ou GIF.' 
       });
     }
 
-    // Converter para base64
+    // Converter para buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const contentBase64 = buffer.toString('base64');
 
-    // Criar nome único
-    const timestamp = Date.now();
-    const extension = path.extname(file.name);
-    const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const fileName = `${timestamp}_${tag}_${cleanName}`;
-
-    // Pasta de destino
-    const folder = type === 'item' ? 'public/itens' : 'public/banners-duplas';
-    const repoFilePath = `${folder}/${fileName}`;
-
-    console.log('📂 Caminho do arquivo:', repoFilePath);
-    console.log('🔧 Configurações GitHub:', { 
-      repo: GITHUB_REPO, 
-      branch: GITHUB_BRANCH,
-      tokenPresent: !!GITHUB_TOKEN 
-    });
-
-    // Buscar SHA do arquivo se já existir (para update)
-    let sha: string | undefined = undefined;
-    try {
-      const getFileRes = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${repoFilePath}?ref=${GITHUB_BRANCH}`, {
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github+json',
-        },
-      });
-      if (getFileRes.ok) {
-        const fileData = await getFileRes.json();
-        sha = fileData.sha;
+    // Gerar nome único para S3
+    let fileName: string;
+    
+    if (isEdit === 'true' && oldImageUrl) {
+      // Para edições, extrair o nome existente e manter
+      try {
+        const urlParts = oldImageUrl.split('/');
+        const existingFileName = urlParts[urlParts.length - 1];
+        fileName = existingFileName;
+        console.log('📝 Editando - mantendo nome existente:', fileName);
+      } catch (error) {
+        console.warn('⚠️ Erro ao extrair nome existente, gerando novo:', error);
+        const prefix = duplaId ? `${duplaId}_${tag}_${type}` : `${tag}_${type}`;
+        fileName = generateS3Filename(file.name, prefix);
       }
-    } catch (error) {
-      console.log('Arquivo não existe ainda (será criado novo)');
+    } else {
+      // Para novas imagens, gerar nome único
+      const prefix = duplaId ? `${duplaId}_${tag}_${type}` : `${tag}_${type}`;
+      fileName = generateS3Filename(file.name, prefix);
     }
 
-    // Commitar arquivo via API do GitHub
-    console.log('⬆️ Enviando para GitHub...');
-    const commitRes = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${repoFilePath}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: `upload banner via API: ${fileName}`,
-        content: contentBase64,
-        branch: GITHUB_BRANCH,
-        ...(sha ? { sha } : {}),
-      }),
-    });
+    console.log('📂 Nome do arquivo S3:', fileName);
+    console.log('� Tamanho do arquivo:', `${(file.size / 1024 / 1024).toFixed(2)}MB`);
 
-    console.log('📊 Status da resposta:', commitRes.status);
+    // Upload para S3
+    console.log('⬆️ Enviando para S3...');
+    const uploadResult = await uploadImageToS3(
+      buffer,
+      fileName,
+      file.type,
+      type === 'banner'
+    );
 
-    if (!commitRes.ok) {
-      const errorData = await commitRes.json();
-      console.error('❌ Erro detalhado do GitHub:', errorData);
+    if (uploadResult.success) {
+      console.log('✅ Upload S3 realizado com sucesso:', uploadResult.url);
+      
+      return NextResponse.json({ 
+        success: true, 
+        imageUrl: uploadResult.url,
+        s3Key: uploadResult.key,
+        fileName: fileName,
+        message: 'Upload realizado com sucesso!'
+      });
+    } else {
+      console.error('❌ Erro no upload S3:', uploadResult.error);
       return NextResponse.json({ 
         success: false, 
-        message: `Erro ao salvar no GitHub: ${errorData.message || 'Erro desconhecido'}`,
-        details: errorData
+        message: uploadResult.error || 'Erro no upload para S3'
       });
     }
 
-    const commitData = await commitRes.json();
-    console.log('✅ Commit realizado:', commitData.commit?.sha);
-
-    // Gerar URL raw
-    const rawUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${repoFilePath}`;
-    console.log('🔗 URL gerada:', rawUrl);
-
-    // Aguardar um pouco para o GitHub processar o arquivo
-    console.log('⏳ Aguardando GitHub processar o arquivo...');
-    await new Promise(resolve => setTimeout(resolve, 2000)); // 2 segundos
-
-    // Testar se o arquivo está acessível
-    try {
-      const testRes = await fetch(rawUrl, { method: 'HEAD' });
-      if (!testRes.ok) {
-        console.warn('⚠️ Arquivo ainda não acessível via raw URL, mas commit foi realizado');
-      } else {
-        console.log('✅ Arquivo confirmado como acessível via raw URL');
-      }
-    } catch (error) {
-      console.warn('⚠️ Erro ao testar acessibilidade do arquivo:', error);
-    }
-
-    // Adicionar cache-busting para evitar problemas de cache
-    const urlComCacheBusting = `${rawUrl}?t=${Date.now()}`;
-
-    return NextResponse.json({ 
-      success: true, 
-      imageUrl: urlComCacheBusting,
-      message: 'Upload realizado com sucesso!'
-    });
   } catch (error) {
-    console.error('Erro no upload:', error);
+    console.error('❌ Erro no upload:', error);
     return NextResponse.json({ 
       success: false, 
       message: 'Erro interno do servidor',
-      error: error instanceof Error ? error.message : error
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
 }

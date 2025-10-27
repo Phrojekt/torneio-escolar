@@ -859,31 +859,59 @@ export function useTorneio() {
     comprarItem,
     removerItemLoja,
 
-    // Função para migrar URLs de banners antigos
-    migrarBannersAntigos: async () => {
+    // Função para migrar URLs de imagens do GitHub para S3
+    migrarImagensParaS3: async () => {
       try {
-        console.log("🔄 Iniciando migração de banners antigos...");
-        const duplasComBannersAntigos = duplas.filter(dupla => 
-          dupla.bannerUrl && dupla.bannerUrl.startsWith('/banners/')
-        );
-        
-        if (duplasComBannersAntigos.length === 0) {
-          console.log("✅ Nenhum banner antigo encontrado para migrar");
-          return;
+        const response = await fetch('/api/migrate-images', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro na migração: ${response.statusText}`);
         }
 
-        console.log(`📋 Encontradas ${duplasComBannersAntigos.length} duplas com banners antigos`);
-        
-        for (const dupla of duplasComBannersAntigos) {
-          const bannerAntigoPath = dupla.bannerUrl;
-          // Remover o banner URL antigo (vai usar o fallback)
-          await duplaService.atualizar(dupla.id, { bannerUrl: '' });
-          console.log(`🔄 Removido banner antigo da dupla ${dupla.tag}: ${bannerAntigoPath}`);
+        // Ler stream de progresso
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Não foi possível ler a resposta');
         }
-        
-        console.log("✅ Migração concluída! As duplas agora usarão o banner padrão até novo upload.");
+
+        const results = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const text = new TextDecoder().decode(value);
+          const lines = text.split('\n').filter(line => line.trim());
+
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line);
+              results.push(data);
+            } catch (e) {
+              // Linha não é JSON válido, ignorar
+            }
+          }
+        }
+
+        return results;
       } catch (error) {
-        console.error("❌ Erro na migração de banners:", error);
+        console.error("❌ Erro na migração S3:", error);
+        throw error;
+      }
+    },
+
+    // Função para verificar configuração S3
+    verificarConfiguracaoS3: async () => {
+      try {
+        const response = await fetch('/api/migrate-images');
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("❌ Erro ao verificar configuração S3:", error);
         throw error;
       }
     },

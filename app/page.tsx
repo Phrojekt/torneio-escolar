@@ -17,6 +17,7 @@ import { toast } from "sonner"
 import { LoginPage } from "@/components/auth/login-page"
 import { BannerDupla } from "@/components/tournament/banner-dupla"
 import { deleteField } from 'firebase/firestore'
+import { getProxyImageSrc } from '@/lib/image-utils'
 
 // Função utilitária para calcular valores apenas das rodadas (sem bônus)
 const calcularValoresRodadas = (dupla: any) => {
@@ -1266,6 +1267,7 @@ function GerenciamentoDuplas({ torneio }: { torneio: any }) {
           const formData = new FormData();
           formData.append('file', bannerFile);
           formData.append('tag', tag.toUpperCase());
+          formData.append('type', 'banner');
 
           console.log("� Enviando arquivo para API local...");
 
@@ -1546,6 +1548,14 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
           const formData = new FormData()
           formData.append('file', file)
           formData.append('tag', tagValue.toUpperCase())
+          formData.append('duplaId', dupla.id)
+          formData.append('isEdit', 'true')
+          formData.append('type', 'banner')
+          
+          // Incluir URL da imagem antiga para deletar
+          if (dupla.bannerUrl) {
+            formData.append('oldImageUrl', dupla.bannerUrl)
+          }
 
           const response = await fetch('/api/upload', { method: 'POST', body: formData })
           const result = await response.json()
@@ -1587,7 +1597,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
                   {dupla.itemIcon && (
                     <div className="w-6 h-6 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-lg flex items-center justify-center">
                       <img 
-                        src={dupla.itemIcon} 
+                        src={getProxyImageSrc(dupla.itemIcon)} 
                         alt="Ícone" 
                         className="w-4 h-4 object-contain"
                         title="Ícone atribuído à dupla"
@@ -1626,7 +1636,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
           >
             {dupla.itemIcon ? (
               <img 
-                src={dupla.itemIcon} 
+                src={getProxyImageSrc(dupla.itemIcon)} 
                 alt="Ícone atual" 
                 className="w-3 h-3 object-contain"
               />
@@ -1715,8 +1725,47 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
     </Card>
   )
 
+  // Estados para migração de imagens
+  const [migrando, setMigrando] = useState(false);
+  const [resultadoMigracao, setResultadoMigracao] = useState<any>(null);
+
+  const handleMigrarImagens = async () => {
+    if (migrando) return;
+    
+    setMigrando(true);
+    try {
+      console.log('🔄 Iniciando migração de URLs de imagens...');
+      const resultado = await torneio.migrarImagensParaSistemaLocal();
+      setResultadoMigracao(resultado);
+      
+      if (resultado.success) {
+        toast.success(`Migração concluída! ${resultado.duplasAtualizadas} duplas e ${resultado.itensAtualizados} itens atualizados.`);
+      }
+    } catch (error) {
+      console.error('❌ Erro na migração:', error);
+      toast.error('Erro ao migrar imagens');
+    } finally {
+      setMigrando(false);
+    }
+  };
+
+  const handleVerificarMigracao = async () => {
+    try {
+      const resultado = await torneio.verificarMigracaoNecessaria();
+      if (resultado.totalNeedsMigration > 0) {
+        toast.info(`${resultado.totalNeedsMigration} URLs precisam ser migradas (${resultado.duplasComUrlsAntigas} duplas, ${resultado.itensComUrlsAntigas} itens)`);
+      } else {
+        toast.success('Todas as URLs já estão no formato correto!');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao verificar:', error);
+      toast.error('Erro ao verificar migração');
+    }
+  };
+
   return (
     <div className="space-y-6">
+
       {/* Header geral */}
       <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden">
         <CardHeader className="text-white px-6 py-6" style={{ backgroundColor: "#0f006d" }}>
@@ -1814,7 +1863,7 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
                         <div className="flex items-center gap-3">
                           <div className="w-16 h-16 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
                             <img
-                              src={item.imagem}
+                              src={getProxyImageSrc(item.imagem)}
                               alt={item.nome}
                               className="w-full h-full object-contain"
                             />
@@ -2293,7 +2342,7 @@ function LojaManager({ torneio }: { torneio: any }) {
                     {item.imagem && (
                       <div className="flex-shrink-0">
                         <img 
-                          src={item.imagem} 
+                          src={getProxyImageSrc(item.imagem)} 
                           alt={item.nome}
                           className="w-16 h-16 object-cover rounded-lg border-2 border-orange-200" 
                         />
@@ -2403,7 +2452,7 @@ function LojaManager({ torneio }: { torneio: any }) {
                     <div className="flex items-center gap-4">
                       <div className="flex-shrink-0">
                         <img
-                          src={dupla.bannerUrl}
+                          src={getProxyImageSrc(dupla.bannerUrl)}
                           alt={dupla.tag}
                           className="w-16 h-16 object-cover rounded-lg border-2 border-gray-300"
                         />
@@ -2417,7 +2466,7 @@ function LojaManager({ torneio }: { torneio: any }) {
                           <span className="text-sm text-gray-500">Ícone atual:</span>
                           {dupla.itemIcon ? (
                             <img
-                              src={dupla.itemIcon}
+                              src={getProxyImageSrc(dupla.itemIcon)}
                               alt="Ícone da dupla"
                               className="w-6 h-6 object-contain"
                             />
@@ -2609,7 +2658,7 @@ function RankingTable({
                     <div className="item-icon-container w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center bg-gradient-to-r from-orange-400 to-yellow-400 flex-shrink-0">
                       {dupla.itemIcon ? (
                         <img 
-                          src={dupla.itemIcon} 
+                          src={getProxyImageSrc(dupla.itemIcon)} 
                           alt="Item Icon" 
                           className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 object-contain"
                         />
@@ -2773,7 +2822,7 @@ function LojaView({ torneio, showComprarButton = true }: { torneio: any; showCom
                       <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-orange-200 flex items-center justify-center">
                         {item.imagem ? (
                           <img
-                            src={item.imagem}
+                            src={getProxyImageSrc(item.imagem)}
                             alt={item.nome}
                             className="w-full h-full object-cover"
                             onError={(e) => {

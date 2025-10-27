@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { getOptimizedImageUrl } from "@/lib/image-utils"
 
 interface BannerDuplaProps {
   dupla: any
@@ -12,47 +13,22 @@ interface BannerDuplaProps {
 
 export const BannerDupla = ({ dupla, className = "", showTag = true, objectFit = 'auto' }: BannerDuplaProps) => {
   const [imagemFalhou, setImagemFalhou] = useState(false);
-  const [tentativas, setTentativas] = useState(0);
   const [carregando, setCarregando] = useState(true);
-  const [imagemCarregada, setImagemCarregada] = useState(false);
   const [computedFit, setComputedFit] = useState<'cover' | 'contain' | 'fill' | 'scale-down'>('cover');
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   
-  // Debug: verificar dados da dupla
-  console.log('🖼️ BannerDupla render:', { 
-    tag: dupla?.tag, 
-    bannerUrl: dupla?.bannerUrl, 
-    imagemFalhou,
-    tentativas,
-    duplaCompleta: dupla 
-  });
+  // Conectar diretamente ao S3 - sem fallback de proxy
+  const { primary } = getOptimizedImageUrl(dupla?.bannerUrl);
   
-  // Verificar se há banner válido
-  const temBanner = dupla?.bannerUrl && dupla.bannerUrl.trim() !== '' && !imagemFalhou;
-  
-  console.log('🔍 Verificação de banner:', { 
-    temBanner, 
-    bannerUrlValida: dupla?.bannerUrl && dupla.bannerUrl.trim() !== '', 
-    imagemFalhou,
-    tentativas
-  });
-  
-  const handleImageError = () => {
-    console.error('❌ Erro ao carregar imagem (tentativa ' + (tentativas + 1) + '):', dupla.bannerUrl);
-    
-    // Se for uma URL do GitHub e não passou de 3 tentativas, tentar novamente após delay
-    if (dupla?.bannerUrl?.includes('raw.githubusercontent.com') && tentativas < 3) {
-      console.log('🔄 Tentando recarregar imagem em 3 segundos...');
-      setTimeout(() => {
-        setTentativas(prev => prev + 1);
-        setImagemFalhou(false); // Reset para tentar novamente
-        setCarregando(true); // Reset carregamento para nova tentativa
-      }, 3000);
-    } else {
-      setImagemFalhou(true);
-      setCarregando(false);
-    }
+  const handleImageError = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.log('❌ Imagem S3 falhou, usando fallback textual:', {
+      duplaTag: dupla?.tag,
+      tentativaUrl: event.currentTarget.src,
+      originalUrl: dupla?.bannerUrl
+    });
+    setImagemFalhou(true);
+    setCarregando(false);
   };
   
   // Função para calcular melhor objectFit com base nas proporções
@@ -65,6 +41,12 @@ export const BannerDupla = ({ dupla, className = "", showTag = true, objectFit =
     if (ratioDiff > 0.18) return 'contain';
     return 'cover';
   }
+
+  // Reset do estado quando a dupla mudar
+  useEffect(() => {
+    setImagemFalhou(false);
+    setCarregando(true);
+  }, [dupla?.id, dupla?.bannerUrl]);
 
   // Setup ResizeObserver para recalcular quando o container muda
   useEffect(() => {
@@ -97,24 +79,37 @@ export const BannerDupla = ({ dupla, className = "", showTag = true, objectFit =
     const contRect = contEl?.getBoundingClientRect();
     const contW = contRect?.width;
     const contH = contRect?.height;
+    
+    console.log('✅ IMAGEM S3 CARREGADA:', {
+      duplaTag: dupla?.tag,
+      loadedUrl: imgEl.src,
+      originalUrl: dupla?.bannerUrl,
+      dimensions: `${imgW}x${imgH}`,
+      complete: imgEl.complete
+    });
+    
     if (objectFit === 'auto') {
       const best = computeBestFit(imgW, imgH, contW, contH) as any;
       setComputedFit(best);
     }
     setImagemFalhou(false);
-    setTentativas(0);
     setCarregando(false);
-    setImagemCarregada(true);
   }
 
-  
+  // Verificar se tem banner válido
+  const temBanner = dupla?.bannerUrl && !imagemFalhou;
 
   if (temBanner) {
-    console.log('✅ Exibindo imagem:', dupla.bannerUrl);
+    console.log('✅ Exibindo imagem S3:', {
+      primary,
+      originalUrl: dupla?.bannerUrl,
+      duplaId: dupla?.id,
+      duplaTag: dupla?.tag,
+      isS3: primary?.includes('s3.amazonaws.com')
+    });
     
-    // Adicionar key para forçar re-render quando tentativas mudar
     return (
-  <div ref={containerRef as any} className="banner-dupla-container w-full h-full relative overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center banner-mobile-large sm:banner-tablet lg:banner-desktop">
+      <div ref={containerRef as any} className="banner-dupla-container w-full h-full relative overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center banner-mobile-large sm:banner-tablet lg:banner-desktop">
         {/* Loading placeholder */}
         {carregando && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 animate-pulse flex items-center justify-center">
@@ -123,8 +118,8 @@ export const BannerDupla = ({ dupla, className = "", showTag = true, objectFit =
         )}
         
         <img 
-          key={`${dupla.id}-${tentativas}`}
-          src={dupla.bannerUrl} 
+          key={dupla.id}
+          src={primary} 
           alt={`Banner da dupla ${dupla.tag}`}
           ref={imgRef as any}
           onLoad={onImgLoad}
@@ -144,7 +139,6 @@ export const BannerDupla = ({ dupla, className = "", showTag = true, objectFit =
             transformOrigin: 'center center'
           }}
           onError={handleImageError}
-          
         />
       </div>
     )

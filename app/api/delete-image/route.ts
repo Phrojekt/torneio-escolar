@@ -1,103 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = process.env.GITHUB_REPO || 'Phrojekt/torneio-escolar';
-const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
-const GITHUB_API_URL = 'https://api.github.com';
+// Configuração do S3 - Netlify compatible
+const s3Client = new S3Client({
+  region: process.env.MY_AWS_REGION || 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY || '',
+  },
+});
+
+const BUCKET_NAME = process.env.MY_AWS_S3_BUCKET || 'jambalaia';
 
 export async function DELETE(request: NextRequest) {
   try {
-    // Verificar se o token do GitHub está configurado
-    if (!GITHUB_TOKEN) {
-      console.error('❌ Token do GitHub não configurado');
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Token do GitHub não configurado. Configure a variável GITHUB_TOKEN.' 
-      });
-    }
-
-    const { imageUrl } = await request.json();
+    const { imageUrl, s3Key } = await request.json();
     
-    if (!imageUrl) {
+    if (!imageUrl && !s3Key) {
       return NextResponse.json({ 
         success: false, 
-        message: 'URL da imagem não fornecida' 
+        message: 'URL da imagem ou chave S3 deve ser fornecida' 
       });
     }
 
-    console.log('🗑️ Tentando deletar imagem:', imageUrl);
+    console.log('🗑️ Tentando deletar imagem S3:', { imageUrl, s3Key });
 
-    // Extrair o caminho do arquivo da URL raw do GitHub
-    // Formato: https://raw.githubusercontent.com/owner/repo/branch/path
-    const urlParts = imageUrl.replace('https://raw.githubusercontent.com/', '').split('/');
-    if (urlParts.length < 4) {
+    let keyToDelete = s3Key;
+
+    // Se apenas URL foi fornecida, extrair a chave S3
+    if (!keyToDelete && imageUrl) {
+      if (imageUrl.includes('s3.amazonaws.com')) {
+        // Extrair chave da URL S3: https://bucket.s3.amazonaws.com/path/file.jpg
+        const urlParts = imageUrl.split('.s3.amazonaws.com/');
+        if (urlParts.length === 2) {
+          keyToDelete = urlParts[1];
+        }
+      } else {
+        return NextResponse.json({ 
+          success: false, 
+          message: 'URL não é uma URL válida do S3' 
+        });
+      }
+    }
+
+    if (!keyToDelete) {
       return NextResponse.json({ 
         success: false, 
-        message: 'URL inválida do GitHub' 
+        message: 'Não foi possível determinar a chave S3 do arquivo' 
       });
     }
 
-    // Remover owner/repo/branch para obter o caminho
-    const repoFilePath = urlParts.slice(3).join('/');
-    console.log('📂 Caminho do arquivo:', repoFilePath);
+    console.log('📂 Chave S3 para deletar:', keyToDelete);
 
-    // Buscar SHA do arquivo para deletar
-    const getFileRes = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${repoFilePath}?ref=${GITHUB_BRANCH}`, {
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github+json',
-      },
+    // Deletar arquivo do S3
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: keyToDelete,
     });
 
-    if (!getFileRes.ok) {
-      console.log('ℹ️ Arquivo não encontrado no GitHub (pode já ter sido deletado)');
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Arquivo não encontrado (pode já ter sido deletado)' 
-      });
-    }
+    await s3Client.send(deleteCommand);
 
-    const fileData = await getFileRes.json();
-    const sha = fileData.sha;
-
-    // Deletar arquivo via API do GitHub
-    const deleteRes = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${repoFilePath}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: `delete image: ${repoFilePath}`,
-        sha,
-        branch: GITHUB_BRANCH,
-      }),
-    });
-
-    if (!deleteRes.ok) {
-      const errorData = await deleteRes.json();
-      console.error('❌ Erro ao deletar do GitHub:', errorData);
-      return NextResponse.json({ 
-        success: false, 
-        message: `Erro ao deletar do GitHub: ${errorData.message || 'Erro desconhecido'}`,
-        details: errorData
-      });
-    }
-
-    console.log('✅ Imagem deletada com sucesso do GitHub');
+    console.log('✅ Imagem deletada com sucesso do S3');
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Imagem deletada com sucesso!'
+      message: 'Imagem deletada com sucesso do S3!',
+      deletedKey: keyToDelete
     });
 
   } catch (error) {
-    console.error('Erro ao deletar imagem:', error);
+    console.error('❌ Erro ao deletar imagem do S3:', error);
     return NextResponse.json({ 
       success: false, 
       message: 'Erro interno do servidor',
-      error: error instanceof Error ? error.message : error
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
     });
   }
 }
