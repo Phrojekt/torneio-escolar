@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { getS3Config } from '@/lib/s3-config';
 
+const config = getS3Config();
 const s3Client = new S3Client({
-  region: process.env.MY_AWS_REGION || 'us-east-1',
+  region: config.region,
   credentials: {
-    accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: config.accessKeyId || '',
+    secretAccessKey: config.secretAccessKey || '',
   },
 });
 
-const BUCKET_NAME = process.env.MY_AWS_S3_BUCKET || 'jambalaia';
+const BUCKET_NAME = config.bucket;
 
 export async function GET(request: NextRequest) {
   try {

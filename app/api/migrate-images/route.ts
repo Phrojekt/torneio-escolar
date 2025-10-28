@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { uploadImageToS3, generateS3Filename } from '@/lib/s3-utils';
+import { getS3Config } from '@/lib/s3-config';
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
@@ -221,15 +222,16 @@ async function downloadAndUploadToS3(
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Endpoint para verificar status da configuração S3 - Netlify compatible
+    const config = getS3Config();
     return NextResponse.json({
-      bucket: process.env.MY_AWS_S3_BUCKET,
-      region: process.env.MY_AWS_REGION,
-      hasCredentials: !!(process.env.MY_AWS_ACCESS_KEY_ID && process.env.MY_AWS_SECRET_ACCESS_KEY),
-      bannersPath: process.env.S3_BANNERS_PATH,
-      itensPath: process.env.S3_ITENS_PATH,
+      bucket: config.bucket,
+      region: config.region,
+      hasCredentials: !!(config.accessKeyId && config.secretAccessKey),
+      bannersPath: config.bannersPath,
+      itensPath: config.itensPath,
     });
   } catch (error) {
     return NextResponse.json({

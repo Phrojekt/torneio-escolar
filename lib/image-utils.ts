@@ -84,13 +84,14 @@ export function getProxyImageSrc(imageUrl?: string): string | undefined {
   return convertToOptimizedImageUrl(imageUrl);
 }
 
+import { getS3Config } from './s3-config';
+
 /**
  * Gera URL S3 a partir da chave
  */
 export function generateS3Url(s3Key: string): string {
-  // Hardcoded bucket name para evitar exposição de env vars no client
-  const bucketName = 'jambalaia';
-  return `https://${bucketName}.s3.amazonaws.com/${s3Key}`;
+  const config = getS3Config();
+  return `https://${config.bucket}.s3.amazonaws.com/${s3Key}`;
 }
 
 /**

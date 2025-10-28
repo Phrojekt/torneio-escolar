@@ -73,13 +73,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
+import { getS3Config } from '@/lib/s3-config';
+
 export async function GET(request: NextRequest) {
   // Endpoint para testar configuração - Netlify compatible
+  const config = getS3Config();
   return NextResponse.json({
-    bucket: process.env.MY_AWS_S3_BUCKET,
-    region: process.env.MY_AWS_REGION,
-    hasCredentials: !!(process.env.MY_AWS_ACCESS_KEY_ID && process.env.MY_AWS_SECRET_ACCESS_KEY),
-    bannersPath: process.env.S3_BANNERS_PATH,
-    itensPath: process.env.S3_ITENS_PATH,
+    bucket: config.bucket,
+    region: config.region,
+    hasCredentials: !!(config.accessKeyId && config.secretAccessKey),
+    bannersPath: config.bannersPath,
+    itensPath: config.itensPath,
   });
 }
