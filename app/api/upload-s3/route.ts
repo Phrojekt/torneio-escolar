@@ -33,21 +33,30 @@ export async function POST(request: NextRequest) {
     }
     
     console.log(`📤 Fazendo upload de ${type}: ${file.name} (${file.size} bytes)`);
+    console.log(`🔍 Dados da dupla: ${duplaId}`);
+    
+    // Sanitizar duplaId para evitar problemas
+    const sanitizedDuplaId = duplaId ? duplaId.replace(/[^a-zA-Z0-9_-]/g, '_') : '';
     
     // Converter para buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    // Gerar nome único
-    const prefix = duplaId ? `${duplaId}_${type}` : type;
+    console.log(`📦 Buffer criado: ${buffer.length} bytes`);
+    
+    // Gerar nome único com sanitização
+    const prefix = sanitizedDuplaId ? `${sanitizedDuplaId}_${type}` : type;
     const filename = generateS3Filename(file.name, prefix);
     
-    // Upload para S3
+    console.log(`🏷️ Nome do arquivo: ${filename}`);
+    
+    // Upload para S3 com retry
     const result = await uploadImageToS3(
       buffer,
       filename,
       file.type,
-      type === 'banner'
+      type === 'banner',
+      3 // 3 tentativas
     );
     
     if (result.success) {

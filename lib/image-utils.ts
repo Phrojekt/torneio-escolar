@@ -11,6 +11,67 @@ export function isS3Url(url?: string): boolean {
 }
 
 /**
+ * Corrige URLs S3 com problemas de encoding
+ */
+export function fixS3UrlEncoding(url: string): string {
+  try {
+    console.log('🔧 Corrigindo encoding da URL:', url);
+    
+    // Se não há caracteres especiais, retornar como está
+    if (!url.includes('%')) {
+      console.log('✅ URL sem encoding especial, mantendo:', url);
+      return url;
+    }
+    
+    // Verificar se é duplo encoding (FALC%C3%83O = FALCÃO com encoding duplo)
+    let workingUrl = url;
+    
+    // Tentar decodificar até não haver mais encoding
+    let maxAttempts = 3;
+    let lastUrl = '';
+    
+    while (workingUrl !== lastUrl && maxAttempts > 0 && workingUrl.includes('%')) {
+      lastUrl = workingUrl;
+      try {
+        workingUrl = decodeURIComponent(workingUrl);
+        maxAttempts--;
+      } catch (e) {
+        break;
+      }
+    }
+    
+    console.log('🔄 URL após decodificação:', workingUrl);
+    
+    // Agora re-encode adequadamente apenas o que precisa
+    const urlObj = new URL(workingUrl);
+    
+    // Processar o pathname
+    const pathParts = urlObj.pathname.split('/');
+    const properlyEncodedParts = pathParts.map(part => {
+      if (part === '') return part;
+      
+      // Para partes do path que contêm caracteres especiais, usar encoding adequado
+      // Mas preservar alguns caracteres comuns
+      return encodeURIComponent(part)
+        .replace(/%20/g, '%20') // Espaços
+        .replace(/%2B/g, '+')   // Plus signs
+        .replace(/%2F/g, '/')   // Slashes within the part (se houver)
+        .replace(/%3A/g, ':');  // Colons
+    });
+    
+    urlObj.pathname = properlyEncodedParts.join('/');
+    
+    const correctedUrl = urlObj.toString();
+    console.log('✅ URL corrigida:', correctedUrl);
+    
+    return correctedUrl;
+  } catch (error) {
+    console.warn('⚠️ Erro ao corrigir encoding da URL:', url, error);
+    return url;
+  }
+}
+
+/**
  * Converte URLs para S3 diretas - apenas S3, sem GitHub
  */
 export function convertToOptimizedImageUrl(imageUrl?: string): string | undefined {
@@ -18,9 +79,9 @@ export function convertToOptimizedImageUrl(imageUrl?: string): string | undefine
     return undefined;
   }
 
-  // Se já é uma URL do S3, retornar diretamente
+  // Se já é uma URL do S3, retornar com normalização de encoding
   if (isS3Url(imageUrl)) {
-    return imageUrl;
+    return fixS3UrlEncoding(imageUrl);
   }
 
   // Para outras URLs, assumir que são inválidas

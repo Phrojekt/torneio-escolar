@@ -1545,6 +1545,15 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
       try {
         let bannerUrlToSave = dupla.bannerUrl || ''
         if (file) {
+          console.log('📤 Iniciando upload de banner:', {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            duplaId: dupla.id,
+            duplaTag: tagValue,
+            oldImageUrl: dupla.bannerUrl
+          });
+          
           const formData = new FormData()
           formData.append('file', file)
           formData.append('tag', tagValue.toUpperCase())
@@ -1557,11 +1566,20 @@ function GerenciamentoDuplasCompleto({ torneio }: { torneio: any }) {
             formData.append('oldImageUrl', dupla.bannerUrl)
           }
 
+          console.log('📡 Enviando requisição para /api/upload...');
           const response = await fetch('/api/upload', { method: 'POST', body: formData })
+          
+          console.log('📡 Resposta recebida:', response.status, response.statusText);
+          
           const result = await response.json()
+          
+          console.log('📊 Resultado do upload:', result);
+          
           if (result.success) {
             bannerUrlToSave = result.imageUrl
+            console.log('✅ Upload bem-sucedido:', bannerUrlToSave);
           } else {
+            console.error('❌ Erro no upload:', result);
             toast.error(result.message || 'Erro no upload da imagem')
             return
           }
